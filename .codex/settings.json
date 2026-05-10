@@ -1,0 +1,159 @@
+{
+  "_note": "Codex policy metadata for this repository. Codex may not consume this JSON directly; follow AGENTS.md and Codex tool permissions in the active client.",
+  "statusLine": {
+    "type": "command",
+    "command": "bash .codex/statusline.sh"
+  },
+  "permissions": {
+    "allow": [
+      "exec_command(git status*)",
+      "exec_command(git diff*)",
+      "exec_command(git log*)",
+      "exec_command(git branch*)",
+      "exec_command(git rev-parse*)",
+      "exec_command(ls *)",
+      "exec_command(dir *)",
+      "exec_command(python -m json.tool*)",
+      "exec_command(python -m pytest*)",
+      "exec_command(py -m pytest*)"
+    ],
+    "deny": [
+      "exec_command(rm -rf *)",
+      "exec_command(git push --force*)",
+      "exec_command(git push -f *)",
+      "exec_command(git reset --hard*)",
+      "exec_command(git clean -f*)",
+      "exec_command(sudo *)",
+      "exec_command(chmod 777*)",
+      "exec_command(*>.env*)",
+      "exec_command(cat *.env*)",
+      "exec_command(type *.env*)",
+      "read(**/.env*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/session-start.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/detect-gaps.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "exec_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/validate-commit.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/validate-push.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/validate-assets.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/validate-skill-change.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/notify.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/pre-compact.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/post-compact.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/session-stop.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/log-agent.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .codex/hooks/log-agent-stop.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
