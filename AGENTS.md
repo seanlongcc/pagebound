@@ -54,7 +54,8 @@ Quick reference:
 ## Git And Completion Workflow
 
 - Use Conventional Commits for commit messages, for example `feat: add feed timer` or `fix: prevent media persistence`.
-- Do not create branches with the `codex/` prefix. Use descriptive feature branches without that prefix.
+- Use Conventional Commit-style branch names with a slash after the type prefix, for example `feat/feed-timer`, `fix/media-persistence`, `chore/update-agent-rules`, or `docs/workflow-guide`.
+- Do not create branches with the `codex/` prefix. Use descriptive Conventional Commit-style feature branches without that prefix.
 - Before completion, run `git status --short --branch`.
 - Summarize changed files and any checks that could not be run.
 - If durable project facts changed, update the relevant Serena memories before finishing. Prefer assigning this to a background Serena memory refresh subagent while implementation or verification continues, then review the memory changes before completion.
