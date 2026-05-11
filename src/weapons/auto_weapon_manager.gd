@@ -6,6 +6,7 @@ extends Node
 var _owner: Node3D
 var _enemies_root: Node
 var _damage_model
+var _pagecraft_manager: Node
 var _weapon_data: Resource
 var _cooldown_remaining := 0.0
 var _hit_count := 0
@@ -24,11 +25,12 @@ func _physics_process(delta: float) -> void:
 
 
 ## Configures the first playable auto weapon runtime.
-func configure(owner: Node3D, enemies_root: Node, damage_model, weapon_data: Resource) -> void:
+func configure(owner: Node3D, enemies_root: Node, damage_model, weapon_data: Resource, pagecraft_manager: Node = null) -> void:
 	_owner = owner
 	_enemies_root = enemies_root
 	_damage_model = damage_model
 	_weapon_data = weapon_data
+	_pagecraft_manager = pagecraft_manager
 	_cooldown_remaining = 0.0
 
 
@@ -61,5 +63,12 @@ func _fire_at(target: Node3D) -> void:
 		return
 	var level_data = _weapon_data.level_data_for(1)
 	_damage_model.apply_damage(health, _weapon_data.id, level_data.base_damage, _weapon_data.material_tags)
+	_deposit_pagecraft_mark(target.global_position, level_data)
 	_hit_count += 1
 	_cooldown_remaining = level_data.cooldown_seconds
+
+
+func _deposit_pagecraft_mark(world_position: Vector3, level_data: Resource) -> void:
+	if _pagecraft_manager == null or not _pagecraft_manager.has_method("deposit_mark"):
+		return
+	_pagecraft_manager.deposit_mark(world_position, _weapon_data.pagecraft_material_tag, level_data.mark_radius_meters, _weapon_data.id)

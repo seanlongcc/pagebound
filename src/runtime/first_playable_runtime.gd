@@ -7,6 +7,7 @@ const DamageNumberManagerScript := preload("res://src/feedback/damage_number_man
 const GameplayCameraFollowScript := preload("res://src/camera/gameplay_camera_follow.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
 const PlayerControllerScript := preload("res://src/player/player_controller.gd")
+const PagecraftManagerScript := preload("res://src/pagecraft/pagecraft_manager.gd")
 const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.gd")
 const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
@@ -31,6 +32,7 @@ func _start_first_playable_loop() -> void:
 	_input_actions.ensure_default_actions()
 	_ensure_runtime_services()
 	_ensure_damage_number_manager()
+	_ensure_pagecraft_manager()
 	_spawn_player()
 	_spawn_enemy()
 	_ensure_weapon_manager()
@@ -89,6 +91,7 @@ func _spawn_player() -> void:
 		player_body.set_follow_camera(_camera())
 	_ensure_health(player_body, &"player_hero", 40.0, &"player")
 	_ensure_camera_follow(player_body)
+	_connect_player_dash(player_body)
 
 
 func _spawn_enemy() -> void:
@@ -114,7 +117,26 @@ func _ensure_weapon_manager() -> void:
 		manager.name = "WeaponManager"
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon())
+		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager())
+
+
+func _ensure_pagecraft_manager() -> void:
+	var manager := _pagecraft_root().get_node_or_null("PagecraftManager")
+	if manager == null:
+		manager = PagecraftManagerScript.new()
+		manager.name = "PagecraftManager"
+		_pagecraft_root().add_child(manager)
+	if manager.has_method("configure"):
+		manager.configure(_event_bus, _pagecraft_root())
+
+
+func _connect_player_dash(player_body: Node) -> void:
+	var manager := _pagecraft_manager()
+	if player_body == null or manager == null or not player_body.has_signal("dash_path_sampled"):
+		return
+	var callable := Callable(manager, "activate_path")
+	if not player_body.dash_path_sampled.is_connected(callable):
+		player_body.dash_path_sampled.connect(callable)
 
 
 func _ensure_health(owner: Node, entity_id: StringName, max_health: float, team_id: StringName) -> Node:
@@ -185,3 +207,11 @@ func _camera_rig() -> Node3D:
 
 func _damage_numbers_root() -> Node3D:
 	return _run_root().get_node("DamageNumbers") as Node3D
+
+
+func _pagecraft_root() -> Node3D:
+	return _run_root().get_node("Pagecraft") as Node3D
+
+
+func _pagecraft_manager() -> Node:
+	return _pagecraft_root().get_node_or_null("PagecraftManager")
