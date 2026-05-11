@@ -5,6 +5,8 @@ signal collected(pickup: Node, amount: int)
 
 @export_range(1, 100000, 1) var amount := 1
 @export_range(0.1, 5.0, 0.05) var collect_radius := 0.75
+@export_range(0.1, 10.0, 0.05) var magnet_radius := 3.0
+@export_range(0.1, 30.0, 0.1) var magnet_speed := 8.0
 
 var _collector: Node3D
 var _collected := false
@@ -16,11 +18,15 @@ func _ready() -> void:
 	set_physics_process(visible)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _collector == null or _collected:
 		return
-	if _collector.global_position.distance_to(global_position) <= collect_radius:
+	var flat_target := Vector3(_collector.global_position.x, global_position.y, _collector.global_position.z)
+	var distance := flat_target.distance_to(global_position)
+	if distance <= collect_radius:
 		_collect()
+	elif distance <= magnet_radius:
+		global_position = global_position.move_toward(flat_target, magnet_speed * delta)
 
 
 ## Configures one visible Color Mote pickup.

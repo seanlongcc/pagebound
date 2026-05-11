@@ -1,10 +1,13 @@
 extends SceneTree
 
 const MAIN_SCENE := "res://Main.tscn"
+const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 
 
 func _initialize() -> void:
 	var failures: Array[String] = []
+	await _assert_standalone_pickup_magnet(failures)
+
 	var root := _load_main(failures)
 	if root == null:
 		_finish(failures)
@@ -50,6 +53,13 @@ func _initialize() -> void:
 		_assert_true(runtime.debug_xp_total() == 0, "enemy death must not award XP before pickup collection", failures)
 
 	if player != null and pickup != null:
+		player.global_position = pickup.global_position + Vector3(2.5, 0.0, 0.0)
+		var distance_before_pull := player.global_position.distance_to(pickup.global_position)
+		for pull_index in 5:
+			await physics_frame
+		var distance_after_pull := player.global_position.distance_to(pickup.global_position)
+		_assert_true(distance_after_pull < distance_before_pull - 0.05, "Color Mote must pull toward player inside magnet range", failures)
+
 		player.global_position = Vector3(pickup.global_position.x, player.global_position.y, pickup.global_position.z)
 		for index in 3:
 			await physics_frame
@@ -63,6 +73,35 @@ func _initialize() -> void:
 	root.queue_free()
 	await process_frame
 	_finish(failures)
+
+
+func _assert_standalone_pickup_magnet(failures: Array[String]) -> void:
+	var collector := Node3D.new()
+	collector.name = "Collector"
+	get_root().add_child(collector)
+	collector.position = Vector3(2.5, 0.0, 0.0)
+
+	var pickup := XpPickupScript.new()
+	pickup.name = "StandaloneColorMote"
+	get_root().add_child(pickup)
+	pickup.position = Vector3.ZERO
+	pickup.configure(1, collector)
+	var collected_amounts: Array[int] = []
+	pickup.collected.connect(func(_pickup: Node, amount: int) -> void:
+		collected_amounts.append(amount)
+	)
+
+	var before_distance := collector.position.distance_to(pickup.position)
+	for index in 5:
+		await physics_frame
+	var after_distance := collector.position.distance_to(pickup.position)
+	_assert_true(after_distance < before_distance - 0.05, "standalone Color Mote must pull toward collector inside magnet range", failures)
+	_assert_true(pickup.visible, "standalone Color Mote must stay visible until collect radius", failures)
+	_assert_true(collected_amounts.is_empty(), "standalone Color Mote must not collect before reaching collect radius", failures)
+
+	pickup.queue_free()
+	collector.queue_free()
+	await process_frame
 
 
 func _load_main(failures: Array[String]) -> Node:
