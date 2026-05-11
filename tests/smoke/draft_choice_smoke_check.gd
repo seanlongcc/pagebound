@@ -90,8 +90,8 @@ func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> voi
 	var buttons := _choice_buttons(level_up_screen)
 	_assert_true(buttons.size() == 3, "LevelUpScreen must contain exactly 3 choice buttons", failures)
 	_assert_true(_buttons_contain_text(buttons, "Waxlight damage +1"), "draft must include Waxlight damage +1", failures)
-	_assert_true(_buttons_contain_text(buttons, "Waxlight cooldown -10%"), "draft must include Waxlight cooldown -10%", failures)
-	_assert_true(_buttons_contain_text(buttons, "Player max HP +10"), "draft must include Player max HP +10", failures)
+	_assert_true(_buttons_contain_text(buttons, "Waxlight duration +1s"), "draft must include Waxlight duration +1s", failures)
+	_assert_true(_buttons_contain_text(buttons, "Max unactivated wax +2"), "draft must include Max unactivated wax +2", failures)
 
 
 func _choice_buttons(root: Node) -> Array[Button]:

@@ -30,6 +30,7 @@ var _upgrade_state = RunUpgradeStateScript.new()
 var _event_bus: Node
 var _draft_controller: Node
 var _contact_damage_cooldown_remaining := 0.0
+var _run_ended := false
 var _hud_label: Label
 
 
@@ -41,6 +42,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not enable_first_playable_loop:
+		return
+	if _run_ended:
 		return
 	_tick_contact_damage(delta)
 	_update_hud()
@@ -101,6 +104,11 @@ func debug_level_up_count() -> int:
 ## Spawns a Color Mote for smoke checks.
 func debug_spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
 	_spawn_xp_pickup(world_position, amount)
+
+
+## Returns true after player death/victory ends the run.
+func debug_run_ended() -> bool:
+	return _run_ended
 
 
 ## Returns true while prototype draft UI is open.
@@ -232,7 +240,7 @@ func _ensure_pagecraft_manager() -> void:
 		manager.name = "PagecraftManager"
 		_pagecraft_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(_event_bus, _pagecraft_root(), _damage_model, _enemies_root())
+		manager.configure(_event_bus, _pagecraft_root(), _damage_model, _enemies_root(), _upgrade_state)
 
 
 func _ensure_draft_controller() -> void:
@@ -270,6 +278,9 @@ func _on_entity_died(event: Dictionary) -> void:
 	if not target is Node:
 		return
 	var owner := (target as Node).get_parent()
+	if owner == player():
+		_end_run_from_player_death(event)
+		return
 	_show_enemy_death(owner)
 	var reward := 0
 	if owner != null and "reward_xp" in owner:
@@ -281,6 +292,8 @@ func _on_entity_died(event: Dictionary) -> void:
 
 
 func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
+	if _run_ended:
+		return
 	_level_tracker.add_xp(amount, &"color_mote")
 	_update_hud()
 
@@ -290,6 +303,8 @@ func _on_draft_choice_selected(event: Dictionary) -> void:
 
 
 func _apply_upgrade_choice(choice_id: StringName) -> void:
+	if _run_ended:
+		return
 	var upgrade_event := _upgrade_state.apply_choice(choice_id)
 	if upgrade_event.is_empty():
 		return
@@ -334,6 +349,7 @@ func _ensure_minimal_hud() -> void:
 		_hud_label.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.86, 0.85))
 		_hud_label.add_theme_constant_override("outline_size", 3)
 		hud.add_child(_hud_label)
+	_ensure_death_screen()
 	_update_hud()
 
 
@@ -365,6 +381,8 @@ func _show_enemy_death(owner: Node) -> void:
 
 
 func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
+	if _run_ended:
+		return
 	var pickup := XpPickupScript.new()
 	pickup.name = "ColorMote_%d" % amount
 	pickup.position = Vector3(world_position.x, 0.28, world_position.z)
@@ -388,6 +406,55 @@ func _refresh_weapon_runtime_modifiers() -> void:
 	var manager := _projectiles_root().get_node_or_null("WeaponManager")
 	if manager != null and manager.has_method("refresh_runtime_modifiers"):
 		manager.refresh_runtime_modifiers()
+
+
+func _end_run_from_player_death(event: Dictionary) -> void:
+	if _run_ended:
+		return
+	_run_ended = true
+	if _draft_controller != null and _draft_controller.has_method("force_close"):
+		_draft_controller.force_close(true)
+	_show_death_screen()
+	if _event_bus != null and _event_bus.has_method("emit_run_ended"):
+		_event_bus.emit_run_ended({
+			"reason": &"player_died",
+			"world_position": _event_position(event),
+		})
+	if get_tree() != null:
+		get_tree().paused = true
+
+
+func _ensure_death_screen() -> void:
+	if _modal_layer().get_node_or_null("DeathScreen") != null:
+		return
+	var death_screen := Control.new()
+	death_screen.name = "DeathScreen"
+	death_screen.visible = false
+	death_screen.process_mode = Node.PROCESS_MODE_ALWAYS
+	death_screen.layout_mode = 1
+	death_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_modal_layer().add_child(death_screen)
+
+	var label := Label.new()
+	label.name = "DeathLabel"
+	label.text = "Run Over"
+	label.position = Vector2(320.0, 180.0)
+	label.add_theme_font_size_override("font_size", 36)
+	label.add_theme_color_override("font_color", Color(0.05, 0.035, 0.03, 1.0))
+	label.add_theme_color_override("font_outline_color", Color(1.0, 0.9, 0.78, 0.92))
+	label.add_theme_constant_override("outline_size", 4)
+	death_screen.add_child(label)
+
+
+func _show_death_screen() -> void:
+	var modal := _modal_layer()
+	var screen := modal.get_node_or_null("DeathScreen") as Control
+	if screen == null:
+		_ensure_death_screen()
+		screen = modal.get_node_or_null("DeathScreen") as Control
+	modal.visible = true
+	if screen != null:
+		screen.visible = true
 
 
 func _event_position(event: Dictionary) -> Vector3:

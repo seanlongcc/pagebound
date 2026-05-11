@@ -19,7 +19,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _collector == null or _collected:
+	if _collector == null or _collected or not _collector_can_collect():
 		return
 	var flat_target := Vector3(_collector.global_position.x, global_position.y, _collector.global_position.z)
 	var distance := flat_target.distance_to(global_position)
@@ -44,10 +44,21 @@ func is_collectible() -> bool:
 
 
 func _collect() -> void:
+	if not _collector_can_collect():
+		return
 	_collected = true
 	visible = false
 	set_physics_process(false)
 	collected.emit(self, amount)
+
+
+func _collector_can_collect() -> bool:
+	if _collector == null:
+		return false
+	var health := _collector.get_node_or_null("HealthComponent")
+	if health == null or not health.has_method("is_alive"):
+		return true
+	return health.is_alive()
 
 
 func _ensure_placeholder_nodes() -> void:

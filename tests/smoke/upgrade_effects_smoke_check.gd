@@ -66,19 +66,19 @@ func _initialize() -> void:
 	if pagecraft_manager != null and pagecraft_manager.has_method("debug_last_mark_position"):
 		mark_position = pagecraft_manager.debug_last_mark_position()
 	var dash_victim := _spawn_victim(enemies_root, "UpgradeDashVictim", mark_position + Vector3(0.2, 0.0, 0.0), 20.0)
-	if player != null:
-		player.global_position = mark_position - Vector3.RIGHT * 0.8
-		player.debug_integrate(Vector2.RIGHT, true, 0.01)
-		player.debug_integrate(Vector2.ZERO, false, 0.25)
+	if pagecraft_manager != null and pagecraft_manager.has_method("activate_path"):
+		pagecraft_manager.activate_path(mark_position - Vector3.RIGHT * 0.8, mark_position + Vector3.RIGHT * 0.8)
 		await process_frame
 		await physics_frame
 	if dash_victim != null:
 		var dash_health := dash_victim.get_node("HealthComponent")
-		_assert_true(is_equal_approx(dash_health.current_health, 20.0 - (base_damage + 1.0)), "upgraded Waxlight mark activation must use same damage profile", failures)
+		_assert_true(dash_health.current_health <= 20.0 - (base_damage + 1.0), "upgraded Waxlight mark activation must damage enemy with upgraded profile", failures)
+	if pagecraft_manager != null and pagecraft_manager.has_method("debug_last_activation_damage"):
+		_assert_true(is_equal_approx(pagecraft_manager.debug_last_activation_damage(), base_damage + 1.0), "upgraded Waxlight activation damage amount must use same damage profile", failures)
 
 	await _collect_motes(runtime, player, 6)
 	if runtime != null and runtime.has_method("debug_focus_draft_choice_index"):
-		runtime.debug_focus_draft_choice_index(1)
+		runtime.debug_focus_draft_choice_index(0)
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 		await process_frame
@@ -89,7 +89,7 @@ func _initialize() -> void:
 
 	await _collect_motes(runtime, player, 10)
 	if runtime != null and runtime.has_method("debug_focus_draft_choice_index"):
-		runtime.debug_focus_draft_choice_index(2)
+		runtime.debug_focus_draft_choice_index(0)
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 		await process_frame

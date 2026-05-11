@@ -78,8 +78,10 @@
 - `tests/smoke/combat_prototype_smoke_check.gd`
 - `tests/smoke/pagecraft_smoke_check.gd`
 - `tests/smoke/waxlight_dash_damage_smoke_check.gd`
+- `tests/smoke/waxlight_contact_decay_smoke_check.gd`
 - `tests/smoke/first_playable_smoke_check.gd`
 - `tests/smoke/xp_pickup_smoke_check.gd`
+- `tests/smoke/player_death_flow_smoke_check.gd`
 - `tests/smoke/run_level_smoke_check.gd`
 - `tests/smoke/draft_choice_smoke_check.gd`
 - `tests/smoke/upgrade_effects_smoke_check.gd`
@@ -105,7 +107,9 @@ First 5-minute vertical slice foundation is now in place with primitive placehol
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/combat_prototype_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/pagecraft_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/waxlight_dash_damage_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/waxlight_contact_decay_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/xp_pickup_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/player_death_flow_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/run_level_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/draft_choice_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/upgrade_effects_smoke_check.gd` passed.
@@ -118,8 +122,8 @@ First 5-minute vertical slice foundation is now in place with primitive placehol
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --quit-after 1` ran the configured main scene without shell validation errors.
 - Godot AI addon is copied to `addons/godot_ai/` and enabled in `project.godot`; MCP endpoint `http://127.0.0.1:8000/mcp` is not running until the Godot editor opens with the plugin active.
 - MVP Systems Design gate passed on 2026-05-11 with accepted risks documented in `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
-- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, more top-down camera follow, runtime event bus, damage model, pooled damage numbers, a scene-owned run director with early pressure time bands, two placeholder enemy families (`inkling_chaser` and `paper_scrap_swarmer`), one Waxlight auto weapon, visible HP/Level/XP/enemy/budget/spawned/time HUD, collectible Color Mote XP drops with magnet pull range, run XP thresholds, level-up event flow, exactly 3 primitive draft choices, runtime upgrades for Waxlight damage, Waxlight cooldown, and player max HP, finite page bounds clamp, finite spawn bounds, visible Pagecraft marks, dash activation damage through DamageModel, and primitive Waxlight dash pulse visuals. XP awards only after pickup collection. Dead enemies visibly despawn, stop physics, disable collision, and stop being targetable. `move_up`/W moves toward negative Z/page top.
-- Current implementation count: 29 GDScript source files, 20 smoke checks, 7 ADRs. No third-party gameplay/art assets imported.
+- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, more top-down camera follow, runtime event bus, damage model, pooled damage numbers, a scene-owned run director with early pressure time bands, two placeholder enemy families (`inkling_chaser` and `paper_scrap_swarmer`), one Waxlight auto weapon, visible HP/Level/XP/enemy/budget/spawned/time HUD, collectible Color Mote XP drops with magnet pull range, run XP thresholds, level-up event flow, exactly 3 primitive draft choices, runtime upgrades for Waxlight damage, Waxlight duration, Waxlight unactivated mark cap, Waxlight cooldown, and player max HP, finite page bounds clamp, finite spawn bounds, visible Pagecraft marks, dash activation into finite active Waxlight zones, contact-only active Waxlight damage through DamageModel, activated mark decay, unactivated mark cap enforcement, and primitive Waxlight dash pulse visuals. XP awards only after pickup collection. Player death now opens a `Run Over` death screen, pauses/stops gameplay, blocks dead-body XP collection, and blocks post-death upgrades/healing. Dead enemies visibly despawn, stop physics, disable collision, and stop being targetable. `move_up`/W moves toward negative Z/page top.
+- Current implementation count: 29 GDScript source files, 22 smoke checks, 7 ADRs. No third-party gameplay/art assets imported.
 
 ## Asset Direction Pass
 

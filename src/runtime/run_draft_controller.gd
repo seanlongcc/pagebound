@@ -94,7 +94,7 @@ func _on_run_level_gained(event: Dictionary) -> void:
 
 
 func _open_draft(level_event: Dictionary) -> void:
-	_current_choices = _prototype_choices()
+	_current_choices = _prototype_choices(int(level_event.get("level", 0)))
 	_focused_choice_index = 0
 	_selected_choice_id = &""
 	_sync_choice_buttons()
@@ -126,6 +126,17 @@ func _close_draft() -> void:
 	if _modal_layer != null:
 		_modal_layer.visible = false
 	if get_tree() != null:
+		get_tree().paused = false
+
+
+## Closes draft UI without selecting a card.
+func force_close(keep_tree_paused: bool = false) -> void:
+	_draft_open = false
+	if _level_up_screen != null:
+		_level_up_screen.visible = false
+	if _modal_layer != null:
+		_modal_layer.visible = false
+	if get_tree() != null and not keep_tree_paused:
 		get_tree().paused = false
 
 
@@ -169,8 +180,12 @@ func _sync_choice_buttons() -> void:
 		button.text = "%s\n%s" % [choice["title"], choice["description"]]
 
 
-func _prototype_choices() -> Array[Dictionary]:
+func _prototype_choices(run_level: int) -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
+	if _choice_provider != null and _choice_provider.has_method("prototype_choices_for_level"):
+		for choice in _choice_provider.prototype_choices_for_level(run_level):
+			choices.append(choice.duplicate(true))
+		return choices
 	if _choice_provider != null and _choice_provider.has_method("prototype_choices"):
 		for choice in _choice_provider.prototype_choices():
 			choices.append(choice.duplicate(true))
