@@ -1,0 +1,33 @@
+class_name RuntimeEventBus
+extends Node
+
+signal damage_resolved(event: Dictionary)
+signal entity_died(event: Dictionary)
+signal xp_awarded(event: Dictionary)
+signal pagecraft_mark_deposited(event: Dictionary)
+signal pagecraft_mark_activated(event: Dictionary)
+
+
+## Emits a resolved damage fact after DamageModel calculation.
+func emit_damage_resolved(event: Dictionary) -> void:
+	damage_resolved.emit(event)
+
+
+## Emits a death fact once for one entity life.
+func emit_entity_died(event: Dictionary) -> void:
+	entity_died.emit(event)
+
+
+## Emits an XP reward fact.
+func emit_xp_awarded(event: Dictionary) -> void:
+	xp_awarded.emit(event)
+
+
+## Emits a Pagecraft mark deposit fact.
+func emit_pagecraft_mark_deposited(event: Dictionary) -> void:
+	pagecraft_mark_deposited.emit(event)
+
+
+## Emits a Pagecraft mark activation fact.
+func emit_pagecraft_mark_activated(event: Dictionary) -> void:
+	pagecraft_mark_activated.emit(event)
