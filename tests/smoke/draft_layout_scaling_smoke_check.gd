@@ -49,6 +49,7 @@ func _run_size_case(viewport_size: Vector2i, failures: Array[String]) -> void:
 		_assert_true(_rect_inside(title.get_global_rect(), actual_viewport_size), "%s draft title must stay inside viewport" % [viewport_size], failures)
 		if buttons.size() == 3:
 			var first_size := buttons[0].size
+			var border_colors: Array[Color] = []
 			for button in buttons:
 				var button_rect := button.get_global_rect()
 				_assert_true(_rect_inside(button_rect, actual_viewport_size), "%s draft card must stay inside viewport rect=%s" % [viewport_size, button_rect], failures)
@@ -56,6 +57,10 @@ func _run_size_case(viewport_size: Vector2i, failures: Array[String]) -> void:
 				_assert_true(absf(button.size.y - first_size.y) <= 1.0, "%s draft cards must have equal height" % [viewport_size], failures)
 				_assert_true(button.size.y >= button.size.x * 0.95, "%s draft card must be vertical/card-shaped" % [viewport_size], failures)
 				_assert_wrapped_card_text(button, viewport_size, failures)
+				_assert_rarity_border(button, viewport_size, failures)
+				if button.has_meta("rarity_border_color"):
+					border_colors.append(button.get_meta("rarity_border_color"))
+			_assert_true(_has_multiple_border_colors(border_colors), "%s draft rarity borders must differ across rarity levels" % [viewport_size], failures)
 			_assert_true(_cards_are_ordered(buttons), "%s draft cards must be centered in one row" % [viewport_size], failures)
 
 	if hud_label != null and hud_label.is_visible_in_tree():
@@ -98,6 +103,26 @@ func _assert_wrapped_card_text(button: Button, viewport_size: Vector2i, failures
 	if "autowrap_mode" in button:
 		_assert_true(button.autowrap_mode != TextServer.AUTOWRAP_OFF, "%s draft card text must use autowrap" % [viewport_size], failures)
 	_assert_true(text.contains("\n"), "%s draft card text must be arranged as wrapped/multiline content" % [viewport_size], failures)
+
+
+func _assert_rarity_border(button: Button, viewport_size: Vector2i, failures: Array[String]) -> void:
+	_assert_true(button.has_meta("rarity_border_color"), "%s draft card must expose rarity border color metadata" % [viewport_size], failures)
+	var stylebox := button.get_theme_stylebox("normal")
+	_assert_true(stylebox is StyleBoxFlat, "%s draft card normal style must be StyleBoxFlat for rarity border" % [viewport_size], failures)
+	if stylebox is StyleBoxFlat:
+		var flat := stylebox as StyleBoxFlat
+		_assert_true(flat.border_width_top > 0 and flat.border_width_bottom > 0, "%s draft card must have visible top/bottom rarity border" % [viewport_size], failures)
+		_assert_true(flat.border_width_left > 0 and flat.border_width_right > 0, "%s draft card must have visible left/right rarity border" % [viewport_size], failures)
+
+
+func _has_multiple_border_colors(colors: Array[Color]) -> bool:
+	if colors.size() < 2:
+		return false
+	var first := colors[0]
+	for color in colors:
+		if color != first:
+			return true
+	return false
 
 
 func _draft_buttons(root: Node) -> Array[Button]:

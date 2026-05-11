@@ -13,6 +13,8 @@
 
 Items should feel like build-shaping keepsakes, not boring keys. A level 5 item should improve the run on its own and also open exciting evolution paths for compatible level 10 weapons.
 
+Items are not hidden single-weapon upgrades. They shape builds through stat families, material/tag families, pickup rules, survivability, pets, Pagecraft behavior, or draft odds. A tag-family item such as Candle Spark modifies Firelight/Waxlight-tagged damage through a typed modifier channel, not a hardcoded weapon ID.
+
 ## Detailed Design
 
 ### Core Rules
@@ -27,6 +29,7 @@ Items should feel like build-shaping keepsakes, not boring keys. A level 5 item 
 8. Passive item cards can appear in normal level-up drafts, Page Event rewards, elite chests, and boss rewards through draft system rules.
 9. Item modifiers apply through typed stat/modifier channels, not ad hoc script branches in unrelated systems.
 10. Item data references tags from Resource Data Schemas.
+11. Passive item effects should describe the stat or tag family they affect on draft cards.
 
 ### States and Transitions
 
@@ -92,6 +95,7 @@ Invalid states:
 | `item_level_cap` | `5` | fixed | Root GDD rule. |
 | `default_modifier_stack_rule` | `additive` | enum | Override per modifier when needed. |
 | `catalyst_unlock_level` | `5` | fixed | Root GDD rule. |
+| `candle_spark_level_values` | `15/30/45/60/75%` | tuning | Firelight/Waxlight-tagged glow/burn damage. |
 
 ## Visual/Audio Requirements
 
@@ -102,6 +106,7 @@ Invalid states:
 ## UI Requirements
 
 - Draft cards show item name, level, current effect, next effect, catalyst tags at level 5, and compatible owned weapons when known.
+- Draft cards state the affected stat or tag family, not only a weapon name.
 - HUD/loadout view can show 5 item slots and levels.
 - Debug overlay shows active modifiers and catalyst tags.
 
@@ -117,4 +122,3 @@ Invalid states:
 
 - Exact item list and names can follow root GDD/content tables during implementation.
 - Final modifier stacking balance remains tuning-owned.
-

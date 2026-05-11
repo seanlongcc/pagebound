@@ -29,6 +29,8 @@ Every level-up should feel like a sharp, readable power decision. The player sho
 10. If normal eligibility produces fewer than 3 choices, approved fallback choices fill the draft.
 11. Page Event, elite, chest, and boss reward drafts can use stronger pools but still use 3 choices unless a later GDD explicitly overrides.
 12. Draft UI may pause or slow combat; this system owns draft state, not modal layout.
+13. One-stat weapon range cards can appear for owned weapons and must not also change damage, count, cooldown, or weapon level.
+14. Draft card rarity must be visible through simple rarity-colored borders.
 
 ### States and Transitions
 
@@ -98,6 +100,7 @@ Invalid states:
 | `max_passive_slots` | `5` | fixed for MVP | Shared with item system. |
 | `xp_curve_base` | `10` | `1+` | Prototype tuning. |
 | `xp_curve_growth` | `1.12` | `1.0-1.5` | Prototype tuning. |
+| `rarity_weights` | `60/25/9/5/1` | tuning | Common/Uncommon/Rare/Epic/Legendary. |
 
 ## Visual/Audio Requirements
 
@@ -107,7 +110,7 @@ Invalid states:
 
 ## UI Requirements
 
-- Draft modal shows exactly 3 choices with icon, title, category, level, description, rarity, and compatibility hints.
+- Draft modal shows exactly 3 choices with icon, title, category, level, description, rarity, rarity-colored border, and compatibility hints.
 - HUD shows XP bar, run level, weapon slots, item slots, and pending draft state.
 - Gamepad/keyboard navigation must work without hover.
 
@@ -123,4 +126,3 @@ Invalid states:
 
 - Exact XP curve values are prototype-tuned.
 - Exact rarity names/weights are content-tuned.
-

@@ -811,10 +811,16 @@ func _weapon_display_names() -> Array[String]:
 	var names: Array[String] = []
 	for weapon_id in debug_owned_weapon_ids():
 		match weapon_id:
+			&"waxlight_comet":
+				names.append("Waxlight Comet")
 			&"star_sticker_swarm":
 				names.append("Star Sticker Swarm")
+			&"dreamsap_glob":
+				names.append("Dreamsap Glob")
+			&"color_bloom":
+				names.append("Color Bloom")
 			_:
-				names.append("Waxlight Comet")
+				names.append(String(weapon_id).capitalize())
 	return names
 
 

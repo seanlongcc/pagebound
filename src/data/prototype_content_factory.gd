@@ -10,20 +10,22 @@ const WeaponLevelDataScript := preload("res://src/data/weapon_level_data.gd")
 
 const PAGECRAFT_TAG_WAXLIGHT := &"waxlight"
 const PAGECRAFT_TAG_STAR_STICKER := &"star_sticker"
-const PAGECRAFT_TAG_PAPER_PLANE := &"paper_plane"
-const PAGECRAFT_TAG_MARGIN_SPARK := &"margin_spark"
+const PAGECRAFT_TAG_DREAMSAP := &"dreamsap"
+const PAGECRAFT_TAG_COLOR_BLOOM := &"color_bloom"
 const TAG_FIRELIGHT := &"firelight"
 const TAG_DREAMLIGHT := &"dreamlight"
-const TAG_FOLDED_PAPER := &"folded_paper"
-const TAG_MARGIN := &"margin"
+const TAG_BINDING := &"binding"
+const TAG_WATER := &"water"
+const TAG_BLOOM := &"bloom"
+const TAG_CLOUD := &"cloud"
 const TAG_STAR := &"star"
 const TAG_MOON := &"moon"
 const TAG_HOSTILE_INK := &"hostile_ink"
 const TAG_PROTOTYPE := &"prototype"
 const WEAPON_WAXLIGHT_COMET := &"waxlight_comet"
 const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
-const WEAPON_PAPER_PLANE_DART := &"paper_plane_dart"
-const WEAPON_MARGIN_SPARK_RING := &"margin_spark_ring"
+const WEAPON_DREAMSAP_GLOB := &"dreamsap_glob"
+const WEAPON_COLOR_BLOOM := &"color_bloom"
 const PASSIVE_CANDLE_SPARK := &"candle_spark"
 const ENEMY_INKLING_CHASER := &"inkling_chaser"
 const ENEMY_PAPER_SCRAP_SWARMER := &"paper_scrap_swarmer"
@@ -67,14 +69,14 @@ func star_sticker_swarm_weapon() -> Resource:
 	return resource if resource != null else _star_sticker_swarm_weapon()
 
 
-## Creates the primitive Paper Plane Dart weapon data.
-func paper_plane_dart_weapon() -> Resource:
-	return _paper_plane_dart_weapon()
+## Creates the documented Dreamsap Glob weapon data.
+func dreamsap_glob_weapon() -> Resource:
+	return _dreamsap_glob_weapon()
 
 
-## Creates the primitive Margin Spark Ring weapon data.
-func margin_spark_ring_weapon() -> Resource:
-	return _margin_spark_ring_weapon()
+## Creates the documented Color Bloom weapon data.
+func color_bloom_weapon() -> Resource:
+	return _color_bloom_weapon()
 
 
 ## Returns a weapon by stable content ID.
@@ -84,10 +86,10 @@ func weapon_for_id(weapon_id: StringName) -> Resource:
 			return waxlight_comet_weapon()
 		WEAPON_STAR_STICKER_SWARM:
 			return star_sticker_swarm_weapon()
-		WEAPON_PAPER_PLANE_DART:
-			return paper_plane_dart_weapon()
-		WEAPON_MARGIN_SPARK_RING:
-			return margin_spark_ring_weapon()
+		WEAPON_DREAMSAP_GLOB:
+			return dreamsap_glob_weapon()
+		WEAPON_COLOR_BLOOM:
+			return color_bloom_weapon()
 	return null
 
 
@@ -114,8 +116,8 @@ func weapon_pool() -> Array[Resource]:
 	return [
 		waxlight_comet_weapon(),
 		star_sticker_swarm_weapon(),
-		paper_plane_dart_weapon(),
-		margin_spark_ring_weapon(),
+		dreamsap_glob_weapon(),
+		color_bloom_weapon(),
 	]
 
 
@@ -170,12 +172,14 @@ func _prototype_tags() -> Array[Resource]:
 	return [
 		_make_tag(PAGECRAFT_TAG_WAXLIGHT, "Waxlight", "material", "Friendly glowing wax mark."),
 		_make_tag(PAGECRAFT_TAG_STAR_STICKER, "Star Sticker", "material", "Raised glossy sticker mark."),
-		_make_tag(PAGECRAFT_TAG_PAPER_PLANE, "Paper Plane", "material", "Folded paper dart trail."),
-		_make_tag(PAGECRAFT_TAG_MARGIN_SPARK, "Margin Spark", "material", "Bright spark drawn from page margins."),
+		_make_tag(PAGECRAFT_TAG_DREAMSAP, "Dreamsap", "material", "Sticky dream sap puddle."),
+		_make_tag(PAGECRAFT_TAG_COLOR_BLOOM, "Color Bloom", "material", "Growing color bloom zone."),
 		_make_tag(TAG_FIRELIGHT, "Firelight", "catalyst", "Prototype fire/light evolution catalyst."),
 		_make_tag(TAG_DREAMLIGHT, "Dreamlight", "material", "Soft storybook dream glow."),
-		_make_tag(TAG_FOLDED_PAPER, "Folded Paper", "catalyst", "Folded page weapon catalyst."),
-		_make_tag(TAG_MARGIN, "Margin", "catalyst", "Margin-note weapon catalyst."),
+		_make_tag(TAG_BINDING, "Binding", "catalyst", "Binding evolution catalyst."),
+		_make_tag(TAG_WATER, "Water", "catalyst", "Water evolution catalyst."),
+		_make_tag(TAG_BLOOM, "Bloom", "catalyst", "Bloom evolution catalyst."),
+		_make_tag(TAG_CLOUD, "Cloud", "catalyst", "Cloud evolution catalyst."),
 		_make_tag(TAG_STAR, "Star", "catalyst", "Star evolution catalyst."),
 		_make_tag(TAG_MOON, "Moon", "catalyst", "Moon evolution catalyst."),
 		_make_tag(TAG_HOSTILE_INK, "Hostile Ink", "trait", "Ink enemy trait."),
@@ -215,35 +219,35 @@ func _star_sticker_swarm_weapon() -> Resource:
 	return weapon
 
 
-func _paper_plane_dart_weapon() -> Resource:
+func _dreamsap_glob_weapon() -> Resource:
 	var weapon = WeaponDataScript.new()
-	weapon.id = WEAPON_PAPER_PLANE_DART
-	weapon.display_name = "Paper Plane Dart"
-	weapon.description = "Primitive folded-paper dart that draws a quick line through the nearest target."
+	weapon.id = WEAPON_DREAMSAP_GLOB
+	weapon.display_name = "Dreamsap Glob"
+	weapon.description = "Documented puddle/snare weapon prototype. Drops sticky Dreamsap near enemy clusters."
 	weapon.tags = _string_name_array([TAG_PROTOTYPE])
-	weapon.weapon_type_id = &"line_dart"
-	weapon.attack_behavior_id = &"paper_plane_dart"
-	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_PAPER_PLANE, TAG_FOLDED_PAPER])
-	weapon.catalyst_tags = _string_name_array([TAG_FOLDED_PAPER, TAG_MARGIN])
-	weapon.pagecraft_material_tag = PAGECRAFT_TAG_PAPER_PLANE
-	weapon.dash_interaction_id = &"paper_plane_dash"
-	weapon.levels = _paper_plane_levels()
+	weapon.weapon_type_id = &"puddle_snare"
+	weapon.attack_behavior_id = &"dreamsap_glob"
+	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_DREAMSAP, TAG_BINDING])
+	weapon.catalyst_tags = _string_name_array([TAG_BINDING, TAG_WATER])
+	weapon.pagecraft_material_tag = PAGECRAFT_TAG_DREAMSAP
+	weapon.dash_interaction_id = &"dreamsap_dash_snare"
+	weapon.levels = _dreamsap_levels()
 	return weapon
 
 
-func _margin_spark_ring_weapon() -> Resource:
+func _color_bloom_weapon() -> Resource:
 	var weapon = WeaponDataScript.new()
-	weapon.id = WEAPON_MARGIN_SPARK_RING
-	weapon.display_name = "Margin Spark Ring"
-	weapon.description = "Primitive margin-note pulse that pops a readable ring around a target cluster."
+	weapon.id = WEAPON_COLOR_BLOOM
+	weapon.display_name = "Color Bloom"
+	weapon.description = "Documented burst/growing-zone weapon prototype. Creates colorful blooms under enemy clusters."
 	weapon.tags = _string_name_array([TAG_PROTOTYPE])
-	weapon.weapon_type_id = &"target_ring"
-	weapon.attack_behavior_id = &"margin_spark_ring"
-	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_MARGIN_SPARK, TAG_MARGIN])
-	weapon.catalyst_tags = _string_name_array([TAG_MARGIN, TAG_DREAMLIGHT])
-	weapon.pagecraft_material_tag = PAGECRAFT_TAG_MARGIN_SPARK
-	weapon.dash_interaction_id = &"margin_spark_dash"
-	weapon.levels = _margin_spark_levels()
+	weapon.weapon_type_id = &"burst_zone"
+	weapon.attack_behavior_id = &"color_bloom"
+	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_COLOR_BLOOM, TAG_BLOOM])
+	weapon.catalyst_tags = _string_name_array([TAG_BLOOM, TAG_CLOUD])
+	weapon.pagecraft_material_tag = PAGECRAFT_TAG_COLOR_BLOOM
+	weapon.dash_interaction_id = &"color_bloom_dash_splash"
+	weapon.levels = _color_bloom_levels()
 	return weapon
 
 
@@ -297,6 +301,7 @@ func _weapon_levels() -> Array[Resource]:
 		level_data.base_damage = 5.0 + float(level - 1)
 		level_data.cooldown_seconds = maxf(0.45, 1.15 - float(level - 1) * 0.04)
 		level_data.mark_radius_meters = 0.65 + float(level - 1) * 0.03
+		level_data.range_meters = 8.0 + float(level - 1) * 0.1
 		levels.append(level_data)
 	return levels
 
@@ -309,30 +314,33 @@ func _star_sticker_levels() -> Array[Resource]:
 		level_data.base_damage = 4.0 + float(level - 1) * 2.0
 		level_data.cooldown_seconds = maxf(0.85, 2.0 - float(level - 1) * 0.06)
 		level_data.mark_radius_meters = 0.4 + float(level - 1) * 0.02
+		level_data.range_meters = 7.0 + float(level - 1) * 0.1
 		levels.append(level_data)
 	return levels
 
 
-func _paper_plane_levels() -> Array[Resource]:
+func _dreamsap_levels() -> Array[Resource]:
 	var levels: Array[Resource] = []
 	for level in range(1, 11):
 		var level_data = WeaponLevelDataScript.new()
 		level_data.level = level
-		level_data.base_damage = 3.0 + float(level - 1) * 1.4
-		level_data.cooldown_seconds = maxf(0.75, 1.35 - float(level - 1) * 0.04)
-		level_data.mark_radius_meters = 0.25
+		level_data.base_damage = 3.0 + float(level - 1) * 1.1
+		level_data.cooldown_seconds = maxf(0.85, 2.0 - float(level - 1) * 0.05)
+		level_data.mark_radius_meters = 0.8 + float(level - 1) * 0.03
+		level_data.range_meters = 6.5 + float(level - 1) * 0.1
 		levels.append(level_data)
 	return levels
 
 
-func _margin_spark_levels() -> Array[Resource]:
+func _color_bloom_levels() -> Array[Resource]:
 	var levels: Array[Resource] = []
 	for level in range(1, 11):
 		var level_data = WeaponLevelDataScript.new()
 		level_data.level = level
 		level_data.base_damage = 3.5 + float(level - 1) * 1.2
-		level_data.cooldown_seconds = maxf(1.05, 2.2 - float(level - 1) * 0.06)
-		level_data.mark_radius_meters = 0.75 + float(level - 1) * 0.03
+		level_data.cooldown_seconds = maxf(0.8, 1.8 - float(level - 1) * 0.05)
+		level_data.mark_radius_meters = 0.75 + float(level - 1) * 0.04
+		level_data.range_meters = 6.5 + float(level - 1) * 0.1
 		levels.append(level_data)
 	return levels
 

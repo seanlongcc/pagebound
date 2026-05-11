@@ -9,17 +9,21 @@ const CHOICE_PLAYER_MAX_HP_LEGENDARY := &"player_max_hp_plus_40"
 const CHOICE_WAXLIGHT_DURATION := &"waxlight_duration_plus_1"
 const CHOICE_WAXLIGHT_DURATION_EPIC := &"waxlight_duration_plus_2"
 const CHOICE_WAXLIGHT_MARK_CAP := &"waxlight_mark_cap_plus_2"
+const CHOICE_WAXLIGHT_RANGE := &"waxlight_range_plus"
 const CHOICE_NEW_STAR_STICKER := &"new_weapon_star_sticker_swarm"
-const CHOICE_NEW_PAPER_PLANE := &"new_weapon_paper_plane_dart"
-const CHOICE_NEW_MARGIN_SPARK := &"new_weapon_margin_spark_ring"
+const CHOICE_NEW_DREAMSAP := &"new_weapon_dreamsap_glob"
+const CHOICE_NEW_COLOR_BLOOM := &"new_weapon_color_bloom"
 const CHOICE_STAR_STICKER_DAMAGE := &"weapon_upgrade_star_sticker_damage"
 const CHOICE_STAR_STICKER_COUNT := &"weapon_upgrade_star_sticker_count"
+const CHOICE_STAR_STICKER_RANGE := &"weapon_upgrade_star_sticker_range"
+const CHOICE_DREAMSAP_RANGE := &"weapon_upgrade_dreamsap_range"
+const CHOICE_COLOR_BLOOM_RANGE := &"weapon_upgrade_color_bloom_range"
 const CHOICE_NEW_CANDLE_SPARK := &"new_passive_candle_spark"
 const CHOICE_CANDLE_SPARK_LEVEL := &"passive_upgrade_candle_spark"
 const WEAPON_WAXLIGHT_COMET := &"waxlight_comet"
 const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
-const WEAPON_PAPER_PLANE_DART := &"paper_plane_dart"
-const WEAPON_MARGIN_SPARK_RING := &"margin_spark_ring"
+const WEAPON_DREAMSAP_GLOB := &"dreamsap_glob"
+const WEAPON_COLOR_BLOOM := &"color_bloom"
 const PASSIVE_CANDLE_SPARK := &"candle_spark"
 const MAX_WEAPONS := 5
 const MAX_PASSIVES := 5
@@ -33,6 +37,8 @@ const WAXLIGHT_MARK_CAP_STEP := 3
 const CANDLE_SPARK_FALLBACK_STEP := 0.15
 const STAR_STICKER_DAMAGE_STEP := 2.0
 const STAR_STICKER_COUNT_STEP := 1
+const WAXLIGHT_RANGE_STEP := 1.5
+const DEFAULT_RANGE_STEP := 1.0
 const MAX_STAR_STICKER_COUNT := 4
 const RARITY_COMMON := &"common"
 const RARITY_UNCOMMON := &"uncommon"
@@ -64,6 +70,7 @@ var _waxlight_active_duration_bonus := 0.0
 var _waxlight_unactivated_mark_cap_bonus := 0
 var _star_sticker_damage_bonus := 0.0
 var _star_sticker_count_bonus := 0
+var _weapon_range_bonuses: Dictionary = {}
 var _owned_weapon_levels: Dictionary = {}
 var _owned_passive_levels: Dictionary = {}
 var _draft_seed := 1337
@@ -87,6 +94,7 @@ func reset() -> void:
 	_waxlight_unactivated_mark_cap_bonus = 0
 	_star_sticker_damage_bonus = 0.0
 	_star_sticker_count_bonus = 0
+	_weapon_range_bonuses = {}
 	_owned_weapon_levels = {WEAPON_WAXLIGHT_COMET: 1}
 	_owned_passive_levels = {}
 
@@ -130,12 +138,14 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 		CHOICE_WAXLIGHT_MARK_CAP:
 			_waxlight_unactivated_mark_cap_bonus += WAXLIGHT_MARK_CAP_STEP
 			return _stat_event(choice_id)
+		CHOICE_WAXLIGHT_RANGE:
+			return _add_weapon_range(choice_id, WEAPON_WAXLIGHT_COMET, WAXLIGHT_RANGE_STEP)
 		CHOICE_NEW_STAR_STICKER:
 			return _add_weapon(choice_id, WEAPON_STAR_STICKER_SWARM)
-		CHOICE_NEW_PAPER_PLANE:
-			return _add_weapon(choice_id, WEAPON_PAPER_PLANE_DART)
-		CHOICE_NEW_MARGIN_SPARK:
-			return _add_weapon(choice_id, WEAPON_MARGIN_SPARK_RING)
+		CHOICE_NEW_DREAMSAP:
+			return _add_weapon(choice_id, WEAPON_DREAMSAP_GLOB)
+		CHOICE_NEW_COLOR_BLOOM:
+			return _add_weapon(choice_id, WEAPON_COLOR_BLOOM)
 		CHOICE_STAR_STICKER_DAMAGE:
 			if not _owned_weapon_levels.has(WEAPON_STAR_STICKER_SWARM):
 				return {}
@@ -154,6 +164,12 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 				"weapon_id": WEAPON_STAR_STICKER_SWARM,
 				"star_sticker_count_bonus": _star_sticker_count_bonus,
 			}
+		CHOICE_STAR_STICKER_RANGE:
+			return _add_weapon_range(choice_id, WEAPON_STAR_STICKER_SWARM, DEFAULT_RANGE_STEP)
+		CHOICE_DREAMSAP_RANGE:
+			return _add_weapon_range(choice_id, WEAPON_DREAMSAP_GLOB, DEFAULT_RANGE_STEP)
+		CHOICE_COLOR_BLOOM_RANGE:
+			return _add_weapon_range(choice_id, WEAPON_COLOR_BLOOM, DEFAULT_RANGE_STEP)
 		CHOICE_NEW_CANDLE_SPARK:
 			_owned_passive_levels[PASSIVE_CANDLE_SPARK] = 1
 			return _passive_event(choice_id, true)
@@ -192,6 +208,10 @@ func weapon_cooldown_seconds(weapon_id: StringName, base_cooldown_seconds: float
 	if weapon_id == WEAPON_WAXLIGHT_COMET:
 		return maxf(0.25, base_cooldown_seconds - _waxlight_cooldown_reduction_seconds)
 	return base_cooldown_seconds
+
+
+func weapon_range_meters(weapon_id: StringName, base_range_meters: float) -> float:
+	return base_range_meters + float(_weapon_range_bonuses.get(weapon_id, 0.0))
 
 
 ## Returns current Waxlight damage bonus.
@@ -272,10 +292,17 @@ func debug_rarity_weights() -> Dictionary:
 ## Returns currently eligible non-interval draft choices for smoke checks.
 func debug_eligible_choices_for_level(_run_level: int) -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
+	if _owned_weapon_levels.has(WEAPON_WAXLIGHT_COMET):
+		choices.append(_weapon_range_choice(CHOICE_WAXLIGHT_RANGE, WEAPON_WAXLIGHT_COMET, WAXLIGHT_RANGE_STEP, RARITY_COMMON, "Waxlight range +1.5m"))
 	if _owned_weapon_levels.has(WEAPON_STAR_STICKER_SWARM):
 		choices.append(_star_sticker_damage_choice())
 		if weapon_projectile_count(WEAPON_STAR_STICKER_SWARM, 1) < MAX_STAR_STICKER_COUNT:
 			choices.append(_star_sticker_count_choice())
+		choices.append(_weapon_range_choice(CHOICE_STAR_STICKER_RANGE, WEAPON_STAR_STICKER_SWARM, DEFAULT_RANGE_STEP, RARITY_COMMON, "Star Sticker range +1.0m"))
+	if _owned_weapon_levels.has(WEAPON_DREAMSAP_GLOB):
+		choices.append(_weapon_range_choice(CHOICE_DREAMSAP_RANGE, WEAPON_DREAMSAP_GLOB, DEFAULT_RANGE_STEP, RARITY_COMMON, "Dreamsap range +1.0m"))
+	if _owned_weapon_levels.has(WEAPON_COLOR_BLOOM):
+		choices.append(_weapon_range_choice(CHOICE_COLOR_BLOOM_RANGE, WEAPON_COLOR_BLOOM, DEFAULT_RANGE_STEP, RARITY_COMMON, "Color Bloom range +1.0m"))
 	if _can_add_passive(PASSIVE_CANDLE_SPARK):
 		choices.append(_new_passive_choice())
 	elif _passive_level(PASSIVE_CANDLE_SPARK) < 5:
@@ -308,19 +335,19 @@ func _new_weapon_choices() -> Array[Dictionary]:
 			RARITY_RARE,
 			"Gain orbiting stickers that fire, stick to the page, pop, and reform."
 		))
-	if _can_add_weapon(WEAPON_PAPER_PLANE_DART):
+	if _can_add_weapon(WEAPON_DREAMSAP_GLOB):
 		choices.append(_new_weapon_choice(
-			CHOICE_NEW_PAPER_PLANE,
-			WEAPON_PAPER_PLANE_DART,
+			CHOICE_NEW_DREAMSAP,
+			WEAPON_DREAMSAP_GLOB,
 			RARITY_UNCOMMON,
-			"Launch a fast folded dart line through the nearest target."
+			"Drop sticky Dreamsap puddles that snare and damage enemy clusters."
 		))
-	if _can_add_weapon(WEAPON_MARGIN_SPARK_RING):
+	if _can_add_weapon(WEAPON_COLOR_BLOOM):
 		choices.append(_new_weapon_choice(
-			CHOICE_NEW_MARGIN_SPARK,
-			WEAPON_MARGIN_SPARK_RING,
-			RARITY_RARE,
-			"Pop a primitive margin ring that hits enemies grouped around a target."
+			CHOICE_NEW_COLOR_BLOOM,
+			WEAPON_COLOR_BLOOM,
+			RARITY_COMMON,
+			"Create colorful burst zones that repaint and damage the page."
 		))
 	return choices
 
@@ -390,6 +417,11 @@ func _star_sticker_damage_choice() -> Dictionary:
 func _star_sticker_count_choice() -> Dictionary:
 	var current := weapon_projectile_count(WEAPON_STAR_STICKER_SWARM, 1)
 	return _choice(CHOICE_STAR_STICKER_COUNT, "Star Sticker count +1", "Stars %d -> %d" % [current, mini(MAX_STAR_STICKER_COUNT, current + 1)], "Add exactly one more orbiting sticker.", &"weapon_upgrade", RARITY_RARE, WEAPON_STAR_STICKER_SWARM, &"", &"star_sticker_count", 1.0, 0.75)
+
+
+func _weapon_range_choice(choice_id: StringName, weapon_id: StringName, step: float, rarity: StringName, title: String) -> Dictionary:
+	var current := _weapon_range(weapon_id)
+	return _choice(choice_id, title, "Range %.1fm -> %.1fm" % [current, current + step], "Increase this weapon's max targeting range only.", &"weapon_upgrade", rarity, weapon_id, &"", &"weapon_range", step, 0.85)
 
 
 func _new_passive_choice() -> Dictionary:
@@ -595,6 +627,15 @@ func _star_sticker_damage(level: int) -> float:
 	return weapon_damage(WEAPON_STAR_STICKER_SWARM, float(weapon.level_data_for(level).base_damage))
 
 
+func _weapon_range(weapon_id: StringName) -> float:
+	var weapon := _weapon_data(weapon_id)
+	if weapon == null:
+		return weapon_range_meters(weapon_id, 0.0)
+	var level_data = weapon.level_data_for(_weapon_level(weapon_id))
+	var base_range := float(level_data.range_meters) if "range_meters" in level_data else 0.0
+	return weapon_range_meters(weapon_id, base_range)
+
+
 func _weapon_data(weapon_id: StringName) -> Resource:
 	if _content_factory == null:
 		return null
@@ -692,6 +733,13 @@ func _add_weapon(choice_id: StringName, weapon_id: StringName) -> Dictionary:
 		"new_weapon_id": weapon_id,
 		"weapon_level": 1,
 	}
+
+
+func _add_weapon_range(choice_id: StringName, weapon_id: StringName, delta: float) -> Dictionary:
+	if not _owned_weapon_levels.has(weapon_id):
+		return {}
+	_weapon_range_bonuses[weapon_id] = float(_weapon_range_bonuses.get(weapon_id, 0.0)) + delta
+	return {"choice_id": choice_id, "weapon_id": weapon_id, "weapon_range_bonus": _weapon_range_bonuses[weapon_id]}
 
 
 func _passive_event(choice_id: StringName, is_new: bool) -> Dictionary:

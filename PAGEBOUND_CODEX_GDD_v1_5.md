@@ -1025,6 +1025,7 @@ Each weapon must define:
 - **Pagecraft material tags**: the material identity used by weapons, items, pets, enemies, map features, and evolutions.
 - **Page alteration**: what mark/object/zone the weapon leaves on the page.
 - **Dash interaction**: what happens when the player dashes through, across, or near the weapon's marks.
+- **Maximum range**: how far the weapon can target or place its effect at the current level.
 - **10 exact levels**: every level must have a specific effect.
 - **2 evolution catalyst tags**: the tags that can transform the weapon at level 10.
 
@@ -1050,6 +1051,7 @@ Each weapon has **10 levels**.
 - Level 5: major behavior breakpoint.
 - Levels 6-9: scaling, dash synergy, and visual escalation.
 - Level 10: capstone and evolution eligibility.
+- Range can also be upgraded by separate one-stat draft cards. A range card must not bundle damage, projectile count, cooldown, or level increases.
 
 ### MVP Weapon Pool
 
@@ -1563,6 +1565,8 @@ Every item should be a magical keepsake, toy, natural object, storybook relic, o
 
 Items are not 1:1 keys for specific weapons. Items have **catalyst tags**. At item level 5, those tags can enable any level 10 weapon with a matching compatible evolution path.
 
+Items are build-shaping stat, tag, behavior, pickup, survivability, draft, pet, or Pagecraft modifiers. They must not be hidden single-weapon upgrades. If an item references a material family such as Firelight/Waxlight, it modifies that tag family through an explicit channel instead of hardcoding one weapon ID.
+
 ### Passive Item Pool
 
 | # | Item | Catalyst Tags | Primary Effect | Max Level Bonus |
@@ -1708,11 +1712,11 @@ Use multiples of 5 for values whenever possible.
 
 #### Candle Spark
 
-- L1: +5% glow/burn damage.
-- L2: +10% glow/burn damage.
-- L3: Waxlight and Color Bloom can ignite briefly.
-- L4: +15% glow/burn damage.
-- L5: ignited marks spread once to nearby marks.
+- L1: +15% Firelight/Waxlight-tagged glow/burn damage.
+- L2: +30% Firelight/Waxlight-tagged glow/burn damage.
+- L3: +45% Firelight/Waxlight-tagged glow/burn damage; Waxlight and Color Bloom can ignite briefly.
+- L4: +60% Firelight/Waxlight-tagged glow/burn damage.
+- L5: +75% Firelight/Waxlight-tagged glow/burn damage; ignited marks spread once to nearby marks and Candle Spark's catalyst tags are fully evolution-enabling.
 
 #### Seashell Lullaby
 

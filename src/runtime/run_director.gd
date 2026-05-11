@@ -8,15 +8,15 @@ const HealthComponentScript := preload("res://src/combat/health_component.gd")
 # increases over time. Active enemies are not a gameplay pacing cap; only the high
 # safety cap protects prototype performance if cleanup fails.
 const TIME_BANDS := [
-	{"id": &"opening", "start_seconds": 0.0, "target": 10, "spawn_interval": 0.95, "batch_size": 1, "health_multiplier": 1.0},
-	{"id": &"first_pressure", "start_seconds": 60.0, "target": 18, "spawn_interval": 0.85, "batch_size": 1, "health_multiplier": 1.15},
-	{"id": &"ink_surge", "start_seconds": 120.0, "target": 28, "spawn_interval": 0.72, "batch_size": 2, "health_multiplier": 1.3},
-	{"id": &"page_crush", "start_seconds": 240.0, "target": 44, "spawn_interval": 0.62, "batch_size": 2, "health_multiplier": 1.5},
+	{"id": &"opening", "start_seconds": 0.0, "target": 8, "spawn_interval": 1.45, "batch_size": 1, "health_multiplier": 1.0},
+	{"id": &"first_pressure", "start_seconds": 60.0, "target": 16, "spawn_interval": 1.10, "batch_size": 1, "health_multiplier": 1.15},
+	{"id": &"ink_surge", "start_seconds": 120.0, "target": 26, "spawn_interval": 0.88, "batch_size": 2, "health_multiplier": 1.3},
+	{"id": &"page_crush", "start_seconds": 240.0, "target": 42, "spawn_interval": 0.70, "batch_size": 2, "health_multiplier": 1.5},
 ]
 
 @export_range(1, 1000, 1) var safety_enemy_cap := 120
-@export_range(1, 256, 1) var active_budget := 10
-@export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := 0.95
+@export_range(1, 256, 1) var active_budget := 8
+@export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := 1.45
 @export_range(1, 16, 1) var spawn_batch_size := 1
 @export var page_half_extents := Vector2(11.0, 7.0)
 

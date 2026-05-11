@@ -6,7 +6,7 @@
 script = ExtResource("1_passive")
 id = &"candle_spark"
 display_name = "Candle Spark"
-description = "Documented Firelight/Waxlight passive. Prototype effect gives a chunky Waxlight glow damage boost."
+description = "Documented Firelight/Waxlight passive. Prototype effect boosts tagged glow/burn damage broadly."
 tags = Array[StringName]([&"prototype"])
 draft_rarity = &"uncommon"
 catalyst_tags = Array[StringName]([&"firelight", &"waxlight"])

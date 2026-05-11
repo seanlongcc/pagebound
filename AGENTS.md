@@ -34,6 +34,16 @@ Use skills when relevant:
 - `brooks-lint` for code quality, architecture health, tech debt, maintainability, and test quality review.
 - `caveman` for user-facing replies unless the user explicitly says `stop caveman` or `normal mode`.
 
+## Design Source Guardrail
+
+Before initial implementation or correction work for weapons, passive items, enemies, page events, chapters, Pagecraft materials, pets, characters, bosses, or content unlocks:
+
+- Read the relevant chapter in `PAGEBOUND_CODEX_GDD_v1_5.md`.
+- Read the focused `design/gdd/*` system document for that domain when it exists.
+- Treat the root GDD as the content source of truth unless the current task explicitly updates it.
+- Do not invent new weapon, item, material, enemy, event, chapter, or unlock IDs when a root-GDD entry exists for the needed prototype role.
+- Record `Design source consulted: ...` in the bead or session-state note for content work.
+
 ## Beads Issue Tracking
 
 This project uses `bd` (beads) for issue tracking. Run `bd prime` for current workflow context. Run `bd hooks install` only when hook-based workflow injection is wanted.

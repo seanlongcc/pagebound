@@ -20,13 +20,15 @@ Weapons should make the page feel conquered by the player's build. The player mo
 1. MVP includes all 20 shared weapons as data-defined content, placeholder visuals acceptable.
 2. Every weapon has exactly 10 levels.
 3. Every weapon defines type, material tags, page alteration, dash interaction, level entries, attack behavior reference, and 2 evolution catalyst tags.
-4. Weapons auto-fire without aim input.
-5. Player can own up to 5 weapon slots in normal MVP runs.
-6. Leveling a weapon increases exactly one level at a time unless a reward explicitly grants multiple levels.
-7. Weapon runtime asks Damage Model to resolve damage; it does not directly subtract health.
-8. Weapon runtime asks Pagecraft to deposit/activate marks; it does not own grid state.
-9. Weapon visuals/projectiles use object pools.
-10. Evolved weapons replace base behavior while keeping the weapon slot and level 10 state.
+4. Every weapon has a maximum range used for targeting or effect placement.
+5. Weapons auto-fire without aim input.
+6. Player can own up to 5 weapon slots in normal MVP runs.
+7. Leveling a weapon increases exactly one level at a time unless a reward explicitly grants multiple levels.
+8. Separate one-stat range upgrade cards may increase weapon range without changing damage, count, cooldown, or weapon level.
+9. Weapon runtime asks Damage Model to resolve damage; it does not directly subtract health.
+10. Weapon runtime asks Pagecraft to deposit/activate marks; it does not own grid state.
+11. Weapon visuals/projectiles use object pools.
+12. Evolved weapons replace base behavior while keeping the weapon slot and level 10 state.
 
 ### States and Transitions
 
@@ -59,6 +61,8 @@ Weapons should make the page feel conquered by the player's build. The player mo
 `attack_interval = base_interval / max(0.1, attack_speed_multiplier)`
 
 `weapon_damage = level_base_damage * player_damage_multiplier * weapon_specific_multiplier`
+
+`weapon_can_target = distance_to_target <= current_weapon_range`
 
 `weapon_slot_available = owned_weapon_count < 5`
 
@@ -96,6 +100,7 @@ Invalid states:
 | `new_weapon_weight_until_count` | `3` | `1-5` | Draft system consumes this. |
 | `cooldown_multiplier_min` | `0.15` | `0.05-1.0` | Prevents zero-interval attacks. |
 | `pagecraft_deposit_scale` | `1.0` | `0.1-5.0` | Passed to Pagecraft, not owned here. |
+| `weapon_range_step` | `1.0m` | `0.25-5.0m` | Separate one-stat draft card upgrade. |
 
 ## Visual/Audio Requirements
 
@@ -115,6 +120,7 @@ Invalid states:
 - Weapon system supports 5 normal weapon slots and 20 data-defined MVP weapons.
 - A weapon can auto-fire without aim input.
 - Weapon level 1-10 progression changes behavior/stats through data.
+- Weapon maximum range gates targeting/effect placement and can be upgraded by separate range cards.
 - Weapon hits flow through Damage Model and Event Bus.
 - Weapon Pagecraft deposits flow through Pagecraft system.
 - Level 10 weapon can be handed to Evolution System for eligibility.
@@ -123,4 +129,3 @@ Invalid states:
 
 - Exact behavior implementation for all 20 weapons can ship incrementally, but data slots must exist for MVP readiness.
 - Final weapon balance belongs to content tuning.
-

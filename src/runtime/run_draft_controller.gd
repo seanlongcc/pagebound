@@ -238,6 +238,7 @@ func _sync_choice_buttons() -> void:
 			continue
 		var choice := _current_choices[index]
 		button.visible = true
+		_apply_rarity_border(button, choice.get("rarity", &"common"))
 		button.text = "%s - %s\n%s\n%s\n%s" % [
 			choice.get("category_label", "Choice"),
 			choice.get("rarity_label", "Common"),
@@ -245,6 +246,50 @@ func _sync_choice_buttons() -> void:
 			choice.get("stat_line", ""),
 			choice.get("description", ""),
 		]
+
+
+func _apply_rarity_border(button: Button, rarity: StringName) -> void:
+	var border_color := _rarity_border_color(rarity)
+	button.set_meta("rarity_border_color", border_color)
+	var normal := _choice_stylebox(border_color, Color(0.11, 0.10, 0.095, 0.88), 4)
+	var hover := _choice_stylebox(border_color.lightened(0.12), Color(0.15, 0.135, 0.12, 0.92), 5)
+	var pressed := _choice_stylebox(border_color.darkened(0.08), Color(0.08, 0.075, 0.07, 0.94), 4)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
+
+
+func _choice_stylebox(border_color: Color, background_color: Color, border_width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background_color
+	style.border_color = border_color
+	style.border_width_left = border_width
+	style.border_width_top = border_width
+	style.border_width_right = border_width
+	style.border_width_bottom = border_width
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left = 12.0
+	style.content_margin_top = 12.0
+	style.content_margin_right = 12.0
+	style.content_margin_bottom = 12.0
+	return style
+
+
+func _rarity_border_color(rarity: StringName) -> Color:
+	match rarity:
+		&"uncommon":
+			return Color(0.22, 0.72, 0.34, 1.0)
+		&"rare":
+			return Color(0.25, 0.52, 0.95, 1.0)
+		&"epic":
+			return Color(0.65, 0.36, 0.88, 1.0)
+		&"legendary":
+			return Color(0.96, 0.68, 0.18, 1.0)
+	return Color(0.56, 0.56, 0.56, 1.0)
 
 
 func _prototype_choices(run_level: int) -> Array[Dictionary]:

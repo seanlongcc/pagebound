@@ -95,8 +95,10 @@ func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> voi
 	var buttons := _choice_buttons(level_up_screen)
 	_assert_true(buttons.size() == 3, "LevelUpScreen must contain exactly 3 choice buttons", failures)
 	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm"), "weapon-pick draft must include documented second weapon", failures)
-	_assert_true(_buttons_contain_text(buttons, "Paper Plane Dart"), "weapon-pick draft must include primitive Paper Plane Dart weapon", failures)
-	_assert_true(_buttons_contain_text(buttons, "Margin Spark Ring"), "weapon-pick draft must include primitive Margin Spark Ring weapon", failures)
+	_assert_true(_buttons_contain_text(buttons, "Dreamsap Glob"), "weapon-pick draft must include documented Dreamsap Glob weapon", failures)
+	_assert_true(_buttons_contain_text(buttons, "Color Bloom"), "weapon-pick draft must include documented Color Bloom weapon", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Paper Plane Dart"), "weapon-pick draft must not include non-GDD Paper Plane Dart weapon", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Margin Spark Ring"), "weapon-pick draft must not include non-GDD Margin Spark Ring weapon", failures)
 	_assert_true(_buttons_contain_text(buttons, "New Weapon"), "weapon-pick cards must label the reward category", failures)
 
 

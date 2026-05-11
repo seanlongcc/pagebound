@@ -9,6 +9,7 @@ level = 1
 base_damage = 4.0
 cooldown_seconds = 2.0
 mark_radius_meters = 0.4
+range_meters = 7.0
 
 [sub_resource type="Resource" id="Resource_level_2"]
 script = ExtResource("2_level")
@@ -16,6 +17,7 @@ level = 2
 base_damage = 6.0
 cooldown_seconds = 1.94
 mark_radius_meters = 0.42
+range_meters = 7.1
 
 [sub_resource type="Resource" id="Resource_level_3"]
 script = ExtResource("2_level")
@@ -23,6 +25,7 @@ level = 3
 base_damage = 8.0
 cooldown_seconds = 1.88
 mark_radius_meters = 0.44
+range_meters = 7.2
 
 [sub_resource type="Resource" id="Resource_level_4"]
 script = ExtResource("2_level")
@@ -30,6 +33,7 @@ level = 4
 base_damage = 10.0
 cooldown_seconds = 1.82
 mark_radius_meters = 0.46
+range_meters = 7.3
 
 [sub_resource type="Resource" id="Resource_level_5"]
 script = ExtResource("2_level")
@@ -37,6 +41,7 @@ level = 5
 base_damage = 12.0
 cooldown_seconds = 1.76
 mark_radius_meters = 0.48
+range_meters = 7.4
 
 [sub_resource type="Resource" id="Resource_level_6"]
 script = ExtResource("2_level")
@@ -44,6 +49,7 @@ level = 6
 base_damage = 14.0
 cooldown_seconds = 1.7
 mark_radius_meters = 0.5
+range_meters = 7.5
 
 [sub_resource type="Resource" id="Resource_level_7"]
 script = ExtResource("2_level")
@@ -51,6 +57,7 @@ level = 7
 base_damage = 16.0
 cooldown_seconds = 1.64
 mark_radius_meters = 0.52
+range_meters = 7.6
 
 [sub_resource type="Resource" id="Resource_level_8"]
 script = ExtResource("2_level")
@@ -58,6 +65,7 @@ level = 8
 base_damage = 18.0
 cooldown_seconds = 1.58
 mark_radius_meters = 0.54
+range_meters = 7.7
 
 [sub_resource type="Resource" id="Resource_level_9"]
 script = ExtResource("2_level")
@@ -65,6 +73,7 @@ level = 9
 base_damage = 20.0
 cooldown_seconds = 1.52
 mark_radius_meters = 0.56
+range_meters = 7.8
 
 [sub_resource type="Resource" id="Resource_level_10"]
 script = ExtResource("2_level")
@@ -72,6 +81,7 @@ level = 10
 base_damage = 22.0
 cooldown_seconds = 1.46
 mark_radius_meters = 0.58
+range_meters = 7.9
 
 [resource]
 script = ExtResource("1_weapon")
