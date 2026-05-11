@@ -225,7 +225,11 @@ func _ensure_minimal_hud() -> void:
 		_hud_label = Label.new()
 		_hud_label.name = "FirstPlayableHudLabel"
 		_hud_label.position = Vector2(16.0, 12.0)
+		_hud_label.custom_minimum_size = Vector2(240.0, 96.0)
 		_hud_label.add_theme_font_size_override("font_size", 22)
+		_hud_label.add_theme_color_override("font_color", Color(0.04, 0.035, 0.03, 1.0))
+		_hud_label.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.86, 0.85))
+		_hud_label.add_theme_constant_override("outline_size", 3)
 		hud.add_child(_hud_label)
 	_update_hud()
 
@@ -233,10 +237,13 @@ func _ensure_minimal_hud() -> void:
 func _update_hud() -> void:
 	if _hud_label == null:
 		return
-	_hud_label.text = "HP: %d/%d  XP: %d" % [
+	_hud_label.text = "HP: %d/%d\nXP: %d\nEnemies: %d/%d\nTime: %s" % [
 		roundi(debug_player_health()),
 		roundi(debug_player_max_health()),
 		_xp_total,
+		_active_enemy_count(),
+		_enemy_budget(),
+		_format_run_time(_run_time_seconds()),
 	]
 
 
@@ -326,3 +333,35 @@ func _pagecraft_root() -> Node3D:
 
 func _pagecraft_manager() -> Node:
 	return _pagecraft_root().get_node_or_null("PagecraftManager")
+
+
+func _run_director() -> Node:
+	return _run_root().get_node_or_null("RunDirector")
+
+
+func _active_enemy_count() -> int:
+	var director := _run_director()
+	if director != null and director.has_method("debug_active_enemy_count"):
+		return director.debug_active_enemy_count()
+	return 0
+
+
+func _enemy_budget() -> int:
+	var director := _run_director()
+	if director != null and director.has_method("debug_active_budget"):
+		return director.debug_active_budget()
+	return 0
+
+
+func _run_time_seconds() -> float:
+	var director := _run_director()
+	if director != null and director.has_method("debug_run_time"):
+		return director.debug_run_time()
+	return 0.0
+
+
+func _format_run_time(total_seconds: float) -> String:
+	var whole_seconds := maxi(0, floori(total_seconds))
+	var minutes := whole_seconds / 60
+	var seconds := whole_seconds % 60
+	return "%02d:%02d" % [minutes, seconds]

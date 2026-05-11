@@ -3,7 +3,7 @@ extends Node
 
 @export_range(0.01, 1.0, 0.01) var follow_smoothing_seconds := 0.12
 @export_range(0.0, 2.0, 0.01) var lookahead_seconds := 0.18
-@export var page_half_extents := Vector2(4.5, 2.8)
+@export var page_half_extents := Vector2(3.0, 1.8)
 
 var _target: Node3D
 var _camera_rig: Node3D
