@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_assert_true(manager != null and manager.has_method("debug_active_count"), "damage number manager must exist", failures)
 
 	if bus != null and manager != null:
+		var active_before: int = manager.debug_active_count()
 		bus.emit_damage_resolved({
 			"source_id": &"smoke_weapon",
 			"target_id": &"target_dummy",
@@ -29,7 +30,7 @@ func _initialize() -> void:
 		})
 		await process_frame
 
-		_assert_equal(manager.debug_active_count(), 1, "damage event must spawn one active pooled number", failures)
+		_assert_equal(manager.debug_active_count(), active_before + 1, "damage event must spawn one active pooled number", failures)
 		_assert_true(_has_visible_number_text(damage_root, "7"), "damage number text must show resolved amount", failures)
 		_assert_true(manager.debug_spawned_count() >= 1, "damage manager must expose pool spawned count", failures)
 
