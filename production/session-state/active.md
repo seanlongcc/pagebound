@@ -64,6 +64,8 @@
 - `src/weapons/`
 - `src/pagecraft/`
 - `src/runtime/first_playable_runtime.gd`
+- `src/runtime/run_director.gd`
+- `src/pickups/`
 - `tests/smoke/schema_smoke_check.gd`
 - `tests/smoke/player_movement_smoke_check.gd`
 - `tests/smoke/camera_follow_smoke_check.gd`
@@ -72,10 +74,15 @@
 - `tests/smoke/combat_prototype_smoke_check.gd`
 - `tests/smoke/pagecraft_smoke_check.gd`
 - `tests/smoke/first_playable_smoke_check.gd`
+- `tests/smoke/xp_pickup_smoke_check.gd`
+- `tests/smoke/run_director_smoke_check.gd`
+- `tests/smoke/enemy_loop_smoke_check.gd`
+- `tests/smoke/hud_counters_smoke_check.gd`
+- `tests/smoke/page_bounds_smoke_check.gd`
 
 ## Next
 
-First playable foundation is now in place. Next practical work: complete remaining Technical Setup architecture/control artifacts tracked by `pagebound-kos`, expand Resource schemas toward full `.tres` authored MVP counts, add a real run director/spawner, and replace primitive placeholders only after asset provenance is recorded.
+First playable MVP runtime foundation is now in place. Next practical work: expand Resource schemas toward full `.tres` authored MVP counts, add draft/level-up flow, broaden weapon/passive content, and replace primitive placeholders only after asset provenance is recorded.
 
 ## Validation
 
@@ -87,11 +94,16 @@ First playable foundation is now in place. Next practical work: complete remaini
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/damage_numbers_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/combat_prototype_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/pagecraft_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/xp_pickup_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/run_director_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/enemy_loop_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/hud_counters_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/page_bounds_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/first_playable_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --quit-after 1` ran the configured main scene without shell validation errors.
 - Godot AI addon is copied to `addons/godot_ai/` and enabled in `project.godot`; MCP endpoint `http://127.0.0.1:8000/mcp` is not running until the Godot editor opens with the plugin active.
 - MVP Systems Design gate passed on 2026-05-11 with accepted risks documented in `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
-- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, camera follow, runtime event bus, damage model, pooled damage numbers, one chaser enemy, one auto weapon, visible HP/XP HUD, visible Color Mote XP drop on enemy death, player contact damage, finite page bounds clamp, visible Pagecraft marks, and dash activation of marks. `move_up`/W now moves toward negative Z/page top.
+- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, camera follow, runtime event bus, damage model, pooled damage numbers, a scene-owned run director, two placeholder enemy families (`inkling_chaser` and `paper_scrap_swarmer`), one auto weapon, visible HP/XP/enemy/time HUD, collectible Color Mote XP drops, 50 player HP, 5 enemy contact damage, finite page bounds clamp, finite spawn bounds, visible Pagecraft marks, and dash activation of marks. XP awards only after pickup collection. Dead enemies visibly despawn, stop physics, disable collision, and stop being targetable. `move_up`/W now moves toward negative Z/page top.
 
 ## Asset Direction Pass
 
