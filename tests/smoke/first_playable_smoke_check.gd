@@ -1,0 +1,95 @@
+extends SceneTree
+
+const MAIN_SCENE := "res://Main.tscn"
+
+
+func _initialize() -> void:
+	var failures: Array[String] = []
+	var root := _load_main(failures)
+	if root == null:
+		_finish(failures)
+		return
+
+	await process_frame
+	await physics_frame
+
+	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
+	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser")
+	var enemy_health: Node = null
+	if enemy != null:
+		enemy_health = enemy.get_node_or_null("HealthComponent")
+	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
+	var damage_manager := root.get_node_or_null("RunRoot/DamageNumbers/DamageNumberManager")
+	var pagecraft_manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
+	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	var camera := root.get_node_or_null("RunRoot/CameraRig/Camera3D") as Camera3D
+
+	_assert_true(player is CharacterBody3D, "player must exist as CharacterBody3D", failures)
+	_assert_true(enemy is CharacterBody3D, "enemy must spawn as CharacterBody3D", failures)
+	_assert_true(enemy_health != null and enemy_health.has_method("is_alive"), "enemy must own health", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_hit_count"), "auto weapon manager must exist", failures)
+	_assert_true(damage_manager != null and damage_manager.has_method("debug_spawned_count"), "damage number manager must exist", failures)
+	_assert_true(pagecraft_manager != null and pagecraft_manager.has_method("debug_mark_count"), "Pagecraft manager must exist", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_xp_total"), "runtime XP stub must exist", failures)
+	_assert_true(camera != null and camera.current, "gameplay camera must be current", failures)
+
+	if player != null and player.has_method("debug_integrate"):
+		var start_position: Vector3 = player.global_position
+		player.debug_integrate(Vector2.RIGHT, false, 0.25)
+		_assert_true(player.global_position.x > start_position.x + 0.1, "player must move", failures)
+
+	var starting_enemy_distance := 999.0
+	if enemy != null and enemy.has_method("debug_distance_to_target"):
+		starting_enemy_distance = enemy.debug_distance_to_target()
+
+	for index in 420:
+		await physics_frame
+
+	if enemy != null and enemy.has_method("debug_distance_to_target"):
+		_assert_true(enemy.debug_distance_to_target() < starting_enemy_distance, "enemy must chase player", failures)
+	if weapon_manager != null:
+		_assert_true(weapon_manager.debug_hit_count() > 0, "auto weapon must hit", failures)
+	if enemy_health != null:
+		_assert_true(not enemy_health.is_alive(), "enemy must die", failures)
+	if damage_manager != null:
+		_assert_true(damage_manager.debug_spawned_count() > 0, "damage numbers must spawn", failures)
+	if runtime != null:
+		_assert_true(runtime.debug_xp_total() >= 1, "XP stub must reward enemy death", failures)
+	if pagecraft_manager != null:
+		_assert_true(pagecraft_manager.debug_mark_count() > 0, "weapon must leave Pagecraft mark", failures)
+
+	if player != null and pagecraft_manager != null and pagecraft_manager.has_method("debug_first_mark_position"):
+		var mark_position: Vector3 = pagecraft_manager.debug_first_mark_position()
+		player.global_position = mark_position - Vector3.RIGHT * 0.5
+		player.debug_integrate(Vector2.RIGHT, true, 0.01)
+		player.debug_integrate(Vector2.ZERO, false, 0.25)
+		_assert_true(pagecraft_manager.debug_activation_count() > 0, "dash must activate Pagecraft mark", failures)
+
+	root.queue_free()
+	await process_frame
+	_finish(failures)
+
+
+func _load_main(failures: Array[String]) -> Node:
+	var packed_scene := load(MAIN_SCENE) as PackedScene
+	_assert_true(packed_scene != null, "Main.tscn must load", failures)
+	if packed_scene == null:
+		return null
+	var root := packed_scene.instantiate()
+	get_root().add_child(root)
+	return root
+
+
+func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
+	if not value:
+		failures.append(message)
+
+
+func _finish(failures: Array[String]) -> void:
+	if failures.is_empty():
+		print("first playable smoke check passed")
+		quit(0)
+		return
+
+	push_error("first playable smoke check failed:\n- " + "\n- ".join(failures))
+	quit(1)

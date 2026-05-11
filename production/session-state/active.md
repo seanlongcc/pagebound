@@ -1,10 +1,10 @@
 # Active Session State
 
-**Task**: MVP Systems Design Complete
-**Status**: Gate Passed
+**Task**: First Playable Foundation
+**Status**: Implemented and smoke validated
 **Stage**: Technical Setup
 **Review Mode**: lean
-**Current Section**: Systems Design gate passed; architecture and schema implementation next
+**Current Section**: First playable combat/Pagecraft foundation on `feat/mvp`
 
 ## Files
 
@@ -45,17 +45,53 @@
 - `design/gdd/in-run-hud-and-draft-ui.md`
 - `design/gdd/reviews/mvp-systems-design-review-2026-05-11.md`
 - `production/gates/systems-design-to-technical-setup-2026-05-11.md`
+- `docs/architecture/ADR-0001-resource-schema-foundation.md`
+- `docs/architecture/ADR-0002-first-playable-player-input.md`
+- `docs/architecture/ADR-0003-gameplay-camera-follow.md`
+- `docs/architecture/ADR-0004-runtime-events-damage-model.md`
+- `docs/architecture/ADR-0005-pooled-damage-feedback.md`
+- `docs/architecture/ADR-0006-first-combat-prototype.md`
+- `docs/architecture/ADR-0007-pagecraft-mvp-hook.md`
+- `src/data/`
+- `src/input/`
+- `src/player/`
+- `src/camera/`
+- `src/events/`
+- `src/combat/`
+- `src/pooling/`
+- `src/feedback/`
+- `src/enemies/`
+- `src/weapons/`
+- `src/pagecraft/`
+- `src/runtime/first_playable_runtime.gd`
+- `tests/smoke/schema_smoke_check.gd`
+- `tests/smoke/player_movement_smoke_check.gd`
+- `tests/smoke/camera_follow_smoke_check.gd`
+- `tests/smoke/damage_model_smoke_check.gd`
+- `tests/smoke/damage_numbers_smoke_check.gd`
+- `tests/smoke/combat_prototype_smoke_check.gd`
+- `tests/smoke/pagecraft_smoke_check.gd`
+- `tests/smoke/first_playable_smoke_check.gd`
 
 ## Next
 
-Begin Technical Setup. Recommended next practical build step is Resource Data Schemas implementation: typed Resource classes, registries, placeholder content, and schema smoke validation. Parallel planning work should create architecture/ADR artifacts for scene/service ownership, schema registry, event bus, input, pooling, and save/migration.
+First playable foundation is now in place. Next practical work: complete remaining Technical Setup architecture/control artifacts tracked by `pagebound-kos`, expand Resource schemas toward full `.tres` authored MVP counts, add a real run director/spawner, and replace primitive placeholders only after asset provenance is recorded.
 
 ## Validation
 
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/shell_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/schema_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/player_movement_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/camera_follow_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/damage_model_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/damage_numbers_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/combat_prototype_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/pagecraft_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/first_playable_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --quit-after 1` ran the configured main scene without shell validation errors.
 - Godot AI addon is copied to `addons/godot_ai/` and enabled in `project.godot`; MCP endpoint `http://127.0.0.1:8000/mcp` is not running until the Godot editor opens with the plugin active.
 - MVP Systems Design gate passed on 2026-05-11 with accepted risks documented in `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
+- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, camera follow, runtime event bus, damage model, pooled damage numbers, one chaser enemy, one auto weapon, XP reward stub, visible Pagecraft marks, and dash activation of marks.
 
 ## Asset Direction Pass
 
