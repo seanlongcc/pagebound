@@ -9,7 +9,7 @@ const HealthComponentScript := preload("res://src/combat/health_component.gd")
 const PlayerControllerScript := preload("res://src/player/player_controller.gd")
 const PagecraftManagerScript := preload("res://src/pagecraft/pagecraft_manager.gd")
 const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.gd")
-const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
+const RunDirectorScript := preload("res://src/runtime/run_director.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -45,7 +45,7 @@ func _start_first_playable_loop() -> void:
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
 	_spawn_player()
-	_spawn_enemy()
+	_ensure_run_director()
 	_ensure_weapon_manager()
 
 
@@ -121,22 +121,6 @@ func _spawn_player() -> void:
 	_connect_player_dash(player_body)
 
 
-func _spawn_enemy() -> void:
-	if _enemies_root().get_node_or_null("InklingChaser") != null:
-		return
-	var enemy_data = _content_factory.inkling_chaser_enemy()
-	var enemy_body := CharacterBody3D.new()
-	enemy_body.name = "InklingChaser"
-	enemy_body.set_script(ChaserEnemyScript)
-	_enemies_root().add_child(enemy_body)
-	enemy_body.global_position = Vector3(5.0, 0.0, 1.5)
-	if enemy_body.has_method("configure"):
-		enemy_body.configure(enemy_data, player())
-	var health := _ensure_health(enemy_body, enemy_data.id, enemy_data.max_health, &"enemy")
-	if enemy_body.has_method("set_health_component"):
-		enemy_body.set_health_component(health)
-
-
 func _ensure_weapon_manager() -> void:
 	var manager := _projectiles_root().get_node_or_null("WeaponManager")
 	if manager == null:
@@ -145,6 +129,16 @@ func _ensure_weapon_manager() -> void:
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
 		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager())
+
+
+func _ensure_run_director() -> void:
+	var director := _run_root().get_node_or_null("RunDirector")
+	if director == null:
+		director = RunDirectorScript.new()
+		director.name = "RunDirector"
+		_run_root().add_child(director)
+	if director.has_method("configure"):
+		director.configure(_enemies_root(), player(), _content_factory, Vector2(7.7, 4.7))
 
 
 func _ensure_pagecraft_manager() -> void:
