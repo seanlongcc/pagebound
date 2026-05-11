@@ -336,7 +336,7 @@ func _ensure_minimal_hud() -> void:
 func _update_hud() -> void:
 	if _hud_label == null:
 		return
-	_hud_label.text = "HP: %d/%d\nLevel: %d\nXP: %d/%d\nEnemies: %d/%d\nTime: %s" % [
+	_hud_label.text = "HP: %d/%d\nLevel: %d\nXP: %d/%d\nEnemies: %d/%d\nBudget: %d\nSpawned: %d\nTime: %s" % [
 		roundi(debug_player_health()),
 		roundi(debug_player_max_health()),
 		debug_run_level(),
@@ -344,6 +344,8 @@ func _update_hud() -> void:
 		debug_xp_threshold(),
 		_active_enemy_count(),
 		_enemy_budget(),
+		_enemy_budget(),
+		_spawned_count(),
 		_format_run_time(_run_time_seconds()),
 	]
 
@@ -474,6 +476,13 @@ func _enemy_budget() -> int:
 	var director := _run_director()
 	if director != null and director.has_method("debug_active_budget"):
 		return director.debug_active_budget()
+	return 0
+
+
+func _spawned_count() -> int:
+	var director := _run_director()
+	if director != null and director.has_method("debug_spawned_count"):
+		return director.debug_spawned_count()
 	return 0
 
 

@@ -3,6 +3,12 @@ extends Node
 
 const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
+const TIME_BANDS := [
+	{"id": &"opening", "start_seconds": 0.0, "budget": 4, "spawn_interval": 0.9},
+	{"id": &"first_pressure", "start_seconds": 60.0, "budget": 6, "spawn_interval": 0.75},
+	{"id": &"ink_surge", "start_seconds": 120.0, "budget": 8, "spawn_interval": 0.6},
+	{"id": &"page_crush", "start_seconds": 240.0, "budget": 10, "spawn_interval": 0.5},
+]
 
 @export_range(1, 128, 1) var active_budget := 4
 @export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := 0.9
@@ -14,6 +20,7 @@ var _content_factory
 var _spawn_timer := 0.0
 var _run_time := 0.0
 var _spawned_count := 0
+var _current_time_band_id: StringName = &"opening"
 var _spawned_enemy_ids: Array[StringName] = []
 
 
@@ -21,6 +28,7 @@ func _physics_process(delta: float) -> void:
 	if _enemies_root == null or _target == null or _content_factory == null:
 		return
 	_run_time += delta
+	_apply_time_band(_run_time)
 	_spawn_timer = maxf(0.0, _spawn_timer - delta)
 	if _spawn_timer <= 0.0 and debug_active_enemy_count() < active_budget:
 		_spawn_enemy(_next_enemy_data())
@@ -33,6 +41,7 @@ func configure(enemies_root: Node3D, target: Node3D, content_factory, new_page_h
 	_target = target
 	_content_factory = content_factory
 	page_half_extents = new_page_half_extents
+	_apply_time_band(_run_time)
 	if _spawned_count == 0 and debug_active_enemy_count() == 0:
 		_spawn_enemy(_next_enemy_data())
 		_spawn_timer = spawn_interval_seconds
@@ -46,6 +55,23 @@ func debug_run_time() -> float:
 ## Returns total enemies spawned by the director.
 func debug_spawned_count() -> int:
 	return _spawned_count
+
+
+## Returns current spawn interval after time-band tuning.
+func debug_spawn_interval_seconds() -> float:
+	return spawn_interval_seconds
+
+
+## Returns current director pressure time-band ID.
+func debug_current_time_band_id() -> StringName:
+	return _current_time_band_id
+
+
+## Forces elapsed run time for smoke checks and applies pressure band tuning.
+func debug_force_run_time(seconds: float) -> void:
+	_run_time = maxf(0.0, seconds)
+	_apply_time_band(_run_time)
+	_spawn_timer = minf(_spawn_timer, spawn_interval_seconds)
 
 
 ## Returns enemy family IDs spawned during this run.
@@ -122,6 +148,16 @@ func _next_enemy_data() -> Resource:
 		if not enemy_pool.is_empty():
 			return enemy_pool[_spawned_count % enemy_pool.size()]
 	return _content_factory.inkling_chaser_enemy()
+
+
+func _apply_time_band(run_time_seconds: float) -> void:
+	var selected_band := TIME_BANDS[0]
+	for band in TIME_BANDS:
+		if run_time_seconds >= float(band["start_seconds"]):
+			selected_band = band
+	active_budget = int(selected_band["budget"])
+	spawn_interval_seconds = float(selected_band["spawn_interval"])
+	_current_time_band_id = selected_band["id"]
 
 
 func _spawn_position(spawn_number: int) -> Vector3:
