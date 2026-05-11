@@ -4,6 +4,7 @@ extends Node
 signal damage_resolved(event: Dictionary)
 signal entity_died(event: Dictionary)
 signal xp_awarded(event: Dictionary)
+signal run_level_gained(event: Dictionary)
 signal pagecraft_mark_deposited(event: Dictionary)
 signal pagecraft_mark_activated(event: Dictionary)
 
@@ -21,6 +22,11 @@ func emit_entity_died(event: Dictionary) -> void:
 ## Emits an XP reward fact.
 func emit_xp_awarded(event: Dictionary) -> void:
 	xp_awarded.emit(event)
+
+
+## Emits a run level-up fact.
+func emit_run_level_gained(event: Dictionary) -> void:
+	run_level_gained.emit(event)
 
 
 ## Emits a Pagecraft mark deposit fact.

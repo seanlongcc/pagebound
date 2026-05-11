@@ -10,6 +10,7 @@ const PlayerControllerScript := preload("res://src/player/player_controller.gd")
 const PagecraftManagerScript := preload("res://src/pagecraft/pagecraft_manager.gd")
 const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.gd")
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
+const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -19,8 +20,8 @@ const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
 var _input_actions = InputActionsScript.new()
 var _content_factory = PrototypeContentFactoryScript.new()
 var _damage_model = DamageModelScript.new()
+var _level_tracker = RunLevelTrackerScript.new()
 var _event_bus: Node
-var _xp_total := 0
 var _contact_damage_cooldown_remaining := 0.0
 var _hud_label: Label
 
@@ -66,7 +67,32 @@ func damage_model():
 
 ## Returns first-playable XP total for smoke/debug checks.
 func debug_xp_total() -> int:
-	return _xp_total
+	return _level_tracker.total_xp()
+
+
+## Returns first-playable run level for smoke/debug checks.
+func debug_run_level() -> int:
+	return _level_tracker.run_level()
+
+
+## Returns XP progress within current run level.
+func debug_current_level_xp() -> int:
+	return _level_tracker.current_level_xp()
+
+
+## Returns XP needed for the next run level.
+func debug_xp_threshold() -> int:
+	return _level_tracker.xp_threshold_for_next_level()
+
+
+## Returns count of emitted level-ups for smoke/debug checks.
+func debug_level_up_count() -> int:
+	return _level_tracker.level_up_count()
+
+
+## Spawns a Color Mote for smoke checks.
+func debug_spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
+	_spawn_xp_pickup(world_position, amount)
 
 
 ## Returns first-playable player health for smoke/debug checks.
@@ -94,6 +120,7 @@ func _ensure_runtime_services() -> void:
 	_damage_model.configure(_event_bus)
 	if _event_bus.has_signal("entity_died") and not _event_bus.entity_died.is_connected(_on_entity_died):
 		_event_bus.entity_died.connect(_on_entity_died)
+	_level_tracker.configure(_event_bus)
 
 
 func _ensure_damage_number_manager() -> void:
@@ -187,13 +214,7 @@ func _on_entity_died(event: Dictionary) -> void:
 
 
 func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
-	_xp_total += amount
-	if _event_bus != null and _event_bus.has_method("emit_xp_awarded"):
-		_event_bus.emit_xp_awarded({
-			"amount": amount,
-			"total": _xp_total,
-			"source_id": &"color_mote",
-		})
+	_level_tracker.add_xp(amount, &"color_mote")
 	_update_hud()
 
 
@@ -237,10 +258,12 @@ func _ensure_minimal_hud() -> void:
 func _update_hud() -> void:
 	if _hud_label == null:
 		return
-	_hud_label.text = "HP: %d/%d\nXP: %d\nEnemies: %d/%d\nTime: %s" % [
+	_hud_label.text = "HP: %d/%d\nLevel: %d\nXP: %d/%d\nEnemies: %d/%d\nTime: %s" % [
 		roundi(debug_player_health()),
 		roundi(debug_player_max_health()),
-		_xp_total,
+		debug_run_level(),
+		debug_current_level_xp(),
+		debug_xp_threshold(),
 		_active_enemy_count(),
 		_enemy_budget(),
 		_format_run_time(_run_time_seconds()),
