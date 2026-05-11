@@ -1,0 +1,137 @@
+[gd_scene load_steps=4 format=3 uid="uid://pagebound_main_shell"]
+
+[ext_resource type="Script" path="res://src/shell/game_bootstrap.gd" id="1_bootstrap"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_page"]
+albedo_color = Color(0.93, 0.88, 0.74, 1)
+roughness = 0.9
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_page"]
+material = SubResource("StandardMaterial3D_page")
+size = Vector2(16, 10)
+
+[sub_resource type="Environment" id="Environment_shell"]
+background_mode = 1
+background_color = Color(0.72, 0.77, 0.82, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 0.96, 0.88, 1)
+ambient_light_energy = 0.35
+tonemap_mode = 2
+
+[node name="Main" type="Node3D"]
+
+[node name="GameBootstrap" type="Node" parent="."]
+script = ExtResource("1_bootstrap")
+
+[node name="RunRoot" type="Node3D" parent="."]
+
+[node name="LevelRoot" type="Node3D" parent="RunRoot"]
+
+[node name="PageGround" type="MeshInstance3D" parent="RunRoot/LevelRoot"]
+mesh = SubResource("PlaneMesh_page")
+
+[node name="EnvironmentProps" type="Node3D" parent="RunRoot/LevelRoot"]
+
+[node name="Boundaries" type="Node3D" parent="RunRoot/LevelRoot"]
+
+[node name="SpawnZones" type="Node3D" parent="RunRoot/LevelRoot"]
+
+[node name="QuestLocations" type="Node3D" parent="RunRoot/LevelRoot"]
+
+[node name="Actors" type="Node3D" parent="RunRoot"]
+
+[node name="Players" type="Node3D" parent="RunRoot/Actors"]
+
+[node name="Pets" type="Node3D" parent="RunRoot/Actors"]
+
+[node name="Enemies" type="Node3D" parent="RunRoot/Actors"]
+
+[node name="Bosses" type="Node3D" parent="RunRoot/Actors"]
+
+[node name="Projectiles" type="Node3D" parent="RunRoot"]
+
+[node name="Pagecraft" type="Node3D" parent="RunRoot"]
+
+[node name="Pickups" type="Node3D" parent="RunRoot"]
+
+[node name="VFX" type="Node3D" parent="RunRoot"]
+
+[node name="DamageNumbers" type="Node3D" parent="RunRoot"]
+
+[node name="CameraRig" type="Node3D" parent="RunRoot"]
+
+[node name="Camera3D" type="Camera3D" parent="RunRoot/CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 0.573576, 0.819152, 0, -0.819152, 0.573576, 0, 6, 7)
+current = true
+fov = 42.0
+
+[node name="Lighting" type="Node3D" parent="RunRoot"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="RunRoot/Lighting"]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 0, 0)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="RunRoot/Lighting"]
+environment = SubResource("Environment_shell")
+
+[node name="OptionalLocalLights" type="Node3D" parent="RunRoot/Lighting"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModalLayer" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+z_index = 10
+
+[node name="LevelUpScreen" type="Control" parent="UI/ModalLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PauseMenu" type="Control" parent="UI/ModalLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VictoryScreen" type="Control" parent="UI/ModalLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DebugOverlay" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+z_index = 20
