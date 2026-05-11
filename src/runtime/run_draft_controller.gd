@@ -22,6 +22,7 @@ const PROTOTYPE_CHOICES := [
 var _event_bus: Node
 var _modal_layer: Control
 var _level_up_screen: Control
+var _choice_provider
 var _choice_buttons: Array[Button] = []
 var _current_choices: Array[Dictionary] = []
 var _draft_open := false
@@ -35,10 +36,11 @@ func _ready() -> void:
 
 
 ## Connects draft UI to runtime events and existing shell UI slots.
-func configure(event_bus: Node, modal_layer: Control, level_up_screen: Control) -> void:
+func configure(event_bus: Node, modal_layer: Control, level_up_screen: Control, choice_provider = null) -> void:
 	_event_bus = event_bus
 	_modal_layer = modal_layer
 	_level_up_screen = level_up_screen
+	_choice_provider = choice_provider
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_set_always_process(_modal_layer)
 	_set_always_process(_level_up_screen)
@@ -66,6 +68,15 @@ func debug_selected_choice_id() -> StringName:
 ## Accepts focused/default choice for smoke tests and keyboard/gamepad flow.
 func accept_focused_choice() -> void:
 	_select_choice_index(_focused_choice_index)
+
+
+## Focuses a visible choice by index for keyboard/gamepad smoke flow.
+func focus_choice_index(choice_index: int) -> void:
+	if choice_index < 0 or choice_index >= _current_choices.size():
+		return
+	_focused_choice_index = choice_index
+	if choice_index < _choice_buttons.size():
+		_choice_buttons[choice_index].grab_focus()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -160,6 +171,10 @@ func _sync_choice_buttons() -> void:
 
 func _prototype_choices() -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
+	if _choice_provider != null and _choice_provider.has_method("prototype_choices"):
+		for choice in _choice_provider.prototype_choices():
+			choices.append(choice.duplicate(true))
+		return choices
 	for choice in PROTOTYPE_CHOICES:
 		choices.append(choice.duplicate(true))
 	return choices

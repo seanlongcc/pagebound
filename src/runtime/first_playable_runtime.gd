@@ -12,6 +12,7 @@ const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
 const RunDraftControllerScript := preload("res://src/runtime/run_draft_controller.gd")
 const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
+const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -22,6 +23,7 @@ var _input_actions = InputActionsScript.new()
 var _content_factory = PrototypeContentFactoryScript.new()
 var _damage_model = DamageModelScript.new()
 var _level_tracker = RunLevelTrackerScript.new()
+var _upgrade_state = RunUpgradeStateScript.new()
 var _event_bus: Node
 var _draft_controller: Node
 var _contact_damage_cooldown_remaining := 0.0
@@ -116,11 +118,32 @@ func debug_accept_focused_draft_choice() -> void:
 		_draft_controller.accept_focused_choice()
 
 
+## Focuses a draft choice for smoke checks.
+func debug_focus_draft_choice_index(choice_index: int) -> void:
+	if _draft_controller != null and _draft_controller.has_method("focus_choice_index"):
+		_draft_controller.focus_choice_index(choice_index)
+
+
 ## Returns last selected draft choice ID for smoke checks.
 func debug_selected_draft_choice_id() -> StringName:
 	if _draft_controller == null or not _draft_controller.has_method("debug_selected_choice_id"):
 		return &""
 	return _draft_controller.debug_selected_choice_id()
+
+
+## Applies a prototype upgrade choice for smoke/debug checks.
+func debug_apply_upgrade_choice(choice_id: StringName) -> void:
+	_apply_upgrade_choice(choice_id)
+
+
+## Returns current Waxlight damage bonus.
+func debug_waxlight_damage_bonus() -> float:
+	return _upgrade_state.waxlight_damage_bonus()
+
+
+## Returns current Waxlight cooldown multiplier.
+func debug_waxlight_cooldown_multiplier() -> float:
+	return _upgrade_state.waxlight_cooldown_multiplier()
 
 
 ## Returns first-playable player health for smoke/debug checks.
@@ -148,6 +171,8 @@ func _ensure_runtime_services() -> void:
 	_damage_model.configure(_event_bus)
 	if _event_bus.has_signal("entity_died") and not _event_bus.entity_died.is_connected(_on_entity_died):
 		_event_bus.entity_died.connect(_on_entity_died)
+	if _event_bus.has_signal("draft_choice_selected") and not _event_bus.draft_choice_selected.is_connected(_on_draft_choice_selected):
+		_event_bus.draft_choice_selected.connect(_on_draft_choice_selected)
 	_level_tracker.configure(_event_bus)
 
 
@@ -183,7 +208,7 @@ func _ensure_weapon_manager() -> void:
 		manager.name = "WeaponManager"
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager())
+		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager(), _upgrade_state)
 
 
 func _ensure_run_director() -> void:
@@ -213,7 +238,7 @@ func _ensure_draft_controller() -> void:
 		_draft_controller.name = "RunDraftController"
 		_run_root().add_child(_draft_controller)
 	if _draft_controller.has_method("configure"):
-		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen())
+		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen(), _upgrade_state)
 
 
 func _connect_player_dash(player_body: Node) -> void:
@@ -253,6 +278,21 @@ func _on_entity_died(event: Dictionary) -> void:
 
 func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
 	_level_tracker.add_xp(amount, &"color_mote")
+	_update_hud()
+
+
+func _on_draft_choice_selected(event: Dictionary) -> void:
+	_apply_upgrade_choice(event.get("choice_id", &""))
+
+
+func _apply_upgrade_choice(choice_id: StringName) -> void:
+	var upgrade_event := _upgrade_state.apply_choice(choice_id)
+	if upgrade_event.is_empty():
+		return
+	_apply_player_upgrade_effects(upgrade_event)
+	_refresh_weapon_runtime_modifiers()
+	if _event_bus != null and _event_bus.has_method("emit_upgrade_applied"):
+		_event_bus.emit_upgrade_applied(upgrade_event)
 	_update_hud()
 
 
@@ -327,6 +367,21 @@ func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
 		pickup.configure(amount, player())
 	if pickup.has_signal("collected") and not pickup.collected.is_connected(_on_xp_pickup_collected):
 		pickup.collected.connect(_on_xp_pickup_collected)
+
+
+func _apply_player_upgrade_effects(upgrade_event: Dictionary) -> void:
+	var max_health_delta := float(upgrade_event.get("player_max_health_delta", 0.0))
+	if max_health_delta == 0.0:
+		return
+	var health := _player_health()
+	if health != null and health.has_method("add_max_health"):
+		health.add_max_health(max_health_delta, true)
+
+
+func _refresh_weapon_runtime_modifiers() -> void:
+	var manager := _projectiles_root().get_node_or_null("WeaponManager")
+	if manager != null and manager.has_method("refresh_runtime_modifiers"):
+		manager.refresh_runtime_modifiers()
 
 
 func _event_position(event: Dictionary) -> Vector3:

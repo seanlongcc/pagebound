@@ -11,6 +11,7 @@ var _marks: Array[Dictionary] = []
 var _activation_count := 0
 var _activation_damage_count := 0
 var _last_activation_damage := 0.0
+var _last_mark_position := Vector3.ZERO
 var _pulse_count := 0
 
 
@@ -43,6 +44,7 @@ func deposit_mark(
 		"activated": false,
 	}
 	_marks.append(mark)
+	_last_mark_position = mark["position"]
 	_emit_deposited(mark)
 
 
@@ -74,6 +76,11 @@ func debug_activation_damage_count() -> int:
 ## Returns the last dash activation damage amount for smoke/debug checks.
 func debug_last_activation_damage() -> float:
 	return _last_activation_damage
+
+
+## Returns the most recently deposited mark position for smoke/debug checks.
+func debug_last_mark_position() -> Vector3:
+	return _last_mark_position
 
 
 ## Returns primitive pulse visual count for smoke/debug checks.

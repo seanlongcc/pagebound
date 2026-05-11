@@ -7,6 +7,7 @@ signal xp_awarded(event: Dictionary)
 signal run_level_gained(event: Dictionary)
 signal draft_opened(event: Dictionary)
 signal draft_choice_selected(event: Dictionary)
+signal upgrade_applied(event: Dictionary)
 signal pagecraft_mark_deposited(event: Dictionary)
 signal pagecraft_mark_activated(event: Dictionary)
 
@@ -39,6 +40,11 @@ func emit_draft_opened(event: Dictionary) -> void:
 ## Emits a draft choice selected fact.
 func emit_draft_choice_selected(event: Dictionary) -> void:
 	draft_choice_selected.emit(event)
+
+
+## Emits a runtime upgrade applied fact.
+func emit_upgrade_applied(event: Dictionary) -> void:
+	upgrade_applied.emit(event)
 
 
 ## Emits a Pagecraft mark deposit fact.

@@ -60,3 +60,21 @@ func reset_health(new_max_health: float = -1.0) -> void:
 		max_health = new_max_health
 	current_health = max_health
 	_death_emitted = false
+
+
+## Increases max health and optionally heals by the added amount.
+func add_max_health(delta: float, heal_added_amount: bool = true) -> Dictionary:
+	var previous_max_health := max_health
+	var previous_health := current_health
+	max_health = maxf(1.0, max_health + delta)
+	if heal_added_amount:
+		current_health = clampf(current_health + delta, 0.0, max_health)
+	else:
+		current_health = clampf(current_health, 0.0, max_health)
+	health_changed.emit(previous_health, current_health)
+	return {
+		"previous_max_health": previous_max_health,
+		"max_health": max_health,
+		"previous_health": previous_health,
+		"current_health": current_health,
+	}
