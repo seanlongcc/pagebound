@@ -3,6 +3,7 @@ extends Node
 
 const InputActionsScript := preload("res://src/input/input_actions.gd")
 const DamageModelScript := preload("res://src/combat/damage_model.gd")
+const DamageNumberManagerScript := preload("res://src/feedback/damage_number_manager.gd")
 const GameplayCameraFollowScript := preload("res://src/camera/gameplay_camera_follow.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
 const PlayerControllerScript := preload("res://src/player/player_controller.gd")
@@ -24,6 +25,7 @@ func _ready() -> void:
 func _start_first_playable_loop() -> void:
 	_input_actions.ensure_default_actions()
 	_ensure_runtime_services()
+	_ensure_damage_number_manager()
 	_spawn_player()
 
 
@@ -49,6 +51,16 @@ func _ensure_runtime_services() -> void:
 		_event_bus.name = "RuntimeEventBus"
 		_run_root().add_child(_event_bus)
 	_damage_model.configure(_event_bus)
+
+
+func _ensure_damage_number_manager() -> void:
+	var manager := _damage_numbers_root().get_node_or_null("DamageNumberManager")
+	if manager == null:
+		manager = DamageNumberManagerScript.new()
+		manager.name = "DamageNumberManager"
+		_damage_numbers_root().add_child(manager)
+	if manager.has_method("configure"):
+		manager.configure(_event_bus, _damage_numbers_root())
 
 
 func _spawn_player() -> void:
@@ -102,3 +114,7 @@ func _camera() -> Camera3D:
 
 func _camera_rig() -> Node3D:
 	return _run_root().get_node("CameraRig") as Node3D
+
+
+func _damage_numbers_root() -> Node3D:
+	return _run_root().get_node("DamageNumbers") as Node3D
