@@ -12,6 +12,7 @@ const TAG_HOSTILE_INK := &"hostile_ink"
 const TAG_PROTOTYPE := &"prototype"
 const WEAPON_WAXLIGHT_COMET := &"waxlight_comet"
 const ENEMY_INKLING_CHASER := &"inkling_chaser"
+const ENEMY_PAPER_SCRAP_SWARMER := &"paper_scrap_swarmer"
 
 
 ## Registers minimal first-playable content into a schema registry.
@@ -20,6 +21,7 @@ func register_minimal_first_playable_content(registry) -> void:
 		registry.register_tag(tag)
 	registry.register_weapon(_waxlight_comet_weapon())
 	registry.register_enemy(_inkling_chaser_enemy())
+	registry.register_enemy(_paper_scrap_swarmer_enemy())
 
 
 ## Creates the placeholder Waxlight Comet weapon data.
@@ -30,6 +32,19 @@ func waxlight_comet_weapon() -> Resource:
 ## Creates the placeholder Inkling Chaser enemy data.
 func inkling_chaser_enemy() -> Resource:
 	return _inkling_chaser_enemy()
+
+
+## Creates the placeholder Paper Scrap Swarmer enemy data.
+func paper_scrap_swarmer_enemy() -> Resource:
+	return _paper_scrap_swarmer_enemy()
+
+
+## Creates the first-playable director enemy pool.
+func first_playable_enemy_pool() -> Array[Resource]:
+	return [
+		_inkling_chaser_enemy(),
+		_paper_scrap_swarmer_enemy(),
+	]
 
 
 func _prototype_tags() -> Array[Resource]:
@@ -65,7 +80,22 @@ func _inkling_chaser_enemy() -> Resource:
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"chaser"
 	enemy.max_health = 18.0
-	enemy.move_speed = 2.6
+	enemy.move_speed = 2.1
+	enemy.contact_damage = 5.0
+	enemy.reward_xp = 1
+	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
+	return enemy
+
+
+func _paper_scrap_swarmer_enemy() -> Resource:
+	var enemy = EnemyDataScript.new()
+	enemy.id = ENEMY_PAPER_SCRAP_SWARMER
+	enemy.display_name = "Paper Scrap Swarmer"
+	enemy.description = "Primitive fast weak swarmer enemy for first playable validation."
+	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
+	enemy.behavior_id = &"swarmer"
+	enemy.max_health = 8.0
+	enemy.move_speed = 4.3
 	enemy.contact_damage = 5.0
 	enemy.reward_xp = 1
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])

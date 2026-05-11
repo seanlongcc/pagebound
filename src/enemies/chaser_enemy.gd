@@ -7,6 +7,8 @@ extends CharacterBody3D
 
 var _target: Node3D
 var _health: Node
+var _enemy_id: StringName
+var _behavior_id: StringName
 
 
 func _ready() -> void:
@@ -31,9 +33,12 @@ func _physics_process(_delta: float) -> void:
 func configure(enemy_data: Resource, target: Node3D) -> void:
 	_target = target
 	if enemy_data != null:
+		_enemy_id = enemy_data.id
+		_behavior_id = enemy_data.behavior_id
 		move_speed = enemy_data.move_speed
 		contact_damage = enemy_data.contact_damage
 		reward_xp = enemy_data.reward_xp
+		_apply_placeholder_profile()
 
 
 ## Assigns the health component used for alive/dead checks.
@@ -46,6 +51,16 @@ func debug_distance_to_target() -> float:
 	if _target == null:
 		return 999.0
 	return global_position.distance_to(_target.global_position)
+
+
+## Returns configured enemy family ID for smoke/debug checks.
+func debug_enemy_id() -> StringName:
+	return _enemy_id
+
+
+## Returns true while this enemy can be targeted by weapons.
+func debug_is_targetable() -> bool:
+	return visible and not _is_dead()
 
 
 func _is_dead() -> bool:
@@ -80,3 +95,15 @@ func _placeholder_material(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	material.roughness = 0.8
 	return material
+
+
+func _apply_placeholder_profile() -> void:
+	var mesh_instance := get_node_or_null("PlaceholderMesh") as MeshInstance3D
+	if mesh_instance == null:
+		return
+	if _behavior_id == &"swarmer":
+		mesh_instance.scale = Vector3(0.72, 0.72, 0.72)
+		mesh_instance.material_override = _placeholder_material(Color(0.46, 0.09, 0.16, 1.0))
+	else:
+		mesh_instance.scale = Vector3(1.15, 1.05, 1.15)
+		mesh_instance.material_override = _placeholder_material(Color(0.06, 0.06, 0.08, 1.0))

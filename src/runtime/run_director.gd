@@ -14,6 +14,7 @@ var _content_factory
 var _spawn_timer := 0.0
 var _run_time := 0.0
 var _spawned_count := 0
+var _spawned_enemy_ids: Array[StringName] = []
 
 
 func _physics_process(delta: float) -> void:
@@ -22,7 +23,7 @@ func _physics_process(delta: float) -> void:
 	_run_time += delta
 	_spawn_timer = maxf(0.0, _spawn_timer - delta)
 	if _spawn_timer <= 0.0 and debug_active_enemy_count() < active_budget:
-		_spawn_enemy(_content_factory.inkling_chaser_enemy())
+		_spawn_enemy(_next_enemy_data())
 		_spawn_timer = spawn_interval_seconds
 
 
@@ -33,7 +34,7 @@ func configure(enemies_root: Node3D, target: Node3D, content_factory, new_page_h
 	_content_factory = content_factory
 	page_half_extents = new_page_half_extents
 	if _spawned_count == 0 and debug_active_enemy_count() == 0:
-		_spawn_enemy(_content_factory.inkling_chaser_enemy())
+		_spawn_enemy(_next_enemy_data())
 		_spawn_timer = spawn_interval_seconds
 
 
@@ -45,6 +46,11 @@ func debug_run_time() -> float:
 ## Returns total enemies spawned by the director.
 func debug_spawned_count() -> int:
 	return _spawned_count
+
+
+## Returns enemy family IDs spawned during this run.
+func debug_spawned_enemy_ids() -> Array[StringName]:
+	return _spawned_enemy_ids.duplicate()
 
 
 ## Returns current living, targetable enemy count.
@@ -73,6 +79,7 @@ func _spawn_enemy(enemy_data: Resource) -> void:
 		return
 	var enemy_body := CharacterBody3D.new()
 	_spawned_count += 1
+	_spawned_enemy_ids.append(enemy_data.id)
 	enemy_body.name = _enemy_node_name(enemy_data, _spawned_count)
 	enemy_body.set_script(ChaserEnemyScript)
 	_enemies_root.add_child(enemy_body)
@@ -107,6 +114,14 @@ func _ensure_health(owner: Node, entity_id: StringName, max_health: float, team_
 	if health.has_method("configure"):
 		health.configure(entity_id, max_health, team_id)
 	return health
+
+
+func _next_enemy_data() -> Resource:
+	if _content_factory.has_method("first_playable_enemy_pool"):
+		var enemy_pool: Array = _content_factory.first_playable_enemy_pool()
+		if not enemy_pool.is_empty():
+			return enemy_pool[_spawned_count % enemy_pool.size()]
+	return _content_factory.inkling_chaser_enemy()
 
 
 func _spawn_position(spawn_number: int) -> Vector3:
