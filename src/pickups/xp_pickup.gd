@@ -5,7 +5,7 @@ signal collected(pickup: Node, amount: int)
 
 @export_range(1, 100000, 1) var amount := 1
 @export_range(0.1, 5.0, 0.05) var collect_radius := 0.75
-@export_range(0.1, 12.0, 0.05) var magnet_radius := 8.0
+@export_range(0.1, 12.0, 0.05) var magnet_radius := 3.0
 @export_range(0.1, 30.0, 0.1) var magnet_speed := 8.0
 
 var _collector: Node3D

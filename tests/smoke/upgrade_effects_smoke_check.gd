@@ -49,9 +49,8 @@ func _initialize() -> void:
 	if weapon_manager != null and weapon_manager.has_method("debug_cooldown_seconds"):
 		base_cooldown = weapon_manager.debug_cooldown_seconds()
 
-	await _collect_motes(runtime, player, 3)
-	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
-		runtime.debug_accept_focused_draft_choice()
+	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"waxlight_damage_plus_1")
 		await process_frame
 
 	if runtime != null and runtime.has_method("debug_waxlight_damage_bonus"):
@@ -82,22 +81,16 @@ func _initialize() -> void:
 	if pagecraft_manager != null and pagecraft_manager.has_method("debug_last_activation_damage"):
 		_assert_true(is_equal_approx(pagecraft_manager.debug_last_activation_damage(), base_damage + 2.0), "upgraded Waxlight activation damage amount must use same damage profile", failures)
 
-	await _collect_motes(runtime, player, 6)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
-		runtime.debug_focus_draft_choice_id(&"waxlight_cooldown_minus_10")
-	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
-		runtime.debug_accept_focused_draft_choice()
+	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"waxlight_cooldown_minus_10")
 		await process_frame
 	if runtime != null and runtime.has_method("debug_waxlight_cooldown_multiplier"):
 		_assert_true(is_equal_approx(runtime.debug_waxlight_cooldown_multiplier(), 0.9 / base_cooldown), "Waxlight cooldown choice must apply chunky 1.15s -> 0.90s tuning", failures)
 	if weapon_manager != null and weapon_manager.has_method("debug_cooldown_seconds"):
 		_assert_true(is_equal_approx(weapon_manager.debug_cooldown_seconds(), 0.9), "weapon cooldown must use runtime cooldown upgrade", failures)
 
-	await _collect_motes(runtime, player, 10)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
-		runtime.debug_focus_draft_choice_id(&"player_max_hp_plus_10")
-	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
-		runtime.debug_accept_focused_draft_choice()
+	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"player_max_hp_plus_10")
 		await process_frame
 	if runtime != null and runtime.has_method("debug_player_max_health"):
 		_assert_true(is_equal_approx(runtime.debug_player_max_health(), 70.0), "HP upgrade must raise HealthComponent max HP to 70", failures)
@@ -107,16 +100,29 @@ func _initialize() -> void:
 		runtime.debug_apply_upgrade_choice(&"new_weapon_star_sticker_swarm")
 		await physics_frame
 	var base_star_damage := 0.0
+	var base_star_count := 0
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
 		base_star_damage = weapon_manager.debug_weapon_damage(&"star_sticker_swarm")
+	if weapon_manager != null and weapon_manager.has_method("debug_star_orbit_count"):
+		base_star_count = weapon_manager.debug_star_orbit_count()
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_damage")
 		await physics_frame
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
-		_assert_true(weapon_manager.debug_weapon_damage(&"star_sticker_swarm") >= base_star_damage + 2.0, "Star Sticker level upgrade must give clear integer hit damage increase", failures)
+		_assert_true(is_equal_approx(weapon_manager.debug_weapon_damage(&"star_sticker_swarm"), base_star_damage + 2.0), "Star Sticker damage upgrade must increase damage only", failures)
 	if weapon_manager != null and weapon_manager.has_method("debug_star_orbit_count"):
-		_assert_true(weapon_manager.debug_star_orbit_count() >= 2, "Star Sticker level upgrade must read as count 1 -> 2", failures)
-	_assert_true(upgrade_events.size() == 5, "each selected draft/direct choice must emit upgrade applied event", failures)
+		_assert_true(weapon_manager.debug_star_orbit_count() == base_star_count, "Star Sticker damage upgrade must not increase star count", failures)
+	var damage_after_star_damage := 0.0
+	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
+		damage_after_star_damage = weapon_manager.debug_weapon_damage(&"star_sticker_swarm")
+	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_count")
+		await physics_frame
+	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
+		_assert_true(is_equal_approx(weapon_manager.debug_weapon_damage(&"star_sticker_swarm"), damage_after_star_damage), "Star Sticker count upgrade must not increase damage", failures)
+	if weapon_manager != null and weapon_manager.has_method("debug_star_orbit_count"):
+		_assert_true(weapon_manager.debug_star_orbit_count() == base_star_count + 1, "Star Sticker count upgrade must add exactly one orbit star", failures)
+	_assert_true(upgrade_events.size() == 6, "each selected draft/direct choice must emit upgrade applied event", failures)
 
 	root.queue_free()
 	await process_frame

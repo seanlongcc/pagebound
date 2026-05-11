@@ -265,7 +265,7 @@ func _buttons_are_horizontal(buttons: Array[Button]) -> bool:
 
 func _buttons_contain_text(buttons: Array[Button], text: String) -> bool:
 	for button in buttons:
-		if button.text.contains(text):
+		if _visible_text(button).contains(text):
 			return true
 	return false
 

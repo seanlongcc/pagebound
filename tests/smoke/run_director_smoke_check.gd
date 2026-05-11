@@ -30,11 +30,13 @@ func _initialize() -> void:
 		return
 
 	var initial_spawned: int = director.debug_spawned_count()
-	for index in 180:
+	for index in 360:
 		await physics_frame
 
 	_assert_true(director.debug_spawned_count() > initial_spawned, "director must spawn enemies over time", failures)
+	_assert_true(director.debug_spawned_count() >= initial_spawned + 6, "opening spawn pressure must beat prior slow 6s baseline", failures)
 	_assert_true(director.debug_active_enemy_count() <= director.debug_active_budget(), "director must enforce active enemy budget", failures)
+	_assert_true(director.debug_active_enemy_count() <= director.debug_safety_enemy_cap(), "director safety cap must prevent runaway enemy count", failures)
 	_assert_true(director.debug_all_active_enemies_within_bounds(), "director must keep active enemies inside finite page bounds", failures)
 
 	_finish_after_root(root, failures)

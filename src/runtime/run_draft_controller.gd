@@ -189,7 +189,7 @@ func _ensure_ui() -> void:
 
 	var panel := VBoxContainer.new()
 	panel.name = "DraftChoiceStack"
-	panel.custom_minimum_size = Vector2(900.0, 236.0)
+	panel.custom_minimum_size = Vector2(900.0, 340.0)
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	panel.add_theme_constant_override("separation", 14)
 	center.add_child(panel)
@@ -204,7 +204,7 @@ func _ensure_ui() -> void:
 
 	var row := HBoxContainer.new()
 	row.name = "DraftChoiceRow"
-	row.custom_minimum_size = Vector2(900.0, 180.0)
+	row.custom_minimum_size = Vector2(900.0, 280.0)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_FILL
 	row.add_theme_constant_override("separation", 14)
@@ -214,12 +214,14 @@ func _ensure_ui() -> void:
 		var button := Button.new()
 		button.name = "DraftChoice%d" % index
 		button.focus_mode = Control.FOCUS_ALL
-		button.custom_minimum_size = Vector2(286.0, 180.0)
+		button.custom_minimum_size = Vector2(286.0, 280.0)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.size_flags_vertical = Control.SIZE_FILL
 		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		button.clip_text = true
-		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.clip_text = false
+		button.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		if "autowrap_mode" in button:
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		var choice_index := index
 		button.pressed.connect(func() -> void:
 			_select_choice_index(choice_index)
@@ -236,7 +238,9 @@ func _sync_choice_buttons() -> void:
 			continue
 		var choice := _current_choices[index]
 		button.visible = true
-		button.text = "%s\n%s\n%s" % [
+		button.text = "%s - %s\n%s\n%s\n%s" % [
+			choice.get("category_label", "Choice"),
+			choice.get("rarity_label", "Common"),
 			choice.get("title", ""),
 			choice.get("stat_line", ""),
 			choice.get("description", ""),

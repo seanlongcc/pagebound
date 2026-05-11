@@ -79,6 +79,7 @@ id = &"star_sticker_swarm"
 display_name = "Star Sticker Swarm"
 description = "Prototype authored Resource for documented orbit/fire/page-stick/pop sticker weapon."
 tags = Array[StringName]([&"prototype"])
+draft_rarity = &"rare"
 weapon_type_id = &"orbit_attach"
 attack_behavior_id = &"star_sticker_burst"
 material_tags = Array[StringName]([&"star_sticker", &"dreamlight"])

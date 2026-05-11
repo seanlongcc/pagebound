@@ -1,6 +1,7 @@
 class_name AutoWeaponManager
 extends Node
 
+const PrimitiveWeaponEffectsScript := preload("res://src/weapons/primitive_weapon_effects.gd")
 const STAR_STICKER_LIFETIME_SECONDS := 1.25
 const STAR_STICKER_POP_DAMAGE_SCALE := 0.75
 const STAR_STICKER_POP_RADIUS_SCALE := 2.0
@@ -190,10 +191,8 @@ func _weapon_level(weapon_id: StringName) -> int:
 
 func _weapon_data(weapon_id: StringName) -> Resource:
 	if _content_factory != null:
-		if weapon_id == &"waxlight_comet" and _content_factory.has_method("waxlight_comet_weapon"):
-			return _content_factory.waxlight_comet_weapon()
-		if weapon_id == &"star_sticker_swarm" and _content_factory.has_method("star_sticker_swarm_weapon"):
-			return _content_factory.star_sticker_swarm_weapon()
+		if _content_factory.has_method("weapon_for_id"):
+			return _content_factory.weapon_for_id(weapon_id)
 	if _fallback_weapon_data != null and _fallback_weapon_data.id == weapon_id:
 		return _fallback_weapon_data
 	return null
@@ -228,6 +227,10 @@ func _fire_weapon_state_at(state: Dictionary, target: Node3D) -> void:
 	var weapon_id: StringName = state.get("id", &"")
 	if weapon_id == &"star_sticker_swarm":
 		_fire_star_sticker(state, target)
+	elif weapon_id == &"paper_plane_dart":
+		_fire_paper_plane_dart(state, target)
+	elif weapon_id == &"margin_spark_ring":
+		_fire_margin_spark_ring(state, target)
 	else:
 		_fire_direct_marking_weapon(state, target)
 
@@ -238,7 +241,7 @@ func _fire_direct_marking_weapon(state: Dictionary, target: Node3D) -> void:
 		return
 	var weapon_data: Resource = state["data"]
 	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data)
+	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
 	_damage_model.apply_damage(health, weapon_data.id, damage, weapon_data.material_tags)
 	_deposit_pagecraft_mark(target.global_position, weapon_data, level_data, damage)
 	_count_hit(weapon_data.id)
@@ -247,7 +250,7 @@ func _fire_direct_marking_weapon(state: Dictionary, target: Node3D) -> void:
 func _fire_star_sticker(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
 	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data)
+	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
 	_sync_star_orbits()
 	var targets := _sticker_targets(target, debug_star_available_count())
 	for enemy in targets:
@@ -262,6 +265,24 @@ func _fire_star_sticker(state: Dictionary, target: Node3D) -> void:
 		_create_star_travel_feedback(_owner.global_position, enemy.global_position)
 		_create_star_page_sticker(enemy.global_position, weapon_data, level_data, damage, orbit_index)
 		_count_hit(weapon_data.id)
+
+
+func _fire_paper_plane_dart(state: Dictionary, target: Node3D) -> void:
+	var weapon_data: Resource = state["data"]
+	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
+	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
+	var result: Dictionary = PrimitiveWeaponEffectsScript.fire_paper_plane_dart(self, _owner, _damage_model, weapon_data, level_data, target, damage)
+	_count_hits(weapon_data.id, int(result.get("hits", 0)))
+	_track_transient_entries(result.get("transients", []))
+
+
+func _fire_margin_spark_ring(state: Dictionary, target: Node3D) -> void:
+	var weapon_data: Resource = state["data"]
+	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
+	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
+	var result: Dictionary = PrimitiveWeaponEffectsScript.fire_margin_spark_ring(self, _enemies_root, _damage_model, weapon_data, level_data, target, damage)
+	_count_hits(weapon_data.id, int(result.get("hits", 0)))
+	_track_transient_entries(result.get("transients", []))
 
 
 func _sticker_targets(primary: Node3D, max_count: int) -> Array[Node3D]:
@@ -449,6 +470,9 @@ func _sync_star_orbits() -> void:
 func _desired_star_orbit_count() -> int:
 	if not _owned_weapon_ids().has(&"star_sticker_swarm"):
 		return 0
+	var base_count := 1
+	if _upgrade_state != null and _upgrade_state.has_method("weapon_projectile_count"):
+		return _upgrade_state.weapon_projectile_count(&"star_sticker_swarm", base_count)
 	return clampi(_weapon_level(&"star_sticker_swarm"), 1, MAX_STAR_STICKER_COUNT)
 
 
@@ -499,6 +523,12 @@ func _track_transient_visual(visual: Node, lifetime_seconds: float) -> void:
 	})
 
 
+func _track_transient_entries(entries: Array) -> void:
+	for entry in entries:
+		if entry is Dictionary and not (entry as Dictionary).is_empty():
+			_transient_visuals.append(entry)
+
+
 func _tick_transient_visuals(delta: float) -> void:
 	for index in range(_transient_visuals.size() - 1, -1, -1):
 		var entry := _transient_visuals[index]
@@ -512,9 +542,11 @@ func _tick_transient_visuals(delta: float) -> void:
 		_transient_visuals[index] = entry
 
 
-func _runtime_damage(weapon_id: StringName, level_data: Resource) -> float:
+func _runtime_damage(weapon_id: StringName, level_data: Resource, damage_tags: Array = []) -> float:
 	if _upgrade_state != null and _upgrade_state.has_method("weapon_damage"):
 		return _upgrade_state.weapon_damage(weapon_id, level_data.base_damage)
+	if _upgrade_state != null and _upgrade_state.has_method("damage_for_tags"):
+		return _upgrade_state.damage_for_tags(weapon_id, level_data.base_damage, damage_tags)
 	return level_data.base_damage
 
 
@@ -532,6 +564,11 @@ func _cooldown_for_state(state: Dictionary) -> float:
 
 func _count_hit(weapon_id: StringName) -> void:
 	_hit_counts[weapon_id] = int(_hit_counts.get(weapon_id, 0)) + 1
+
+
+func _count_hits(weapon_id: StringName, amount: int) -> void:
+	for _index in maxi(0, amount):
+		_count_hit(weapon_id)
 
 
 func _string_name_array(values: Array) -> Array[StringName]:

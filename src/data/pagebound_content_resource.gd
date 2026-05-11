@@ -9,6 +9,8 @@ extends Resource
 @export_multiline var description := ""
 ## Shared tag IDs referenced by this content.
 @export var tags: Array[StringName] = []
+## Draft rarity for cards/resources that can appear in a run draft.
+@export var draft_rarity: StringName = &"common"
 ## Deprecated resources stay loadable but are blocked from new-run pools by default.
 @export var deprecated := false
 ## True when deprecated content is still allowed in new prototype runs.

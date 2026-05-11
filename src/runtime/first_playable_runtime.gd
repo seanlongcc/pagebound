@@ -15,6 +15,7 @@ const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const RunMenuControllerScript := preload("res://src/runtime/run_menu_controller.gd")
 const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const PageEventControllerScript := preload("res://src/runtime/page_event_controller.gd")
+const PageEventAnnouncementScript := preload("res://src/runtime/page_event_announcement.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -34,6 +35,7 @@ var _event_bus: Node
 var _draft_controller: Node
 var _menu_controller: Node
 var _page_event_controller: Node
+var _page_event_announcement: Node
 var _contact_damage_cooldown_remaining := 0.0
 var _run_started := false
 var _run_ended := false
@@ -65,6 +67,7 @@ func _initialize_first_playable_loop() -> void:
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
+	_ensure_page_event_announcement()
 	_hud().visible = false
 	_ensure_page_event_controller()
 	_ensure_draft_controller()
@@ -83,6 +86,7 @@ func _start_run() -> void:
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
+	_ensure_page_event_announcement()
 	_ensure_page_event_controller()
 	_ensure_draft_controller()
 	_spawn_player()
@@ -390,6 +394,18 @@ func _ensure_page_event_controller() -> void:
 		_page_event_controller = PageEventControllerScript.new()
 		_page_event_controller.name = "PageEventController"
 		_run_root().add_child(_page_event_controller)
+	if _page_event_controller.has_signal("event_started") and not _page_event_controller.event_started.is_connected(_on_page_event_started):
+		_page_event_controller.event_started.connect(_on_page_event_started)
+
+
+func _ensure_page_event_announcement() -> void:
+	_page_event_announcement = _run_root().get_node_or_null("PageEventAnnouncement")
+	if _page_event_announcement == null:
+		_page_event_announcement = PageEventAnnouncementScript.new()
+		_page_event_announcement.name = "PageEventAnnouncement"
+		_run_root().add_child(_page_event_announcement)
+	if _page_event_announcement.has_method("configure"):
+		_page_event_announcement.configure(_hud())
 
 
 func _connect_player_dash(player_body: Node) -> void:
@@ -442,6 +458,11 @@ func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
 
 func _on_draft_choice_selected(event: Dictionary) -> void:
 	_apply_upgrade_choice(event.get("choice_id", &""))
+
+
+func _on_page_event_started(event: Dictionary) -> void:
+	if _page_event_announcement != null and _page_event_announcement.has_method("show_event"):
+		_page_event_announcement.show_event(event.get("title", "Page Event"), event.get("descriptor", ""))
 
 
 func _apply_upgrade_choice(choice_id: StringName) -> void:
@@ -629,6 +650,8 @@ func _prepare_clean_run_state() -> void:
 	_upgrade_state.reset()
 	if _page_event_controller != null and _page_event_controller.has_method("reset"):
 		_page_event_controller.reset()
+	if _page_event_announcement != null and _page_event_announcement.has_method("hide"):
+		_page_event_announcement.hide()
 	var director := _run_director()
 	if director != null and director.has_method("reset"):
 		director.reset()

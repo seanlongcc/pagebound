@@ -8,6 +8,7 @@ id = &"waxlight_cooldown_minus_10"
 display_name = "Waxlight cooldown -0.25s"
 description = "Waxlight Comet fires more often."
 tags = Array[StringName]([&"prototype"])
+draft_rarity = &"uncommon"
 choice_type = &"stat"
 effect_id = &"waxlight_cooldown_minus_10"
 stat_id = &"waxlight_cooldown"

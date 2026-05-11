@@ -47,14 +47,16 @@ func _run_size_case(viewport_size: Vector2i, failures: Array[String]) -> void:
 	_assert_true(buttons.size() == 3, "%s draft must have exactly 3 visible cards" % [viewport_size], failures)
 	if title != null:
 		_assert_true(_rect_inside(title.get_global_rect(), actual_viewport_size), "%s draft title must stay inside viewport" % [viewport_size], failures)
-	if buttons.size() == 3:
-		var first_size := buttons[0].size
-		for button in buttons:
-			var button_rect := button.get_global_rect()
-			_assert_true(_rect_inside(button_rect, actual_viewport_size), "%s draft card must stay inside viewport rect=%s" % [viewport_size, button_rect], failures)
-			_assert_true(absf(button.size.x - first_size.x) <= 1.0, "%s draft cards must have equal width" % [viewport_size], failures)
-			_assert_true(absf(button.size.y - first_size.y) <= 1.0, "%s draft cards must have equal height" % [viewport_size], failures)
-		_assert_true(_cards_are_ordered(buttons), "%s draft cards must be centered in one row" % [viewport_size], failures)
+		if buttons.size() == 3:
+			var first_size := buttons[0].size
+			for button in buttons:
+				var button_rect := button.get_global_rect()
+				_assert_true(_rect_inside(button_rect, actual_viewport_size), "%s draft card must stay inside viewport rect=%s" % [viewport_size, button_rect], failures)
+				_assert_true(absf(button.size.x - first_size.x) <= 1.0, "%s draft cards must have equal width" % [viewport_size], failures)
+				_assert_true(absf(button.size.y - first_size.y) <= 1.0, "%s draft cards must have equal height" % [viewport_size], failures)
+				_assert_true(button.size.y >= button.size.x * 0.95, "%s draft card must be vertical/card-shaped" % [viewport_size], failures)
+				_assert_wrapped_card_text(button, viewport_size, failures)
+			_assert_true(_cards_are_ordered(buttons), "%s draft cards must be centered in one row" % [viewport_size], failures)
 
 	if hud_label != null and hud_label.is_visible_in_tree():
 		var hud_rect := hud_label.get_global_rect()
@@ -88,6 +90,16 @@ func _cards_are_ordered(buttons: Array[Button]) -> bool:
 	return absf(buttons[0].global_position.y - buttons[1].global_position.y) < 8.0 and absf(buttons[1].global_position.y - buttons[2].global_position.y) < 8.0 and buttons[0].global_position.x < buttons[1].global_position.x and buttons[1].global_position.x < buttons[2].global_position.x
 
 
+func _assert_wrapped_card_text(button: Button, viewport_size: Vector2i, failures: Array[String]) -> void:
+	var text := _visible_text(button)
+	_assert_true(not text.contains("..."), "%s draft card text must not show ellipsis truncation" % [viewport_size], failures)
+	_assert_true(not button.clip_text, "%s draft card text must not be clipped by Button clip_text" % [viewport_size], failures)
+	_assert_true(button.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING, "%s draft card text must not trim overrun with ellipsis" % [viewport_size], failures)
+	if "autowrap_mode" in button:
+		_assert_true(button.autowrap_mode != TextServer.AUTOWRAP_OFF, "%s draft card text must use autowrap" % [viewport_size], failures)
+	_assert_true(text.contains("\n"), "%s draft card text must be arranged as wrapped/multiline content" % [viewport_size], failures)
+
+
 func _draft_buttons(root: Node) -> Array[Button]:
 	var buttons: Array[Button] = []
 	_collect_draft_buttons(root, buttons)
@@ -111,6 +123,19 @@ func _find_named(node: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _visible_text(node: Node) -> String:
+	if node == null:
+		return ""
+	var text := ""
+	if node is Label and node.visible:
+		text += (node as Label).text + "\n"
+	if node is Button and node.visible:
+		text += (node as Button).text + "\n"
+	for child in node.get_children():
+		text += _visible_text(child)
+	return text
 
 
 func _load_main(failures: Array[String]) -> Node:

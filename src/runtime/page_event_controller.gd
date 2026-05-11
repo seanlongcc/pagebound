@@ -1,7 +1,11 @@
 class_name PageEventController
 extends Node
 
+signal event_started(event: Dictionary)
+
 const EVENT_FILL_COLOR_WELL := &"fill_color_well"
+const EVENT_TITLE := "Page Event: Fill the Color Well"
+const EVENT_DESCRIPTOR := "Defeat enemies and trigger Waxlight marks to fill the well."
 const EVENT_DURATION_SECONDS := 180.0
 const REQUIRED_PROGRESS := 5.0
 
@@ -97,6 +101,11 @@ func _start_event() -> void:
 	_expired = false
 	_elapsed_active = 0.0
 	_progress = 0.0
+	event_started.emit({
+		"id": EVENT_FILL_COLOR_WELL,
+		"title": EVENT_TITLE,
+		"descriptor": EVENT_DESCRIPTOR,
+	})
 
 
 func _complete() -> void:

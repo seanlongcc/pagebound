@@ -8,6 +8,7 @@ id = &"candle_spark"
 display_name = "Candle Spark"
 description = "Documented Firelight/Waxlight passive. Prototype effect gives a chunky Waxlight glow damage boost."
 tags = Array[StringName]([&"prototype"])
+draft_rarity = &"uncommon"
 catalyst_tags = Array[StringName]([&"firelight", &"waxlight"])
 stat_id = &"glow_damage_multiplier"
 level_values = Array[float]([0.15, 0.3, 0.45, 0.6, 0.75])

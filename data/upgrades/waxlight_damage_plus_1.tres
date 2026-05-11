@@ -8,6 +8,7 @@ id = &"waxlight_damage_plus_1"
 display_name = "Waxlight damage +2"
 description = "Waxlight hits and active wax hit harder."
 tags = Array[StringName]([&"prototype"])
+draft_rarity = &"common"
 choice_type = &"stat"
 effect_id = &"waxlight_damage_plus_1"
 stat_id = &"waxlight_damage"

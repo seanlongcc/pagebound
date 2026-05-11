@@ -79,6 +79,7 @@ id = &"waxlight_comet"
 display_name = "Waxlight Comet"
 description = "Prototype authored Resource for the starter Waxlight Comet."
 tags = Array[StringName]([&"prototype"])
+draft_rarity = &"common"
 weapon_type_id = &"direct_nearest"
 attack_behavior_id = &"nearest_direct_hit"
 material_tags = Array[StringName]([&"waxlight", &"firelight"])

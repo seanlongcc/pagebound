@@ -84,7 +84,7 @@ func _assert_standalone_pickup_magnet(failures: Array[String]) -> void:
 	var collector := Node3D.new()
 	collector.name = "Collector"
 	get_root().add_child(collector)
-	collector.position = Vector3(2.5, 0.0, 0.0)
+	collector.position = Vector3(5.0, 0.0, 0.0)
 
 	var pickup := XpPickupScript.new()
 	pickup.name = "StandaloneColorMote"
@@ -96,11 +96,18 @@ func _assert_standalone_pickup_magnet(failures: Array[String]) -> void:
 		collected_amounts.append(amount)
 	)
 
-	var before_distance := collector.position.distance_to(pickup.position)
+	var far_before_distance := collector.position.distance_to(pickup.position)
 	for index in 5:
 		await physics_frame
-	var after_distance := collector.position.distance_to(pickup.position)
-	_assert_true(after_distance < before_distance - 0.05, "standalone Color Mote must pull toward collector inside magnet range", failures)
+	var far_after_distance := collector.position.distance_to(pickup.position)
+	_assert_true(absf(far_after_distance - far_before_distance) <= 0.05, "standalone Color Mote must not pull from too-large current magnet distance", failures)
+
+	collector.position = Vector3(2.5, 0.0, 0.0)
+	var close_before_distance := collector.position.distance_to(pickup.position)
+	for index in 5:
+		await physics_frame
+	var close_after_distance := collector.position.distance_to(pickup.position)
+	_assert_true(close_after_distance < close_before_distance - 0.05, "standalone Color Mote must pull toward collector inside intended close magnet range", failures)
 	_assert_true(pickup.visible, "standalone Color Mote must stay visible until collect radius", failures)
 	_assert_true(collected_amounts.is_empty(), "standalone Color Mote must not collect before reaching collect radius", failures)
 

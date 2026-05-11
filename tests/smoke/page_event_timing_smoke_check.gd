@@ -25,14 +25,24 @@ func _initialize() -> void:
 		runtime.debug_force_run_time(59.0)
 	await process_frame
 	_assert_true(runtime != null and runtime.debug_active_page_event_id() == &"", "59s simulated time must not start prototype Page Event", failures)
+	_assert_true(not _visible_text(root.get_node_or_null("UI/HUD")).contains("Page Event:"), "59s simulated time must not show Page Event announcement", failures)
 	_assert_true(not _screen_visible(root, "VictoryScreen"), "59s simulated time must not show summary", failures)
 
 	if runtime != null and runtime.has_method("debug_force_run_time"):
 		runtime.debug_force_run_time(60.0)
 	await process_frame
 	_assert_true(runtime != null and runtime.debug_active_page_event_id() == &"fill_color_well", "60s simulated time must start prototype Page Event", failures)
-	_assert_true(_visible_text(root.get_node_or_null("UI/HUD")).contains("Fill the Color Well"), "HUD must show event objective at 60s", failures)
+	var hud_text := _visible_text(root.get_node_or_null("UI/HUD"))
+	_assert_true(hud_text.contains("Page Event: Fill the Color Well"), "60s simulated time must show event announcement title", failures)
+	_assert_true(hud_text.contains("Defeat enemies and trigger Waxlight marks to fill the well."), "60s simulated time must show event announcement descriptor", failures)
+	_assert_true(hud_text.contains("Fill the Color Well"), "HUD must show event objective at 60s", failures)
 	_assert_true(not _screen_visible(root, "VictoryScreen"), "60s prototype Page Event must not end 5-minute summary", failures)
+
+	for frame_index in 240:
+		await physics_frame
+	hud_text = _visible_text(root.get_node_or_null("UI/HUD"))
+	_assert_true(not hud_text.contains("Page Event: Fill the Color Well"), "event announcement must fade after its temporary display", failures)
+	_assert_true(hud_text.contains("Event: Fill the Color Well"), "HUD objective must remain visible after announcement fades", failures)
 
 	root.queue_free()
 	await process_frame
@@ -58,6 +68,8 @@ func _find_named(node: Node, node_name: String) -> Node:
 
 func _visible_text(node: Node) -> String:
 	if node == null:
+		return ""
+	if node is CanvasItem and not (node as CanvasItem).is_visible_in_tree():
 		return ""
 	var text := ""
 	if node is Label and node.visible:

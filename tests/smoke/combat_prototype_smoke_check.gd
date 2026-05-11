@@ -19,6 +19,7 @@ func _initialize() -> void:
 	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
 	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
 	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser")
 	var enemy_health: Node = null
@@ -26,6 +27,7 @@ func _initialize() -> void:
 		enemy_health = enemy.get_node_or_null("HealthComponent")
 
 	_assert_true(runtime != null and runtime.has_method("debug_xp_total"), "runtime must expose XP reward stub", failures)
+	_assert_true(player != null, "player must exist", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_hit_count"), "weapon manager must exist", failures)
 	_assert_true(enemy != null and enemy.has_method("debug_distance_to_target"), "placeholder enemy must spawn", failures)
 	_assert_true(enemy_health != null and enemy_health.has_method("is_alive"), "enemy must own HealthComponent", failures)
@@ -43,6 +45,11 @@ func _initialize() -> void:
 		_assert_true(weapon_manager.debug_hit_count() > 0, "auto weapon must hit enemy through damage model", failures)
 	if enemy_health != null:
 		_assert_true(not enemy_health.is_alive(), "enemy must be killable by placeholder weapon", failures)
+	var pickup := _first_visible_pickup(root)
+	if player != null and pickup != null:
+		player.global_position = Vector3(pickup.global_position.x, player.global_position.y, pickup.global_position.z)
+		for collect_index in 3:
+			await physics_frame
 	if runtime != null and runtime.has_method("debug_xp_total"):
 		_assert_true(runtime.debug_xp_total() >= 1, "collectible XP flow must award XP after pickup", failures)
 
@@ -64,6 +71,16 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
 	if not value:
 		failures.append(message)
+
+
+func _first_visible_pickup(root: Node) -> Node3D:
+	var pickups := root.get_node_or_null("RunRoot/Pickups")
+	if pickups == null:
+		return null
+	for child in pickups.get_children():
+		if child is Node3D and child.visible:
+			return child
+	return null
 
 
 func _finish(failures: Array[String]) -> void:
