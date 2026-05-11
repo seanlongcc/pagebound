@@ -65,6 +65,13 @@ func debug_selected_choice_id() -> StringName:
 	return _selected_choice_id
 
 
+## Returns visible draft choice ID at index.
+func debug_choice_id_at(choice_index: int) -> StringName:
+	if choice_index < 0 or choice_index >= _current_choices.size():
+		return &""
+	return _current_choices[choice_index].get("id", &"")
+
+
 ## Accepts focused/default choice for smoke tests and keyboard/gamepad flow.
 func accept_focused_choice() -> void:
 	_select_choice_index(_focused_choice_index)
@@ -77,6 +84,14 @@ func focus_choice_index(choice_index: int) -> void:
 	_focused_choice_index = choice_index
 	if choice_index < _choice_buttons.size():
 		_choice_buttons[choice_index].grab_focus()
+
+
+## Focuses a visible choice by ID for smoke/debug flow.
+func focus_choice_id(choice_id: StringName) -> void:
+	for index in _current_choices.size():
+		if _current_choices[index].get("id", &"") == choice_id:
+			focus_choice_index(index)
+			return
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -142,12 +157,13 @@ func force_close(keep_tree_paused: bool = false) -> void:
 
 func _ensure_ui() -> void:
 	if _level_up_screen == null or _level_up_screen.get_node_or_null("DraftChoicePanel") != null:
+		_collect_existing_buttons()
 		return
 	var panel := VBoxContainer.new()
 	panel.name = "DraftChoicePanel"
-	panel.position = Vector2(320.0, 120.0)
-	panel.custom_minimum_size = Vector2(520.0, 280.0)
-	panel.add_theme_constant_override("separation", 10)
+	panel.position = Vector2(118.0, 112.0)
+	panel.custom_minimum_size = Vector2(820.0, 280.0)
+	panel.add_theme_constant_override("separation", 14)
 	_level_up_screen.add_child(panel)
 
 	var title := Label.new()
@@ -156,16 +172,22 @@ func _ensure_ui() -> void:
 	title.add_theme_font_size_override("font_size", 28)
 	panel.add_child(title)
 
+	var row := HBoxContainer.new()
+	row.name = "DraftChoiceRow"
+	row.custom_minimum_size = Vector2(820.0, 168.0)
+	row.add_theme_constant_override("separation", 14)
+	panel.add_child(row)
+
 	for index in 3:
 		var button := Button.new()
 		button.name = "DraftChoice%d" % index
 		button.focus_mode = Control.FOCUS_ALL
-		button.custom_minimum_size = Vector2(500.0, 64.0)
+		button.custom_minimum_size = Vector2(260.0, 150.0)
 		var choice_index := index
 		button.pressed.connect(func() -> void:
 			_select_choice_index(choice_index)
 		)
-		panel.add_child(button)
+		row.add_child(button)
 		_choice_buttons.append(button)
 
 
@@ -177,7 +199,11 @@ func _sync_choice_buttons() -> void:
 			continue
 		var choice := _current_choices[index]
 		button.visible = true
-		button.text = "%s\n%s" % [choice["title"], choice["description"]]
+		button.text = "%s\n%s\n%s" % [
+			choice.get("title", ""),
+			choice.get("stat_line", ""),
+			choice.get("description", ""),
+		]
 
 
 func _prototype_choices(run_level: int) -> Array[Dictionary]:
@@ -215,3 +241,16 @@ func _set_always_process(node: Node) -> void:
 	if node == null:
 		return
 	node.process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+func _collect_existing_buttons() -> void:
+	if _level_up_screen == null or not _choice_buttons.is_empty():
+		return
+	_collect_choice_buttons(_level_up_screen)
+
+
+func _collect_choice_buttons(node: Node) -> void:
+	if node is Button and String(node.name).begins_with("DraftChoice"):
+		_choice_buttons.append(node)
+	for child in node.get_children():
+		_collect_choice_buttons(child)

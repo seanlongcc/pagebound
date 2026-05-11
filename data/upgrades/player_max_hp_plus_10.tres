@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeChoiceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/data/upgrade_choice_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"player_max_hp_plus_10"
+display_name = "Player max HP +10"
+description = "Increase maximum HP and refill the new amount."
+tags = Array[StringName]([&"prototype"])
+choice_type = &"stat"
+effect_id = &"player_max_hp_plus_10"
+stat_id = &"player_max_hp"
+value = 10.0
+effect_text = "Max HP +10"
+draft_weight = 1.0

@@ -13,6 +13,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
 	var manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
@@ -23,7 +28,7 @@ func _initialize() -> void:
 	_assert_true(manager != null and manager.has_method("debug_first_mark_position"), "Pagecraft manager must expose mark position", failures)
 	_assert_true(manager != null and manager.has_method("debug_activation_damage_count"), "Pagecraft manager must expose activation damage count", failures)
 	_assert_true(enemies_root != null, "enemies root must exist", failures)
-	_assert_true(damage_manager != null and damage_manager.has_method("debug_spawned_count"), "damage number manager must exist", failures)
+	_assert_true(damage_manager != null and damage_manager.has_method("debug_presented_count"), "damage number manager must exist", failures)
 
 	for index in 180:
 		await physics_frame
@@ -47,7 +52,7 @@ func _initialize() -> void:
 	var damage_numbers_before := 0
 	if damage_manager != null:
 		damage_manager.number_lifetime_seconds = 3.0
-		damage_numbers_before = damage_manager.debug_active_count()
+		damage_numbers_before = damage_manager.debug_presented_count()
 
 	player.global_position = mark_position - Vector3.RIGHT * 0.8
 	player.debug_integrate(Vector2.RIGHT, true, 0.01)
@@ -59,7 +64,7 @@ func _initialize() -> void:
 	if manager.has_method("debug_activation_damage_count"):
 		_assert_true(manager.debug_activation_damage_count() > 0, "Pagecraft activation must record DamageModel routed damage", failures)
 	if damage_manager != null:
-		_assert_true(damage_manager.debug_active_count() > damage_numbers_before, "dash activation damage must show active damage number", failures)
+		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before and _has_visible_number_text(root, "5"), "dash activation damage must show active damage number", failures)
 	_assert_true(_has_waxlight_pulse(root), "dash activation must leave primitive Waxlight pulse visual", failures)
 
 	_finish_after_root(root, failures)
@@ -87,6 +92,16 @@ func _has_waxlight_pulse(root: Node) -> bool:
 		return false
 	for child in pagecraft_root.get_children():
 		if child is MeshInstance3D and String(child.name).begins_with("WaxlightDashPulse") and child.visible:
+			return true
+	return false
+
+
+func _has_visible_number_text(root: Node, expected_text: String) -> bool:
+	var damage_root := root.get_node_or_null("RunRoot/DamageNumbers")
+	if damage_root == null:
+		return false
+	for child in damage_root.get_children():
+		if child is Label3D and child.visible and child.text == expected_text:
 			return true
 	return false
 

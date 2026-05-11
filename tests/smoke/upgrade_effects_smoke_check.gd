@@ -13,6 +13,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
@@ -69,7 +74,8 @@ func _initialize() -> void:
 	if pagecraft_manager != null and pagecraft_manager.has_method("activate_path"):
 		pagecraft_manager.activate_path(mark_position - Vector3.RIGHT * 0.8, mark_position + Vector3.RIGHT * 0.8)
 		await process_frame
-		await physics_frame
+		for activation_frame in 25:
+			await physics_frame
 	if dash_victim != null:
 		var dash_health := dash_victim.get_node("HealthComponent")
 		_assert_true(dash_health.current_health <= 20.0 - (base_damage + 1.0), "upgraded Waxlight mark activation must damage enemy with upgraded profile", failures)
@@ -77,8 +83,8 @@ func _initialize() -> void:
 		_assert_true(is_equal_approx(pagecraft_manager.debug_last_activation_damage(), base_damage + 1.0), "upgraded Waxlight activation damage amount must use same damage profile", failures)
 
 	await _collect_motes(runtime, player, 6)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_index"):
-		runtime.debug_focus_draft_choice_index(0)
+	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
+		runtime.debug_focus_draft_choice_id(&"waxlight_cooldown_minus_10")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 		await process_frame
@@ -88,8 +94,8 @@ func _initialize() -> void:
 		_assert_true(is_equal_approx(weapon_manager.debug_cooldown_seconds(), base_cooldown * 0.9), "weapon cooldown must use runtime cooldown upgrade", failures)
 
 	await _collect_motes(runtime, player, 10)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_index"):
-		runtime.debug_focus_draft_choice_index(0)
+	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
+		runtime.debug_focus_draft_choice_id(&"player_max_hp_plus_10")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 		await process_frame

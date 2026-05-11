@@ -23,6 +23,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	for action in REQUIRED_ACTIONS:
 		_assert_true(InputMap.has_action(action), "missing input action: %s" % action, failures)

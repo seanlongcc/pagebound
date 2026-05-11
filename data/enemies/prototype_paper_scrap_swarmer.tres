@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"paper_scrap_swarmer"
+display_name = "Paper Scrap Swarmer"
+description = "Authored delayed fast weak pressure enemy."
+tags = Array[StringName]([&"hostile_ink", &"prototype"])
+behavior_id = &"swarmer"
+max_health = 8.0
+move_speed = 3.2
+contact_damage = 3.0
+reward_xp = 1
+pagecraft_interaction_tags = Array[StringName]([&"waxlight"])

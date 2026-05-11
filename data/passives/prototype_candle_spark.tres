@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PassiveItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/data/passive_item_data.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+id = &"candle_spark"
+display_name = "Candle Spark"
+description = "Documented Firelight/Waxlight passive. Prototype effect increases Waxlight glow damage."
+tags = Array[StringName]([&"prototype"])
+catalyst_tags = Array[StringName]([&"firelight", &"waxlight"])
+stat_id = &"glow_damage_multiplier"
+level_values = Array[float]([0.05, 0.1, 0.1, 0.15, 0.15])

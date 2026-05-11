@@ -12,6 +12,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var director := root.get_node_or_null("RunRoot/RunDirector")
@@ -25,7 +30,14 @@ func _initialize() -> void:
 	if director != null and director.has_method("debug_spawned_enemy_ids"):
 		var spawned_ids: Array = director.debug_spawned_enemy_ids()
 		_assert_true(spawned_ids.has(&"inkling_chaser"), "slow sturdy chaser family must spawn", failures)
-		_assert_true(spawned_ids.has(&"paper_scrap_swarmer"), "fast weak swarmer family must spawn", failures)
+		_assert_true(not spawned_ids.has(&"paper_scrap_swarmer"), "fast weak swarmer family must be delayed from opening", failures)
+
+	if director != null and director.has_method("debug_force_run_time"):
+		director.debug_force_run_time(75.0)
+		for pressure_frame in 90:
+			await physics_frame
+	if director != null and director.has_method("debug_spawned_enemy_ids"):
+		_assert_true(director.debug_spawned_enemy_ids().has(&"paper_scrap_swarmer"), "75s pressure band must spawn fast weak swarmer", failures)
 
 	var chaser := _first_enemy_with_id(enemies_root, &"inkling_chaser")
 	var swarmer := _first_enemy_with_id(enemies_root, &"paper_scrap_swarmer")

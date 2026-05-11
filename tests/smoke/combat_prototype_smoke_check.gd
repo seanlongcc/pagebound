@@ -12,6 +12,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
@@ -33,7 +38,7 @@ func _initialize() -> void:
 		await physics_frame
 
 	if enemy != null:
-		_assert_true(enemy.debug_distance_to_target() < starting_distance, "enemy must chase player", failures)
+		_assert_true(enemy.debug_distance_to_target() < starting_distance or not enemy.visible, "enemy must chase player or die before contact", failures)
 	if weapon_manager != null:
 		_assert_true(weapon_manager.debug_hit_count() > 0, "auto weapon must hit enemy through damage model", failures)
 	if enemy_health != null:

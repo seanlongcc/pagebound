@@ -154,7 +154,7 @@ func _activate_mark(index: int, start_position: Vector3, end_position: Vector3) 
 	var mark := _marks[index]
 	mark["activated"] = true
 	mark["remaining_duration"] = _activation_duration_seconds()
-	mark["damage_tick_remaining"] = 0.0
+	mark["damage_tick_remaining"] = activation_damage_tick_seconds
 	_marks[index] = mark
 	_activation_count += 1
 	var visual = mark.get("visual", null)
@@ -162,6 +162,7 @@ func _activate_mark(index: int, start_position: Vector3, end_position: Vector3) 
 		(visual as MeshInstance3D).material_override = _mark_material(true)
 		(visual as MeshInstance3D).scale *= 1.35
 	_create_dash_pulse(start_position, end_position)
+	_apply_activation_damage(mark)
 	_emit_activated(mark)
 
 

@@ -13,6 +13,8 @@ var _behavior_id: StringName
 
 func _ready() -> void:
 	add_to_group("enemy")
+	collision_layer = 2
+	collision_mask = 0
 	_ensure_placeholder_nodes()
 
 
@@ -56,6 +58,11 @@ func debug_distance_to_target() -> float:
 ## Returns configured enemy family ID for smoke/debug checks.
 func debug_enemy_id() -> StringName:
 	return _enemy_id
+
+
+## Returns tuned movement speed for smoke/debug checks.
+func debug_move_speed() -> float:
+	return move_speed
 
 
 ## Returns true while this enemy can be targeted by weapons.

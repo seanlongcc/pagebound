@@ -6,9 +6,13 @@ const SchemaValidationResultScript := preload("res://src/data/schema_validation_
 var _tags: Array[Resource] = []
 var _weapons: Array[Resource] = []
 var _enemies: Array[Resource] = []
+var _passives: Array[Resource] = []
+var _upgrades: Array[Resource] = []
 var _tag_lookup: Dictionary = {}
 var _weapon_lookup: Dictionary = {}
 var _enemy_lookup: Dictionary = {}
+var _passive_lookup: Dictionary = {}
+var _upgrade_lookup: Dictionary = {}
 
 
 ## Registers a tag resource for validation and runtime lookup.
@@ -32,6 +36,20 @@ func register_enemy(enemy: Resource) -> void:
 		_enemy_lookup[enemy.id] = enemy
 
 
+## Registers a passive item resource for validation and runtime lookup.
+func register_passive(passive: Resource) -> void:
+	_passives.append(passive)
+	if passive != null and passive.id != &"":
+		_passive_lookup[passive.id] = passive
+
+
+## Registers an upgrade choice resource for validation and runtime lookup.
+func register_upgrade(upgrade: Resource) -> void:
+	_upgrades.append(upgrade)
+	if upgrade != null and upgrade.id != &"":
+		_upgrade_lookup[upgrade.id] = upgrade
+
+
 ## Returns true when a tag ID is registered.
 func has_tag(id: StringName) -> bool:
 	return _tag_lookup.has(id)
@@ -47,6 +65,16 @@ func has_enemy(id: StringName) -> bool:
 	return _enemy_lookup.has(id)
 
 
+## Returns true when a passive item ID is registered.
+func has_passive(id: StringName) -> bool:
+	return _passive_lookup.has(id)
+
+
+## Returns true when an upgrade choice ID is registered.
+func has_upgrade(id: StringName) -> bool:
+	return _upgrade_lookup.has(id)
+
+
 ## Returns a registered weapon or null.
 func weapon(id: StringName) -> Resource:
 	return _weapon_lookup.get(id, null) as Resource
@@ -57,6 +85,16 @@ func enemy(id: StringName) -> Resource:
 	return _enemy_lookup.get(id, null) as Resource
 
 
+## Returns a registered passive or null.
+func passive(id: StringName) -> Resource:
+	return _passive_lookup.get(id, null) as Resource
+
+
+## Returns a registered upgrade or null.
+func upgrade(id: StringName) -> Resource:
+	return _upgrade_lookup.get(id, null) as Resource
+
+
 ## Validates IDs, duplicate IDs, tag refs, and prototype runtime ranges.
 func validate():
 	var result = SchemaValidationResultScript.new()
@@ -64,8 +102,12 @@ func validate():
 	_add_duplicate_id_check(result, "duplicate_tag_ids_valid", _tags)
 	_add_duplicate_id_check(result, "duplicate_weapon_ids_valid", _weapons)
 	_add_duplicate_id_check(result, "duplicate_enemy_ids_valid", _enemies)
+	_add_duplicate_id_check(result, "duplicate_passive_ids_valid", _passives)
+	_add_duplicate_id_check(result, "duplicate_upgrade_ids_valid", _upgrades)
 	_add_tag_reference_check(result)
 	_add_weapon_level_count_check(result)
+	_add_passive_level_count_check(result)
+	_add_upgrade_range_check(result)
 	_add_enemy_range_check(result)
 	result.finalize()
 	return result
@@ -151,10 +193,40 @@ func _add_enemy_range_check(result) -> void:
 	)
 
 
+func _add_passive_level_count_check(result) -> void:
+	var invalid_passives: Array[String] = []
+	for passive_resource in _passives:
+		if passive_resource == null or not passive_resource.has_valid_level_track():
+			invalid_passives.append(_resource_label(passive_resource))
+
+	result.add_check(
+		"passive_level_counts_valid",
+		invalid_passives.is_empty(),
+		"Passives must define exactly 5 valid level values.",
+		{"invalid_passives": invalid_passives}
+	)
+
+
+func _add_upgrade_range_check(result) -> void:
+	var invalid_upgrades: Array[String] = []
+	for upgrade_resource in _upgrades:
+		if upgrade_resource == null or not upgrade_resource.has_valid_ranges():
+			invalid_upgrades.append(_resource_label(upgrade_resource))
+
+	result.add_check(
+		"upgrade_choices_valid",
+		invalid_upgrades.is_empty(),
+		"Upgrade choices must define effect IDs and non-negative weights.",
+		{"invalid_upgrades": invalid_upgrades}
+	)
+
+
 func _all_content_resources() -> Array[Resource]:
 	var resources: Array[Resource] = []
 	resources.append_array(_weapons)
 	resources.append_array(_enemies)
+	resources.append_array(_passives)
+	resources.append_array(_upgrades)
 	return resources
 
 

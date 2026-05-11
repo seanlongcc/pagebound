@@ -13,6 +13,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
@@ -62,6 +67,9 @@ func _initialize() -> void:
 	_assert_true(manager.debug_unactivated_mark_count() == base_cap + 2, "upgraded cap must allow more unactivated Waxlight marks", failures)
 
 	manager.debug_clear_marks()
+	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
+	if weapon_manager != null:
+		weapon_manager.set_physics_process(false)
 	var mark_position := Vector3.ZERO
 	manager.debug_deposit_test_mark(mark_position)
 	var touching_victim := _spawn_victim(enemies_root, "TouchingWaxVictim", mark_position + Vector3(0.25, 0.0, 0.0), 20.0)

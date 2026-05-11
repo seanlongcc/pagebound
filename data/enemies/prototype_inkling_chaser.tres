@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"inkling_chaser"
+display_name = "Inkling Chaser"
+description = "Authored opening slow normal enemy. HP equals two starting Waxlight hits."
+tags = Array[StringName]([&"hostile_ink", &"prototype"])
+behavior_id = &"chaser"
+max_health = 10.0
+move_speed = 1.45
+contact_damage = 3.0
+reward_xp = 1
+pagecraft_interaction_tags = Array[StringName]([&"waxlight"])

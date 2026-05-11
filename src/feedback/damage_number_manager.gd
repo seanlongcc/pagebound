@@ -11,6 +11,7 @@ const SimpleObjectPoolScript := preload("res://src/pooling/simple_object_pool.gd
 var _pool
 var _event_bus: Node
 var _numbers_root: Node
+var _presented_count := 0
 
 
 ## Connects the manager to the runtime event bus and pool root.
@@ -35,6 +36,11 @@ func debug_spawned_count() -> int:
 	if _pool == null:
 		return 0
 	return _pool.spawned_count
+
+
+## Returns total damage numbers presented since manager configuration.
+func debug_presented_count() -> int:
+	return _presented_count
 
 
 ## Returns dropped presentation count for smoke/debug checks.
@@ -73,6 +79,7 @@ func _on_damage_resolved(event: Dictionary) -> void:
 	if visual == null or not visual.has_method("activate"):
 		return
 	visual.activate(event.get("world_position", Vector3.ZERO), amount, _color_for_event(event), number_lifetime_seconds)
+	_presented_count += 1
 
 
 func _on_visual_expired(visual: Node) -> void:

@@ -19,6 +19,14 @@ func configure(event_bus: Node, thresholds: Array[int] = []) -> void:
 		_thresholds = _normalized_thresholds(DEFAULT_THRESHOLDS)
 
 
+## Resets run XP and level state for retry/main menu flow.
+func reset() -> void:
+	_run_level = 1
+	_total_xp = 0
+	_current_level_xp = 0
+	_level_up_count = 0
+
+
 ## Adds run XP and emits XP/level facts.
 func add_xp(amount: int, source_id: StringName) -> Array[Dictionary]:
 	var awarded := maxi(0, amount)

@@ -12,7 +12,9 @@ const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
 const RunDraftControllerScript := preload("res://src/runtime/run_draft_controller.gd")
 const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
+const RunMenuControllerScript := preload("res://src/runtime/run_menu_controller.gd")
 const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
+const PageEventControllerScript := preload("res://src/runtime/page_event_controller.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -29,36 +31,73 @@ var _level_tracker = RunLevelTrackerScript.new()
 var _upgrade_state = RunUpgradeStateScript.new()
 var _event_bus: Node
 var _draft_controller: Node
+var _menu_controller: Node
+var _page_event_controller: Node
 var _contact_damage_cooldown_remaining := 0.0
+var _run_started := false
 var _run_ended := false
+var _enemies_defeated := 0
 var _hud_label: Label
 
 
 func _ready() -> void:
 	if not enable_first_playable_loop:
 		return
-	call_deferred("_start_first_playable_loop")
+	call_deferred("_initialize_first_playable_loop")
 
 
 func _physics_process(delta: float) -> void:
 	if not enable_first_playable_loop:
 		return
-	if _run_ended:
+	if not _run_started or _run_ended:
 		return
 	_tick_contact_damage(delta)
+	_tick_page_event(delta)
+	_check_vertical_slice_end()
 	_update_hud()
 
 
-func _start_first_playable_loop() -> void:
+func _initialize_first_playable_loop() -> void:
 	_input_actions.ensure_default_actions()
+	_upgrade_state.configure(_content_factory)
 	_ensure_runtime_services()
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
+	_hud().visible = false
+	_ensure_page_event_controller()
+	_ensure_draft_controller()
+	_ensure_menu_controller()
+	_show_start_menu()
+
+
+func _start_run() -> void:
+	_prepare_clean_run_state()
+	_run_started = true
+	_run_ended = false
+	_enemies_defeated = 0
+	if get_tree() != null:
+		get_tree().paused = false
+	_ensure_runtime_services()
+	_ensure_damage_number_manager()
+	_ensure_pagecraft_manager()
+	_ensure_minimal_hud()
+	_ensure_page_event_controller()
 	_ensure_draft_controller()
 	_spawn_player()
 	_ensure_run_director()
 	_ensure_weapon_manager()
+	_hud().visible = true
+	if _menu_controller != null and _menu_controller.has_method("hide_all"):
+		_menu_controller.hide_all()
+	var director := _run_director()
+	if director != null and director.has_method("start"):
+		director.start()
+	if player() != null:
+		player().global_position = Vector3.ZERO
+		if player().has_method("reset_to_spawn_position"):
+			player().reset_to_spawn_position(Vector3.ZERO)
+	_update_hud()
 
 
 ## Returns the current player instance if one exists.
@@ -79,6 +118,26 @@ func damage_model():
 ## Returns first-playable XP total for smoke/debug checks.
 func debug_xp_total() -> int:
 	return _level_tracker.total_xp()
+
+
+## Returns true only while gameplay systems are running.
+func debug_run_started() -> bool:
+	return _run_started
+
+
+## Starts the run from start menu for smoke/debug checks.
+func debug_start_run() -> void:
+	_start_run()
+
+
+## Retries the run from death/victory menus for smoke/debug checks.
+func debug_retry_run() -> void:
+	_retry_run()
+
+
+## Returns to idle start menu for smoke/debug checks.
+func debug_return_to_main_menu() -> void:
+	_return_to_main_menu()
 
 
 ## Returns first-playable run level for smoke/debug checks.
@@ -135,6 +194,12 @@ func debug_focus_draft_choice_index(choice_index: int) -> void:
 		_draft_controller.focus_choice_index(choice_index)
 
 
+## Focuses a visible draft choice by ID for smoke checks.
+func debug_focus_draft_choice_id(choice_id: StringName) -> void:
+	if _draft_controller != null and _draft_controller.has_method("focus_choice_id"):
+		_draft_controller.focus_choice_id(choice_id)
+
+
 ## Returns last selected draft choice ID for smoke checks.
 func debug_selected_draft_choice_id() -> StringName:
 	if _draft_controller == null or not _draft_controller.has_method("debug_selected_choice_id"):
@@ -171,6 +236,51 @@ func debug_player_max_health() -> float:
 	if health == null or not "max_health" in health:
 		return 0.0
 	return health.max_health
+
+
+## Returns currently owned weapon IDs for smoke/debug checks.
+func debug_owned_weapon_ids() -> Array[StringName]:
+	if _upgrade_state.has_method("owned_weapon_ids"):
+		return _upgrade_state.owned_weapon_ids()
+	return []
+
+
+## Returns currently owned passive IDs for smoke/debug checks.
+func debug_owned_passive_ids() -> Array[StringName]:
+	if _upgrade_state.has_method("owned_passive_ids"):
+		return _upgrade_state.owned_passive_ids()
+	return []
+
+
+## Returns enemy defeat count for summary smoke checks.
+func debug_enemies_defeated() -> int:
+	return _enemies_defeated
+
+
+## Kills the player through normal damage flow for smoke checks.
+func debug_kill_player() -> void:
+	var health := _player_health()
+	if health != null:
+		_damage_model.apply_damage(health, &"debug_kill", 99999.0, [&"debug"])
+
+
+## Forces director run time and timeline checks for smoke tests.
+func debug_force_run_time(seconds: float) -> void:
+	var director := _run_director()
+	if director != null and director.has_method("debug_force_run_time"):
+		director.debug_force_run_time(seconds)
+	if _page_event_controller != null and seconds >= 300.0 and _page_event_controller.has_method("force_start"):
+		_page_event_controller.force_start()
+	_update_hud()
+	if seconds >= 300.0:
+		_show_victory_summary()
+
+
+## Returns active or resolved Page Event ID for smoke checks.
+func debug_active_page_event_id() -> StringName:
+	if _page_event_controller == null or not _page_event_controller.has_method("active_event_id"):
+		return &""
+	return _page_event_controller.active_event_id()
 
 
 func _ensure_runtime_services() -> void:
@@ -220,7 +330,7 @@ func _ensure_weapon_manager() -> void:
 		manager.name = "WeaponManager"
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager(), _upgrade_state)
+		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager(), _upgrade_state, _content_factory)
 
 
 func _ensure_run_director() -> void:
@@ -253,6 +363,30 @@ func _ensure_draft_controller() -> void:
 		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen(), _upgrade_state)
 
 
+func _ensure_menu_controller() -> void:
+	_menu_controller = _run_root().get_node_or_null("RunMenuController")
+	if _menu_controller == null:
+		_menu_controller = RunMenuControllerScript.new()
+		_menu_controller.name = "RunMenuController"
+		_run_root().add_child(_menu_controller)
+	if _menu_controller.has_method("configure"):
+		_menu_controller.configure(_modal_layer())
+	if _menu_controller.has_signal("start_requested") and not _menu_controller.start_requested.is_connected(_start_run):
+		_menu_controller.start_requested.connect(_start_run)
+	if _menu_controller.has_signal("retry_requested") and not _menu_controller.retry_requested.is_connected(_retry_run):
+		_menu_controller.retry_requested.connect(_retry_run)
+	if _menu_controller.has_signal("main_menu_requested") and not _menu_controller.main_menu_requested.is_connected(_return_to_main_menu):
+		_menu_controller.main_menu_requested.connect(_return_to_main_menu)
+
+
+func _ensure_page_event_controller() -> void:
+	_page_event_controller = _run_root().get_node_or_null("PageEventController")
+	if _page_event_controller == null:
+		_page_event_controller = PageEventControllerScript.new()
+		_page_event_controller.name = "PageEventController"
+		_run_root().add_child(_page_event_controller)
+
+
 func _connect_player_dash(player_body: Node) -> void:
 	var manager := _pagecraft_manager()
 	if player_body == null or manager == null or not player_body.has_signal("dash_path_sampled"):
@@ -282,6 +416,9 @@ func _on_entity_died(event: Dictionary) -> void:
 		_end_run_from_player_death(event)
 		return
 	_show_enemy_death(owner)
+	_enemies_defeated += 1
+	if _page_event_controller != null and _page_event_controller.has_method("add_kill_progress"):
+		_page_event_controller.add_kill_progress()
 	var reward := 0
 	if owner != null and "reward_xp" in owner:
 		reward = owner.reward_xp
@@ -292,7 +429,7 @@ func _on_entity_died(event: Dictionary) -> void:
 
 
 func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
-	if _run_ended:
+	if not _run_started or _run_ended:
 		return
 	_level_tracker.add_xp(amount, &"color_mote")
 	_update_hud()
@@ -303,7 +440,7 @@ func _on_draft_choice_selected(event: Dictionary) -> void:
 
 
 func _apply_upgrade_choice(choice_id: StringName) -> void:
-	if _run_ended:
+	if not _run_started or _run_ended:
 		return
 	var upgrade_event := _upgrade_state.apply_choice(choice_id)
 	if upgrade_event.is_empty():
@@ -329,6 +466,8 @@ func _tick_contact_damage(delta: float) -> void:
 		if enemy_health == null or not enemy_health.has_method("is_alive") or not enemy_health.is_alive():
 			continue
 		if player().global_position.distance_to((enemy as Node3D).global_position) <= 0.85:
+			if not "contact_damage" in enemy:
+				continue
 			_damage_model.apply_damage(player_health, enemy.name, enemy.contact_damage, [&"contact"])
 			_contact_damage_cooldown_remaining = 0.7
 			_update_hud()
@@ -343,30 +482,40 @@ func _ensure_minimal_hud() -> void:
 		_hud_label = Label.new()
 		_hud_label.name = "FirstPlayableHudLabel"
 		_hud_label.position = Vector2(16.0, 12.0)
-		_hud_label.custom_minimum_size = Vector2(240.0, 96.0)
-		_hud_label.add_theme_font_size_override("font_size", 22)
+		_hud_label.custom_minimum_size = Vector2(520.0, 300.0)
+		_hud_label.add_theme_font_size_override("font_size", 16)
 		_hud_label.add_theme_color_override("font_color", Color(0.04, 0.035, 0.03, 1.0))
 		_hud_label.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.86, 0.85))
 		_hud_label.add_theme_constant_override("outline_size", 3)
 		hud.add_child(_hud_label)
-	_ensure_death_screen()
 	_update_hud()
 
 
 func _update_hud() -> void:
 	if _hud_label == null:
 		return
-	_hud_label.text = "HP: %d/%d\nLevel: %d\nXP: %d/%d\nEnemies: %d/%d\nBudget: %d\nSpawned: %d\nTime: %s" % [
+	_hud_label.text = "HP: %d/%d\nLevel: %d\nXP: %d/%d\nTime: %s\nWaxlight damage: %.1f\nWaxlight cooldown: %.2fs\nWaxlight duration: %.1fs\nWax cap: %d\nWax inactive/active: %d/%d\nDirector: %.2f/s %s\nBudget: %d\nSpawned: %d\nEnemies: %d active / Safety %d\n%s\nWeapons: %s\nPassives: %s" % [
 		roundi(debug_player_health()),
 		roundi(debug_player_max_health()),
 		debug_run_level(),
 		debug_current_level_xp(),
 		debug_xp_threshold(),
-		_active_enemy_count(),
-		_enemy_budget(),
+		_format_run_time(_run_time_seconds()),
+		_waxlight_damage_value(),
+		_waxlight_cooldown_value(),
+		_waxlight_duration_value(),
+		_waxlight_cap_value(),
+		_waxlight_unactivated_count(),
+		_waxlight_active_count(),
+		_director_spawn_rate(),
+		String(_director_band()),
 		_enemy_budget(),
 		_spawned_count(),
-		_format_run_time(_run_time_seconds()),
+		_active_enemy_count(),
+		_safety_enemy_cap(),
+		_page_event_line(),
+		", ".join(_weapon_display_names()),
+		", ".join(_passive_display_names()),
 	]
 
 
@@ -381,7 +530,7 @@ func _show_enemy_death(owner: Node) -> void:
 
 
 func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
-	if _run_ended:
+	if not _run_started or _run_ended:
 		return
 	var pickup := XpPickupScript.new()
 	pickup.name = "ColorMote_%d" % amount
@@ -412,9 +561,14 @@ func _end_run_from_player_death(event: Dictionary) -> void:
 	if _run_ended:
 		return
 	_run_ended = true
+	_run_started = false
 	if _draft_controller != null and _draft_controller.has_method("force_close"):
 		_draft_controller.force_close(true)
-	_show_death_screen()
+	var director := _run_director()
+	if director != null and director.has_method("stop"):
+		director.stop()
+	if _menu_controller != null and _menu_controller.has_method("show_death_menu"):
+		_menu_controller.show_death_menu()
 	if _event_bus != null and _event_bus.has_method("emit_run_ended"):
 		_event_bus.emit_run_ended({
 			"reason": &"player_died",
@@ -455,6 +609,197 @@ func _show_death_screen() -> void:
 	modal.visible = true
 	if screen != null:
 		screen.visible = true
+
+
+func _prepare_clean_run_state() -> void:
+	_clear_children(_players_root())
+	_clear_children(_enemies_root())
+	_clear_children(_pickups_root())
+	_clear_children(_projectiles_root())
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("debug_clear_marks"):
+		pagecraft.debug_clear_marks()
+	_contact_damage_cooldown_remaining = 0.0
+	_level_tracker.reset()
+	_upgrade_state.reset()
+	if _page_event_controller != null and _page_event_controller.has_method("reset"):
+		_page_event_controller.reset()
+	var director := _run_director()
+	if director != null and director.has_method("reset"):
+		director.reset()
+	var follow := _camera_rig().get_node_or_null("GameplayCameraFollow")
+	if follow != null:
+		follow.queue_free()
+
+
+func _clear_children(root: Node) -> void:
+	if root == null:
+		return
+	for child in root.get_children():
+		root.remove_child(child)
+		child.queue_free()
+
+
+func _retry_run() -> void:
+	_start_run()
+
+
+func _return_to_main_menu() -> void:
+	_run_started = false
+	_run_ended = false
+	if get_tree() != null:
+		get_tree().paused = false
+	var director := _run_director()
+	if director != null and director.has_method("stop"):
+		director.stop()
+	_prepare_clean_run_state()
+	_hud().visible = false
+	_show_start_menu()
+
+
+func _show_start_menu() -> void:
+	if _menu_controller != null and _menu_controller.has_method("show_start_menu"):
+		_menu_controller.show_start_menu()
+
+
+func _tick_page_event(delta: float) -> void:
+	if _page_event_controller == null or not _page_event_controller.has_method("update"):
+		return
+	_page_event_controller.update(_run_time_seconds(), delta)
+	var director := _run_director()
+	if director != null and director.has_method("set_event_pressure_multiplier"):
+		director.set_event_pressure_multiplier(1.15 if _page_event_controller.is_active() else 1.0)
+
+
+func _check_vertical_slice_end() -> void:
+	if _run_time_seconds() >= 300.0:
+		if _page_event_controller != null and _page_event_controller.has_method("force_start"):
+			_page_event_controller.force_start()
+		_update_hud()
+		_show_victory_summary()
+
+
+func _show_victory_summary() -> void:
+	if _run_ended:
+		return
+	_run_ended = true
+	_run_started = false
+	var director := _run_director()
+	if director != null and director.has_method("stop"):
+		director.stop()
+	if _draft_controller != null and _draft_controller.has_method("force_close"):
+		_draft_controller.force_close(true)
+	if _event_bus != null and _event_bus.has_method("emit_run_ended"):
+		_event_bus.emit_run_ended({
+			"reason": &"vertical_slice_complete",
+			"world_position": Vector3.ZERO,
+		})
+	var summary_lines: Array[String] = [
+		"Victory",
+		"Time Survived: %s" % _format_run_time(_run_time_seconds()),
+		"Level: %d" % debug_run_level(),
+		"XP Collected: %d" % debug_xp_total(),
+		"Enemies Defeated: %d" % _enemies_defeated,
+		"Weapons: %s" % ", ".join(_weapon_display_names()),
+		"Passives: %s" % ", ".join(_passive_display_names()),
+	]
+	if _menu_controller != null and _menu_controller.has_method("show_summary"):
+		_menu_controller.show_summary(summary_lines)
+	if get_tree() != null:
+		get_tree().paused = true
+
+
+func _waxlight_damage_value() -> float:
+	var manager := _projectiles_root().get_node_or_null("WeaponManager")
+	if manager != null and manager.has_method("debug_weapon_damage"):
+		return manager.debug_weapon_damage(&"waxlight_comet")
+	return _content_factory.waxlight_comet_weapon().level_data_for(1).base_damage
+
+
+func _waxlight_cooldown_value() -> float:
+	var manager := _projectiles_root().get_node_or_null("WeaponManager")
+	if manager != null and manager.has_method("debug_cooldown_seconds"):
+		return manager.debug_cooldown_seconds()
+	return _content_factory.waxlight_comet_weapon().level_data_for(1).cooldown_seconds
+
+
+func _waxlight_duration_value() -> float:
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("debug_activation_duration_seconds"):
+		return pagecraft.debug_activation_duration_seconds()
+	return 0.0
+
+
+func _waxlight_cap_value() -> int:
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("debug_unactivated_mark_cap"):
+		return pagecraft.debug_unactivated_mark_cap()
+	return 0
+
+
+func _waxlight_unactivated_count() -> int:
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("debug_unactivated_mark_count"):
+		return pagecraft.debug_unactivated_mark_count()
+	return 0
+
+
+func _waxlight_active_count() -> int:
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("debug_active_mark_count"):
+		return pagecraft.debug_active_mark_count()
+	return 0
+
+
+func _director_spawn_rate() -> float:
+	var director := _run_director()
+	if director != null and director.has_method("debug_spawn_rate_per_second"):
+		return director.debug_spawn_rate_per_second()
+	return 0.0
+
+
+func _director_band() -> StringName:
+	var director := _run_director()
+	if director != null and director.has_method("debug_current_time_band_id"):
+		return director.debug_current_time_band_id()
+	return &"idle"
+
+
+func _safety_enemy_cap() -> int:
+	var director := _run_director()
+	if director != null and director.has_method("debug_safety_enemy_cap"):
+		return director.debug_safety_enemy_cap()
+	return 0
+
+
+func _page_event_line() -> String:
+	if _page_event_controller != null and _page_event_controller.has_method("hud_line"):
+		return _page_event_controller.hud_line()
+	return "Event: none"
+
+
+func _weapon_display_names() -> Array[String]:
+	var names: Array[String] = []
+	for weapon_id in debug_owned_weapon_ids():
+		match weapon_id:
+			&"star_sticker_swarm":
+				names.append("Star Sticker Swarm")
+			_:
+				names.append("Waxlight Comet")
+	return names
+
+
+func _passive_display_names() -> Array[String]:
+	var names: Array[String] = []
+	for passive_id in debug_owned_passive_ids():
+		match passive_id:
+			&"candle_spark":
+				names.append("Candle Spark")
+			_:
+				names.append(String(passive_id).capitalize())
+	if names.is_empty():
+		names.append("none")
+	return names
 
 
 func _event_position(event: Dictionary) -> Vector3:

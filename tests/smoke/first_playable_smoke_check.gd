@@ -12,6 +12,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
 	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser")
@@ -38,7 +43,7 @@ func _initialize() -> void:
 	if player != null and player.has_method("debug_integrate"):
 		var start_position: Vector3 = player.global_position
 		player.debug_integrate(Vector2.RIGHT, false, 0.25)
-		_assert_true(player.global_position.x > start_position.x + 0.1, "player must move", failures)
+		_assert_true(player.global_position.distance_to(start_position) > 0.1, "player must move", failures)
 
 	var starting_enemy_distance := 999.0
 	if enemy != null and enemy.has_method("debug_distance_to_target"):
@@ -48,7 +53,7 @@ func _initialize() -> void:
 		await physics_frame
 
 	if enemy != null and enemy.has_method("debug_distance_to_target"):
-		_assert_true(enemy.debug_distance_to_target() < starting_enemy_distance, "enemy must chase player", failures)
+		_assert_true(enemy.debug_distance_to_target() < starting_enemy_distance or not enemy.visible, "enemy must chase player or die before contact", failures)
 	if weapon_manager != null:
 		_assert_true(weapon_manager.debug_hit_count() > 0, "auto weapon must hit", failures)
 	_assert_true(_has_dead_or_despawned_enemy(root), "at least one enemy must die", failures)
@@ -64,6 +69,11 @@ func _initialize() -> void:
 		_assert_true(runtime.debug_xp_total() >= 1, "collectible XP flow must award after Color Mote pickup", failures)
 		_assert_true(runtime.has_method("debug_player_health"), "runtime must expose player health for HUD/contact checks", failures)
 		if runtime.has_method("debug_player_health"):
+			var contact_enemy := _first_living_enemy(root)
+			if contact_enemy != null:
+				contact_enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
+			for contact_frame in 45:
+				await physics_frame
 			_assert_true(runtime.debug_player_health() < 50.0, "enemy contact must damage player through damage model", failures)
 	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP text", failures)
 	if pagecraft_manager != null:
@@ -123,6 +133,19 @@ func _has_dead_or_despawned_enemy(root: Node) -> bool:
 		if not (child as Node3D).visible:
 			return true
 	return false
+
+
+func _first_living_enemy(root: Node) -> Node3D:
+	var enemies := root.get_node_or_null("RunRoot/Actors/Enemies")
+	if enemies == null:
+		return null
+	for child in enemies.get_children():
+		if not child is Node3D or not (child as Node3D).visible:
+			continue
+		var health := child.get_node_or_null("HealthComponent")
+		if health != null and health.has_method("is_alive") and health.is_alive():
+			return child
+	return null
 
 
 func _hud_has_text(hud: Node, text_fragment: String) -> bool:

@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://src/data/weapon_data.gd" id="1_weapon"]
+[ext_resource type="Script" path="res://src/data/weapon_level_data.gd" id="2_level"]
+
+[sub_resource type="Resource" id="Resource_level_1"]
+script = ExtResource("2_level")
+level = 1
+base_damage = 5.0
+cooldown_seconds = 1.15
+mark_radius_meters = 0.65
+
+[sub_resource type="Resource" id="Resource_level_2"]
+script = ExtResource("2_level")
+level = 2
+base_damage = 6.0
+cooldown_seconds = 1.11
+mark_radius_meters = 0.68
+
+[sub_resource type="Resource" id="Resource_level_3"]
+script = ExtResource("2_level")
+level = 3
+base_damage = 7.0
+cooldown_seconds = 1.07
+mark_radius_meters = 0.71
+
+[sub_resource type="Resource" id="Resource_level_4"]
+script = ExtResource("2_level")
+level = 4
+base_damage = 8.0
+cooldown_seconds = 1.03
+mark_radius_meters = 0.74
+
+[sub_resource type="Resource" id="Resource_level_5"]
+script = ExtResource("2_level")
+level = 5
+base_damage = 9.0
+cooldown_seconds = 0.99
+mark_radius_meters = 0.77
+
+[sub_resource type="Resource" id="Resource_level_6"]
+script = ExtResource("2_level")
+level = 6
+base_damage = 10.0
+cooldown_seconds = 0.95
+mark_radius_meters = 0.8
+
+[sub_resource type="Resource" id="Resource_level_7"]
+script = ExtResource("2_level")
+level = 7
+base_damage = 11.0
+cooldown_seconds = 0.91
+mark_radius_meters = 0.83
+
+[sub_resource type="Resource" id="Resource_level_8"]
+script = ExtResource("2_level")
+level = 8
+base_damage = 12.0
+cooldown_seconds = 0.87
+mark_radius_meters = 0.86
+
+[sub_resource type="Resource" id="Resource_level_9"]
+script = ExtResource("2_level")
+level = 9
+base_damage = 13.0
+cooldown_seconds = 0.83
+mark_radius_meters = 0.89
+
+[sub_resource type="Resource" id="Resource_level_10"]
+script = ExtResource("2_level")
+level = 10
+base_damage = 14.0
+cooldown_seconds = 0.79
+mark_radius_meters = 0.92
+
+[resource]
+script = ExtResource("1_weapon")
+id = &"waxlight_comet"
+display_name = "Waxlight Comet"
+description = "Prototype authored Resource for the starter Waxlight Comet."
+tags = Array[StringName]([&"prototype"])
+weapon_type_id = &"direct_nearest"
+attack_behavior_id = &"nearest_direct_hit"
+material_tags = Array[StringName]([&"waxlight", &"firelight"])
+catalyst_tags = Array[StringName]([&"firelight", &"waxlight"])
+pagecraft_material_tag = &"waxlight"
+dash_interaction_id = &"waxlight_dash_pulse"
+levels = Array[Resource]([SubResource("Resource_level_1"), SubResource("Resource_level_2"), SubResource("Resource_level_3"), SubResource("Resource_level_4"), SubResource("Resource_level_5"), SubResource("Resource_level_6"), SubResource("Resource_level_7"), SubResource("Resource_level_8"), SubResource("Resource_level_9"), SubResource("Resource_level_10")])

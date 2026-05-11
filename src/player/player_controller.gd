@@ -6,10 +6,10 @@ signal dash_path_sampled(start_position: Vector3, end_position: Vector3)
 const InputActionsScript := preload("res://src/input/input_actions.gd")
 
 @export_range(1.0, 20.0, 0.1) var move_speed := 7.0
-@export_range(1.0, 40.0, 0.1) var dash_speed := 18.0
-@export_range(0.01, 1.0, 0.01) var dash_active_seconds := 0.18
-@export_range(0.0, 1.0, 0.01) var dash_recovery_seconds := 0.18
-@export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 1.0
+@export_range(1.0, 40.0, 0.1) var dash_speed := 14.0
+@export_range(0.01, 1.0, 0.01) var dash_active_seconds := 0.15
+@export_range(0.0, 1.0, 0.01) var dash_recovery_seconds := 0.14
+@export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 0.9
 @export var page_half_extents := Vector2(7.7, 4.7)
 
 var _input_actions = InputActionsScript.new()
@@ -24,6 +24,8 @@ var _dash_recovery_remaining := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	collision_layer = 1
+	collision_mask = 0
 	_ensure_placeholder_nodes()
 
 
@@ -44,6 +46,23 @@ func debug_integrate(move_input: Vector2, dash_pressed: bool, delta: float) -> v
 ## Returns true while active dash travel is happening.
 func is_dashing() -> bool:
 	return _dash_time_remaining > 0.0
+
+
+## Returns expected straight-line dash travel distance for smoke tuning.
+func debug_dash_distance() -> float:
+	return dash_speed * dash_active_seconds
+
+
+## Clears dash timers for deterministic smoke checks.
+func debug_force_dash_ready() -> void:
+	_dash_time_remaining = 0.0
+	_dash_cooldown_remaining = 0.0
+	_dash_recovery_remaining = 0.0
+
+
+## Resets spawn position for retry and menu-start flows.
+func reset_to_spawn_position(spawn_position: Vector3) -> void:
+	global_position = spawn_position
 
 
 func _integrate(move_input: Vector2, dash_pressed: bool, delta: float, manual_motion: bool) -> void:

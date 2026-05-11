@@ -15,6 +15,11 @@ func _initialize() -> void:
 
 	await process_frame
 	await physics_frame
+	var _runtime_start := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	if _runtime_start != null and _runtime_start.has_method("debug_start_run"):
+		_runtime_start.debug_start_run()
+	await process_frame
+	await physics_frame
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
@@ -37,7 +42,7 @@ func _initialize() -> void:
 	if player != null and enemy != null and runtime != null and runtime.has_method("debug_player_health"):
 		enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
 		await physics_frame
-		_assert_true(is_equal_approx(runtime.debug_player_health(), 45.0), "enemy contact damage must be 5", failures)
+		_assert_true(is_equal_approx(runtime.debug_player_health(), 47.0), "enemy contact damage must be tuned to 3", failures)
 		enemy.global_position = Vector3(6.5, 0.0, 3.0)
 
 	if runtime != null and runtime.has_method("debug_xp_total"):
