@@ -148,7 +148,7 @@ func _ensure_pagecraft_manager() -> void:
 		manager.name = "PagecraftManager"
 		_pagecraft_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(_event_bus, _pagecraft_root())
+		manager.configure(_event_bus, _pagecraft_root(), _damage_model, _enemies_root())
 
 
 func _connect_player_dash(player_body: Node) -> void:

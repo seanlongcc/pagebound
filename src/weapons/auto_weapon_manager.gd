@@ -71,4 +71,11 @@ func _fire_at(target: Node3D) -> void:
 func _deposit_pagecraft_mark(world_position: Vector3, level_data: Resource) -> void:
 	if _pagecraft_manager == null or not _pagecraft_manager.has_method("deposit_mark"):
 		return
-	_pagecraft_manager.deposit_mark(world_position, _weapon_data.pagecraft_material_tag, level_data.mark_radius_meters, _weapon_data.id)
+	_pagecraft_manager.deposit_mark(
+		world_position,
+		_weapon_data.pagecraft_material_tag,
+		level_data.mark_radius_meters,
+		_weapon_data.id,
+		level_data.base_damage,
+		_weapon_data.material_tags
+	)
