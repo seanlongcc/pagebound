@@ -10,6 +10,7 @@ const PlayerControllerScript := preload("res://src/player/player_controller.gd")
 const PagecraftManagerScript := preload("res://src/pagecraft/pagecraft_manager.gd")
 const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.gd")
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
+const RunDraftControllerScript := preload("res://src/runtime/run_draft_controller.gd")
 const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
@@ -22,6 +23,7 @@ var _content_factory = PrototypeContentFactoryScript.new()
 var _damage_model = DamageModelScript.new()
 var _level_tracker = RunLevelTrackerScript.new()
 var _event_bus: Node
+var _draft_controller: Node
 var _contact_damage_cooldown_remaining := 0.0
 var _hud_label: Label
 
@@ -45,6 +47,7 @@ func _start_first_playable_loop() -> void:
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
+	_ensure_draft_controller()
 	_spawn_player()
 	_ensure_run_director()
 	_ensure_weapon_manager()
@@ -93,6 +96,31 @@ func debug_level_up_count() -> int:
 ## Spawns a Color Mote for smoke checks.
 func debug_spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
 	_spawn_xp_pickup(world_position, amount)
+
+
+## Returns true while prototype draft UI is open.
+func debug_draft_is_open() -> bool:
+	return _draft_controller != null and _draft_controller.has_method("is_draft_open") and _draft_controller.is_draft_open()
+
+
+## Returns current prototype draft choice count.
+func debug_draft_choice_count() -> int:
+	if _draft_controller == null or not _draft_controller.has_method("debug_choice_count"):
+		return 0
+	return _draft_controller.debug_choice_count()
+
+
+## Accepts the focused/default draft choice for smoke checks.
+func debug_accept_focused_draft_choice() -> void:
+	if _draft_controller != null and _draft_controller.has_method("accept_focused_choice"):
+		_draft_controller.accept_focused_choice()
+
+
+## Returns last selected draft choice ID for smoke checks.
+func debug_selected_draft_choice_id() -> StringName:
+	if _draft_controller == null or not _draft_controller.has_method("debug_selected_choice_id"):
+		return &""
+	return _draft_controller.debug_selected_choice_id()
 
 
 ## Returns first-playable player health for smoke/debug checks.
@@ -176,6 +204,16 @@ func _ensure_pagecraft_manager() -> void:
 		_pagecraft_root().add_child(manager)
 	if manager.has_method("configure"):
 		manager.configure(_event_bus, _pagecraft_root(), _damage_model, _enemies_root())
+
+
+func _ensure_draft_controller() -> void:
+	_draft_controller = _run_root().get_node_or_null("RunDraftController")
+	if _draft_controller == null:
+		_draft_controller = RunDraftControllerScript.new()
+		_draft_controller.name = "RunDraftController"
+		_run_root().add_child(_draft_controller)
+	if _draft_controller.has_method("configure"):
+		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen())
 
 
 func _connect_player_dash(player_body: Node) -> void:
@@ -348,6 +386,14 @@ func _pickups_root() -> Node3D:
 
 func _hud() -> Control:
 	return get_parent().get_parent().get_node("UI/HUD") as Control
+
+
+func _modal_layer() -> Control:
+	return get_parent().get_parent().get_node("UI/ModalLayer") as Control
+
+
+func _level_up_screen() -> Control:
+	return get_parent().get_parent().get_node("UI/ModalLayer/LevelUpScreen") as Control
 
 
 func _pagecraft_root() -> Node3D:
