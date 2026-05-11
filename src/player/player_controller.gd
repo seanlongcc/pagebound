@@ -10,6 +10,7 @@ const InputActionsScript := preload("res://src/input/input_actions.gd")
 @export_range(0.01, 1.0, 0.01) var dash_active_seconds := 0.18
 @export_range(0.0, 1.0, 0.01) var dash_recovery_seconds := 0.18
 @export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 1.0
+@export var page_half_extents := Vector2(7.7, 4.7)
 
 var _input_actions = InputActionsScript.new()
 var _camera: Camera3D
@@ -94,8 +95,9 @@ func _integrate_dash(delta: float, manual_motion: bool) -> void:
 func _apply_motion(delta: float, manual_motion: bool) -> void:
 	if manual_motion:
 		global_position += velocity * delta
-		return
-	move_and_slide()
+	else:
+		move_and_slide()
+	_clamp_to_page()
 
 
 func _input_to_world_direction(move_input: Vector2) -> Vector3:
@@ -107,7 +109,12 @@ func _input_to_world_direction(move_input: Vector2) -> Vector3:
 	if _camera != null:
 		right = _flattened(_camera.global_transform.basis.x)
 		forward = _flattened(-_camera.global_transform.basis.z)
-	return (right * input.x + forward * input.y).normalized()
+	return (right * input.x + forward * -input.y).normalized()
+
+
+func _clamp_to_page() -> void:
+	global_position.x = clampf(global_position.x, -page_half_extents.x, page_half_extents.x)
+	global_position.z = clampf(global_position.z, -page_half_extents.y, page_half_extents.y)
 
 
 func _flattened(value: Vector3) -> Vector3:

@@ -91,7 +91,7 @@ First playable foundation is now in place. Next practical work: complete remaini
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --quit-after 1` ran the configured main scene without shell validation errors.
 - Godot AI addon is copied to `addons/godot_ai/` and enabled in `project.godot`; MCP endpoint `http://127.0.0.1:8000/mcp` is not running until the Godot editor opens with the plugin active.
 - MVP Systems Design gate passed on 2026-05-11 with accepted risks documented in `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
-- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, camera follow, runtime event bus, damage model, pooled damage numbers, one chaser enemy, one auto weapon, XP reward stub, visible Pagecraft marks, and dash activation of marks.
+- First playable behavior: `Main.tscn` boots, runtime creates a primitive player, input actions, camera follow, runtime event bus, damage model, pooled damage numbers, one chaser enemy, one auto weapon, visible HP/XP HUD, visible Color Mote XP drop on enemy death, player contact damage, finite page bounds clamp, visible Pagecraft marks, and dash activation of marks. `move_up`/W now moves toward negative Z/page top.
 
 ## Asset Direction Pass
 

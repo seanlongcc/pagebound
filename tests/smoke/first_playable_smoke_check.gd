@@ -23,6 +23,7 @@ func _initialize() -> void:
 	var pagecraft_manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var camera := root.get_node_or_null("RunRoot/CameraRig/Camera3D") as Camera3D
+	var hud := root.get_node_or_null("UI/HUD") as Control
 
 	_assert_true(player is CharacterBody3D, "player must exist as CharacterBody3D", failures)
 	_assert_true(enemy is CharacterBody3D, "enemy must spawn as CharacterBody3D", failures)
@@ -32,6 +33,7 @@ func _initialize() -> void:
 	_assert_true(pagecraft_manager != null and pagecraft_manager.has_method("debug_mark_count"), "Pagecraft manager must exist", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_xp_total"), "runtime XP stub must exist", failures)
 	_assert_true(camera != null and camera.current, "gameplay camera must be current", failures)
+	_assert_true(hud != null and hud.visible, "minimal HUD must be visible", failures)
 
 	if player != null and player.has_method("debug_integrate"):
 		var start_position: Vector3 = player.global_position
@@ -51,10 +53,17 @@ func _initialize() -> void:
 		_assert_true(weapon_manager.debug_hit_count() > 0, "auto weapon must hit", failures)
 	if enemy_health != null:
 		_assert_true(not enemy_health.is_alive(), "enemy must die", failures)
+	if enemy != null:
+		_assert_true(not enemy.visible, "dead enemy must have visible death/despawn indication", failures)
 	if damage_manager != null:
 		_assert_true(damage_manager.debug_spawned_count() > 0, "damage numbers must spawn", failures)
 	if runtime != null:
 		_assert_true(runtime.debug_xp_total() >= 1, "XP stub must reward enemy death", failures)
+		_assert_true(runtime.has_method("debug_player_health"), "runtime must expose player health for HUD/contact checks", failures)
+		if runtime.has_method("debug_player_health"):
+			_assert_true(runtime.debug_player_health() < 40.0, "enemy contact must damage player through damage model", failures)
+	_assert_true(_has_visible_pickup(root), "enemy death must spawn visible XP pickup", failures)
+	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP text", failures)
 	if pagecraft_manager != null:
 		_assert_true(pagecraft_manager.debug_mark_count() > 0, "weapon must leave Pagecraft mark", failures)
 
@@ -83,6 +92,25 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
 	if not value:
 		failures.append(message)
+
+
+func _has_visible_pickup(root: Node) -> bool:
+	var pickups := root.get_node_or_null("RunRoot/Pickups")
+	if pickups == null:
+		return false
+	for child in pickups.get_children():
+		if child is Node3D and child.visible:
+			return true
+	return false
+
+
+func _hud_has_text(hud: Node, text_fragment: String) -> bool:
+	if hud == null:
+		return false
+	for child in hud.get_children():
+		if child is Label and child.text.contains(text_fragment):
+			return true
+	return false
 
 
 func _finish(failures: Array[String]) -> void:

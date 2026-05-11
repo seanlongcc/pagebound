@@ -20,6 +20,8 @@ var _content_factory = PrototypeContentFactoryScript.new()
 var _damage_model = DamageModelScript.new()
 var _event_bus: Node
 var _xp_total := 0
+var _contact_damage_cooldown_remaining := 0.0
+var _hud_label: Label
 
 
 func _ready() -> void:
@@ -28,11 +30,19 @@ func _ready() -> void:
 	call_deferred("_start_first_playable_loop")
 
 
+func _physics_process(delta: float) -> void:
+	if not enable_first_playable_loop:
+		return
+	_tick_contact_damage(delta)
+	_update_hud()
+
+
 func _start_first_playable_loop() -> void:
 	_input_actions.ensure_default_actions()
 	_ensure_runtime_services()
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
+	_ensure_minimal_hud()
 	_spawn_player()
 	_spawn_enemy()
 	_ensure_weapon_manager()
@@ -56,6 +66,14 @@ func damage_model():
 ## Returns first-playable XP total for smoke/debug checks.
 func debug_xp_total() -> int:
 	return _xp_total
+
+
+## Returns first-playable player health for smoke/debug checks.
+func debug_player_health() -> float:
+	var health := _player_health()
+	if health == null or not "current_health" in health:
+		return 0.0
+	return health.current_health
 
 
 func _ensure_runtime_services() -> void:
@@ -161,12 +179,89 @@ func _on_entity_died(event: Dictionary) -> void:
 	if reward <= 0:
 		return
 	_xp_total += reward
+	_show_enemy_death(owner)
+	_spawn_xp_pickup(_event_position(event), reward)
 	if _event_bus != null and _event_bus.has_method("emit_xp_awarded"):
 		_event_bus.emit_xp_awarded({
 			"amount": reward,
 			"total": _xp_total,
 			"source_id": event.get("target_id", &"unknown_enemy"),
 		})
+	_update_hud()
+
+
+func _tick_contact_damage(delta: float) -> void:
+	_contact_damage_cooldown_remaining = maxf(0.0, _contact_damage_cooldown_remaining - delta)
+	if _contact_damage_cooldown_remaining > 0.0:
+		return
+	var player_health := _player_health()
+	if player_health == null or not player_health.has_method("is_alive") or not player_health.is_alive():
+		return
+	for enemy in _enemies_root().get_children():
+		if not enemy is Node3D or not enemy.visible:
+			continue
+		var enemy_health := enemy.get_node_or_null("HealthComponent")
+		if enemy_health == null or not enemy_health.has_method("is_alive") or not enemy_health.is_alive():
+			continue
+		if player().global_position.distance_to((enemy as Node3D).global_position) <= 0.85:
+			_damage_model.apply_damage(player_health, enemy.name, enemy.contact_damage, [&"contact"])
+			_contact_damage_cooldown_remaining = 0.7
+			_update_hud()
+			return
+
+
+func _ensure_minimal_hud() -> void:
+	var hud := _hud()
+	hud.visible = true
+	_hud_label = hud.get_node_or_null("FirstPlayableHudLabel") as Label
+	if _hud_label == null:
+		_hud_label = Label.new()
+		_hud_label.name = "FirstPlayableHudLabel"
+		_hud_label.position = Vector2(16.0, 12.0)
+		_hud_label.add_theme_font_size_override("font_size", 22)
+		hud.add_child(_hud_label)
+	_update_hud()
+
+
+func _update_hud() -> void:
+	if _hud_label == null:
+		return
+	_hud_label.text = "HP: %s  XP: %d" % [str(roundi(debug_player_health())), _xp_total]
+
+
+func _show_enemy_death(owner: Node) -> void:
+	if owner == null:
+		return
+	owner.visible = false
+	owner.set_physics_process(false)
+	var collision := owner.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collision != null:
+		collision.disabled = true
+
+
+func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
+	var pickup := MeshInstance3D.new()
+	pickup.name = "ColorMote_%d" % amount
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.18
+	mesh.height = 0.32
+	pickup.mesh = mesh
+	pickup.position = Vector3(world_position.x, 0.28, world_position.z)
+	pickup.material_override = _pickup_material()
+	_pickups_root().add_child(pickup)
+
+
+func _pickup_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.22, 0.9, 1.0, 1.0)
+	material.emission_enabled = true
+	material.emission = Color(0.05, 0.45, 0.75, 1.0)
+	material.emission_energy_multiplier = 0.7
+	return material
+
+
+func _event_position(event: Dictionary) -> Vector3:
+	return event.get("world_position", Vector3.ZERO)
 
 
 func _ensure_camera_follow(target: Node3D) -> void:
@@ -189,6 +284,13 @@ func _players_root() -> Node3D:
 	return _run_root().get_node("Actors/Players") as Node3D
 
 
+func _player_health() -> Node:
+	var player_node := player()
+	if player_node == null:
+		return null
+	return player_node.get_node_or_null("HealthComponent")
+
+
 func _enemies_root() -> Node3D:
 	return _run_root().get_node("Actors/Enemies") as Node3D
 
@@ -207,6 +309,14 @@ func _camera_rig() -> Node3D:
 
 func _damage_numbers_root() -> Node3D:
 	return _run_root().get_node("DamageNumbers") as Node3D
+
+
+func _pickups_root() -> Node3D:
+	return _run_root().get_node("Pickups") as Node3D
+
+
+func _hud() -> Control:
+	return get_parent().get_parent().get_node("UI/HUD") as Control
 
 
 func _pagecraft_root() -> Node3D:

@@ -60,6 +60,15 @@ func _assert_player_moves_and_dashes(player: Node, failures: Array[String]) -> v
 	_assert_true(player.global_position.x > start_position.x + 0.1, "player must move on X/Z plane from input", failures)
 	_assert_equal(roundf(player.global_position.y), roundf(start_position.y), "player movement must keep Y height stable", failures)
 
+	player.global_position = Vector3.ZERO
+	player.debug_integrate(Vector2.UP, false, 0.25)
+	_assert_true(player.global_position.z < -0.1, "move_up/W must move toward page top, not down", failures)
+
+	player.global_position = Vector3.ZERO
+	player.debug_integrate(Vector2.RIGHT, false, 3.0)
+	_assert_true(player.global_position.x <= 7.8, "player must be clamped inside finite page width", failures)
+
+	player.global_position = Vector3.ZERO
 	var dash_events: Array[Dictionary] = []
 	player.dash_path_sampled.connect(func(start: Vector3, end: Vector3) -> void:
 		dash_events.append({"start": start, "end": end})

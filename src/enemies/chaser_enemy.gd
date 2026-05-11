@@ -2,6 +2,7 @@ class_name ChaserEnemy
 extends CharacterBody3D
 
 @export_range(0.0, 20.0, 0.1) var move_speed := 2.6
+@export_range(0.0, 10000.0, 0.1) var contact_damage := 4.0
 @export_range(0, 100000, 1) var reward_xp := 1
 
 var _target: Node3D
@@ -31,6 +32,7 @@ func configure(enemy_data: Resource, target: Node3D) -> void:
 	_target = target
 	if enemy_data != null:
 		move_speed = enemy_data.move_speed
+		contact_damage = enemy_data.contact_damage
 		reward_xp = enemy_data.reward_xp
 
 
