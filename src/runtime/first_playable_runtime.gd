@@ -16,6 +16,9 @@ const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
+const CAMERA_LOCAL_POSITION := Vector3(0.0, 9.0, 4.4)
+const CAMERA_FOLLOW_HALF_EXTENTS := Vector2(3.8, 2.3)
+const CAMERA_FOV_DEGREES := 61.0
 
 @export var enable_first_playable_loop := true
 
@@ -194,6 +197,7 @@ func _spawn_player() -> void:
 	player_body.set_script(PlayerControllerScript)
 	_players_root().add_child(player_body)
 	player_body.global_position = Vector3.ZERO
+	_configure_gameplay_camera()
 	if player_body.has_method("set_follow_camera"):
 		player_body.set_follow_camera(_camera())
 	_ensure_health(player_body, &"player_hero", 50.0, &"player")
@@ -400,6 +404,15 @@ func _ensure_camera_follow(target: Node3D) -> void:
 		camera_rig.add_child(follow)
 	if follow.has_method("configure"):
 		follow.configure(target, camera_rig)
+	if "page_half_extents" in follow:
+		follow.page_half_extents = CAMERA_FOLLOW_HALF_EXTENTS
+
+
+func _configure_gameplay_camera() -> void:
+	var camera := _camera()
+	camera.position = CAMERA_LOCAL_POSITION
+	camera.fov = CAMERA_FOV_DEGREES
+	camera.look_at(_camera_rig().global_position, Vector3.UP)
 
 
 func _run_root() -> Node3D:
