@@ -58,11 +58,10 @@ func _initialize() -> void:
 	if damage_manager != null:
 		_assert_true(damage_manager.debug_spawned_count() > 0, "damage numbers must spawn", failures)
 	if runtime != null:
-		_assert_true(runtime.debug_xp_total() >= 1, "XP stub must reward enemy death", failures)
+		_assert_true(runtime.debug_xp_total() >= 1, "collectible XP flow must award after Color Mote pickup", failures)
 		_assert_true(runtime.has_method("debug_player_health"), "runtime must expose player health for HUD/contact checks", failures)
 		if runtime.has_method("debug_player_health"):
-			_assert_true(runtime.debug_player_health() < 40.0, "enemy contact must damage player through damage model", failures)
-	_assert_true(_has_visible_pickup(root), "enemy death must spawn visible XP pickup", failures)
+			_assert_true(runtime.debug_player_health() < 50.0, "enemy contact must damage player through damage model", failures)
 	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP text", failures)
 	if pagecraft_manager != null:
 		_assert_true(pagecraft_manager.debug_mark_count() > 0, "weapon must leave Pagecraft mark", failures)

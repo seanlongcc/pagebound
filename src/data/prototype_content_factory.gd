@@ -66,7 +66,7 @@ func _inkling_chaser_enemy() -> Resource:
 	enemy.behavior_id = &"chaser"
 	enemy.max_health = 18.0
 	enemy.move_speed = 2.6
-	enemy.contact_damage = 4.0
+	enemy.contact_damage = 5.0
 	enemy.reward_xp = 1
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
 	return enemy

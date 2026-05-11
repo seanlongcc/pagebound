@@ -2,7 +2,7 @@ class_name ChaserEnemy
 extends CharacterBody3D
 
 @export_range(0.0, 20.0, 0.1) var move_speed := 2.6
-@export_range(0.0, 10000.0, 0.1) var contact_damage := 4.0
+@export_range(0.0, 10000.0, 0.1) var contact_damage := 5.0
 @export_range(0, 100000, 1) var reward_xp := 1
 
 var _target: Node3D

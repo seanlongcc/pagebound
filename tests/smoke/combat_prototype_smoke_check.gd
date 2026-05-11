@@ -39,7 +39,7 @@ func _initialize() -> void:
 	if enemy_health != null:
 		_assert_true(not enemy_health.is_alive(), "enemy must be killable by placeholder weapon", failures)
 	if runtime != null and runtime.has_method("debug_xp_total"):
-		_assert_true(runtime.debug_xp_total() >= 1, "enemy death must award XP stub", failures)
+		_assert_true(runtime.debug_xp_total() >= 1, "collectible XP flow must award XP after pickup", failures)
 
 	root.queue_free()
 	await process_frame

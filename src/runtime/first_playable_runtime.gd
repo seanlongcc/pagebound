@@ -10,6 +10,7 @@ const PlayerControllerScript := preload("res://src/player/player_controller.gd")
 const PagecraftManagerScript := preload("res://src/pagecraft/pagecraft_manager.gd")
 const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.gd")
 const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
+const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
 
@@ -76,6 +77,14 @@ func debug_player_health() -> float:
 	return health.current_health
 
 
+## Returns first-playable player max health for smoke/debug checks.
+func debug_player_max_health() -> float:
+	var health := _player_health()
+	if health == null or not "max_health" in health:
+		return 0.0
+	return health.max_health
+
+
 func _ensure_runtime_services() -> void:
 	_event_bus = _run_root().get_node_or_null("RuntimeEventBus")
 	if _event_bus == null:
@@ -107,7 +116,7 @@ func _spawn_player() -> void:
 	player_body.global_position = Vector3.ZERO
 	if player_body.has_method("set_follow_camera"):
 		player_body.set_follow_camera(_camera())
-	_ensure_health(player_body, &"player_hero", 40.0, &"player")
+	_ensure_health(player_body, &"player_hero", 50.0, &"player")
 	_ensure_camera_follow(player_body)
 	_connect_player_dash(player_body)
 
@@ -173,19 +182,23 @@ func _on_entity_died(event: Dictionary) -> void:
 	if not target is Node:
 		return
 	var owner := (target as Node).get_parent()
+	_show_enemy_death(owner)
 	var reward := 0
 	if owner != null and "reward_xp" in owner:
 		reward = owner.reward_xp
 	if reward <= 0:
 		return
-	_xp_total += reward
-	_show_enemy_death(owner)
 	_spawn_xp_pickup(_event_position(event), reward)
+	_update_hud()
+
+
+func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
+	_xp_total += amount
 	if _event_bus != null and _event_bus.has_method("emit_xp_awarded"):
 		_event_bus.emit_xp_awarded({
-			"amount": reward,
+			"amount": amount,
 			"total": _xp_total,
-			"source_id": event.get("target_id", &"unknown_enemy"),
+			"source_id": &"color_mote",
 		})
 	_update_hud()
 
@@ -226,7 +239,11 @@ func _ensure_minimal_hud() -> void:
 func _update_hud() -> void:
 	if _hud_label == null:
 		return
-	_hud_label.text = "HP: %s  XP: %d" % [str(roundi(debug_player_health())), _xp_total]
+	_hud_label.text = "HP: %d/%d  XP: %d" % [
+		roundi(debug_player_health()),
+		roundi(debug_player_max_health()),
+		_xp_total,
+	]
 
 
 func _show_enemy_death(owner: Node) -> void:
@@ -240,24 +257,14 @@ func _show_enemy_death(owner: Node) -> void:
 
 
 func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
-	var pickup := MeshInstance3D.new()
+	var pickup := XpPickupScript.new()
 	pickup.name = "ColorMote_%d" % amount
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.18
-	mesh.height = 0.32
-	pickup.mesh = mesh
 	pickup.position = Vector3(world_position.x, 0.28, world_position.z)
-	pickup.material_override = _pickup_material()
 	_pickups_root().add_child(pickup)
-
-
-func _pickup_material() -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.22, 0.9, 1.0, 1.0)
-	material.emission_enabled = true
-	material.emission = Color(0.05, 0.45, 0.75, 1.0)
-	material.emission_energy_multiplier = 0.7
-	return material
+	if pickup.has_method("configure"):
+		pickup.configure(amount, player())
+	if pickup.has_signal("collected") and not pickup.collected.is_connected(_on_xp_pickup_collected):
+		pickup.collected.connect(_on_xp_pickup_collected)
 
 
 func _event_position(event: Dictionary) -> Vector3:
