@@ -4,17 +4,17 @@ extends Node
 const PROTOTYPE_CHOICES := [
 	{
 		"id": &"waxlight_damage_plus_1",
-		"title": "Waxlight damage +1",
+		"title": "Waxlight damage +2",
 		"description": "Future Waxlight hits and dash activations hit harder.",
 	},
 	{
 		"id": &"waxlight_cooldown_minus_10",
-		"title": "Waxlight cooldown -10%",
+		"title": "Waxlight cooldown -0.25s",
 		"description": "Waxlight Comet fires more often.",
 	},
 	{
 		"id": &"player_max_hp_plus_10",
-		"title": "Player max HP +10",
+		"title": "Player max HP +20",
 		"description": "Increase maximum HP and refill the new amount.",
 	},
 ]
@@ -22,6 +22,8 @@ const PROTOTYPE_CHOICES := [
 var _event_bus: Node
 var _modal_layer: Control
 var _level_up_screen: Control
+var _hud_layer: Control
+var _hud_was_visible := false
 var _choice_provider
 var _choice_buttons: Array[Button] = []
 var _current_choices: Array[Dictionary] = []
@@ -36,14 +38,16 @@ func _ready() -> void:
 
 
 ## Connects draft UI to runtime events and existing shell UI slots.
-func configure(event_bus: Node, modal_layer: Control, level_up_screen: Control, choice_provider = null) -> void:
+func configure(event_bus: Node, modal_layer: Control, level_up_screen: Control, choice_provider = null, hud_layer: Control = null) -> void:
 	_event_bus = event_bus
 	_modal_layer = modal_layer
 	_level_up_screen = level_up_screen
 	_choice_provider = choice_provider
+	_hud_layer = hud_layer
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_set_always_process(_modal_layer)
 	_set_always_process(_level_up_screen)
+	_set_always_process(_hud_layer)
 	_ensure_ui()
 	if _event_bus != null and _event_bus.has_signal("run_level_gained"):
 		if not _event_bus.run_level_gained.is_connected(_on_run_level_gained):
@@ -117,6 +121,9 @@ func _open_draft(level_event: Dictionary) -> void:
 		_modal_layer.visible = true
 	if _level_up_screen != null:
 		_level_up_screen.visible = true
+	if _hud_layer != null:
+		_hud_was_visible = _hud_layer.visible
+		_hud_layer.visible = false
 	if not _choice_buttons.is_empty():
 		_choice_buttons[0].grab_focus()
 	_draft_open = true
@@ -140,6 +147,8 @@ func _close_draft() -> void:
 		_level_up_screen.visible = false
 	if _modal_layer != null:
 		_modal_layer.visible = false
+	if _hud_layer != null and _hud_was_visible:
+		_hud_layer.visible = true
 	if get_tree() != null:
 		get_tree().paused = false
 
@@ -151,6 +160,8 @@ func force_close(keep_tree_paused: bool = false) -> void:
 		_level_up_screen.visible = false
 	if _modal_layer != null:
 		_modal_layer.visible = false
+	if _hud_layer != null and not keep_tree_paused and _hud_was_visible:
+		_hud_layer.visible = true
 	if get_tree() != null and not keep_tree_paused:
 		get_tree().paused = false
 
@@ -159,22 +170,43 @@ func _ensure_ui() -> void:
 	if _level_up_screen == null or _level_up_screen.get_node_or_null("DraftChoicePanel") != null:
 		_collect_existing_buttons()
 		return
+	_level_up_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var margin := MarginContainer.new()
+	margin.name = "DraftChoicePanel"
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 28)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 28)
+	_level_up_screen.add_child(margin)
+
+	var center := CenterContainer.new()
+	center.name = "DraftCenter"
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(center)
+
 	var panel := VBoxContainer.new()
-	panel.name = "DraftChoicePanel"
-	panel.position = Vector2(118.0, 112.0)
-	panel.custom_minimum_size = Vector2(820.0, 280.0)
+	panel.name = "DraftChoiceStack"
+	panel.custom_minimum_size = Vector2(900.0, 236.0)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	panel.add_theme_constant_override("separation", 14)
-	_level_up_screen.add_child(panel)
+	center.add_child(panel)
 
 	var title := Label.new()
 	title.name = "DraftTitle"
-	title.text = "Level Up"
+	title.text = "Select Power Up"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 28)
 	panel.add_child(title)
 
 	var row := HBoxContainer.new()
 	row.name = "DraftChoiceRow"
-	row.custom_minimum_size = Vector2(820.0, 168.0)
+	row.custom_minimum_size = Vector2(900.0, 180.0)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_FILL
 	row.add_theme_constant_override("separation", 14)
 	panel.add_child(row)
 
@@ -182,7 +214,12 @@ func _ensure_ui() -> void:
 		var button := Button.new()
 		button.name = "DraftChoice%d" % index
 		button.focus_mode = Control.FOCUS_ALL
-		button.custom_minimum_size = Vector2(260.0, 150.0)
+		button.custom_minimum_size = Vector2(286.0, 180.0)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.size_flags_vertical = Control.SIZE_FILL
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.clip_text = true
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var choice_index := index
 		button.pressed.connect(func() -> void:
 			_select_choice_index(choice_index)

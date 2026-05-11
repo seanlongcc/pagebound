@@ -18,7 +18,7 @@ const TIME_BANDS := [
 @export_range(1, 256, 1) var active_budget := 8
 @export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := 1.7
 @export_range(1, 16, 1) var spawn_batch_size := 1
-@export var page_half_extents := Vector2(7.7, 4.7)
+@export var page_half_extents := Vector2(11.0, 7.0)
 
 var _enemies_root: Node3D
 var _target: Node3D

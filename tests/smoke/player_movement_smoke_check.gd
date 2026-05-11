@@ -71,7 +71,8 @@ func _assert_player_moves_and_dashes(player: Node, failures: Array[String]) -> v
 
 	player.global_position = Vector3.ZERO
 	player.debug_integrate(Vector2.RIGHT, false, 3.0)
-	_assert_true(player.global_position.x <= 7.8, "player must be clamped inside finite page width", failures)
+	_assert_true(player.global_position.x > 8.5, "player must have larger page movement room than old prototype width", failures)
+	_assert_true(player.global_position.x <= 11.1, "player must be clamped inside larger finite page width", failures)
 
 	player.global_position = Vector3.ZERO
 	var dash_events: Array[Dictionary] = []

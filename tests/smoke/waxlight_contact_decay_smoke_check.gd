@@ -48,6 +48,10 @@ func _initialize() -> void:
 		_finish_after_root(root, failures)
 		return
 
+	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
+	if weapon_manager != null:
+		weapon_manager.set_physics_process(false)
+
 	manager.debug_clear_marks()
 	var base_duration := 0.0
 	if manager.has_method("debug_activation_duration_seconds"):
@@ -61,15 +65,19 @@ func _initialize() -> void:
 	_assert_true(manager.debug_unactivated_mark_count() == base_cap, "unactivated Waxlight marks must respect cap", failures)
 
 	runtime.debug_apply_upgrade_choice(&"waxlight_mark_cap_plus_2")
-	_assert_true(manager.debug_unactivated_mark_cap() == base_cap + 2, "mark cap upgrade must increase unactivated Waxlight cap", failures)
-	for index in 2:
+	_assert_true(manager.debug_unactivated_mark_cap() == base_cap + 3, "mark cap upgrade must increase unactivated Waxlight cap", failures)
+	for index in 3:
 		manager.debug_deposit_test_mark(Vector3(float(index) * 0.4, 0.0, -3.0))
-	_assert_true(manager.debug_unactivated_mark_count() == base_cap + 2, "upgraded cap must allow more unactivated Waxlight marks", failures)
+	_assert_true(manager.debug_unactivated_mark_count() == base_cap + 3, "upgraded cap must allow more unactivated Waxlight marks", failures)
 
 	manager.debug_clear_marks()
-	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
-	if weapon_manager != null:
-		weapon_manager.set_physics_process(false)
+	manager.debug_deposit_test_mark(Vector3.ZERO)
+	_assert_true(manager.debug_unactivated_mark_count() == 1, "inactive Waxlight test mark must deposit", failures)
+	for _frame in 560:
+		await physics_frame
+	_assert_true(manager.debug_unactivated_mark_count() == 0, "unactivated Waxlight marks must expire after finite inactive lifetime", failures)
+
+	manager.debug_clear_marks()
 	var mark_position := Vector3.ZERO
 	manager.debug_deposit_test_mark(mark_position)
 	var touching_victim := _spawn_victim(enemies_root, "TouchingWaxVictim", mark_position + Vector3(0.25, 0.0, 0.0), 20.0)
@@ -86,6 +94,11 @@ func _initialize() -> void:
 	_assert_true(touching_health.current_health < 20.0, "activated Waxlight must damage enemy touching mark", failures)
 	_assert_true(is_equal_approx(outside_health.current_health, 20.0), "activated Waxlight must not damage enemy outside mark radius", failures)
 	_assert_true(manager.debug_active_mark_count() > 0, "activated Waxlight must remain active during decay duration", failures)
+	_assert_true(_visible_named_count(root, "WaxlightDashPulse") > 0, "Waxlight dash activation must create visible pulse feedback", failures)
+
+	for _frame in 90:
+		await physics_frame
+	_assert_true(_visible_named_count(root, "WaxlightDashPulse") == 0, "Waxlight dash pulse visual must clean itself up", failures)
 
 	for frame_index in int(ceil(manager.debug_activation_duration_seconds() * 60.0)) + 20:
 		await physics_frame
@@ -111,6 +124,25 @@ func _finish_after_root(root: Node, failures: Array[String]) -> void:
 	root.queue_free()
 	await process_frame
 	_finish(failures)
+
+
+func _visible_named_count(root: Node, name_prefix: String) -> int:
+	var count := 0
+	if root == null:
+		return count
+	if String(root.name).begins_with(name_prefix) and _node_visible(root):
+		count += 1
+	for child in root.get_children():
+		count += _visible_named_count(child, name_prefix)
+	return count
+
+
+func _node_visible(node: Node) -> bool:
+	if node is Node3D:
+		return (node as Node3D).visible
+	if node is CanvasItem:
+		return (node as CanvasItem).visible
+	return true
 
 
 func _load_main(failures: Array[String]) -> Node:

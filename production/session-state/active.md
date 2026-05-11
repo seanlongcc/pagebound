@@ -1,10 +1,10 @@
 # Active Session State
 
-**Task**: Hardened First 5-Minute Vertical Slice Foundation
+**Task**: First 5-Minute Slice Readability and Scaling Pass
 **Status**: Implemented and smoke validated
 **Stage**: Technical Setup
 **Review Mode**: lean
-**Current Section**: First 5-minute vertical slice UI/flow, pacing, draft breadth, and 5:00 summary on `feat/mvp`
+**Current Section**: First 5-minute vertical slice readability, Star Sticker clarity, UI scaling, larger finite page, and 5:00 summary on `feat/mvp`
 
 ## Files
 
@@ -96,34 +96,40 @@
 - `tests/smoke/player_death_flow_smoke_check.gd`
 - `tests/smoke/run_level_smoke_check.gd`
 - `tests/smoke/draft_choice_smoke_check.gd`
+- `tests/smoke/draft_layout_scaling_smoke_check.gd`
 - `tests/smoke/upgrade_effects_smoke_check.gd`
 - `tests/smoke/run_director_smoke_check.gd`
 - `tests/smoke/director_time_bands_smoke_check.gd`
 - `tests/smoke/enemy_loop_smoke_check.gd`
 - `tests/smoke/hud_counters_smoke_check.gd`
 - `tests/smoke/page_bounds_smoke_check.gd`
+- `tests/smoke/page_event_timing_smoke_check.gd`
+- `tests/smoke/star_sticker_loop_smoke_check.gd`
 - `tests/smoke/vertical_slice_mvp_smoke_check.gd`
 
 ## Next
 
-First 5-minute vertical slice foundation is now in place with primitive placeholders only. Next practical work: extract `src/runtime/first_playable_runtime.gd` below the local 800-line guardrail, continue moving prototype runtime tuning into focused `.tres` content, add more documented weapon/passive choices, add Page Events/boss timing beyond the first Color Well objective, and replace primitive placeholders only after asset provenance is recorded.
+First 5-minute vertical slice readability pass is now in place with primitive placeholders only. Next practical work: extract `src/runtime/first_playable_runtime.gd` below the local 800-line guardrail, continue moving prototype runtime tuning into focused `.tres` content, add more documented weapon/passive choices, add Page Events/boss timing beyond the prototype 60s Color Well trigger, and replace primitive placeholders only after asset provenance is recorded.
 
 ## Current Vertical Slice Facts
 
 - Boot now shows a start menu. Run timer, director spawning, weapon firing, pickups, and player control remain idle until keyboard/gamepad accept or Start Run begins gameplay.
-- Death and victory/summary screens share Retry and Main Menu flow. Retry resets HP, XP, level, enemies, pickups, marks, director time, upgrades, draft state, page event state, and runtime counters.
+- Death and victory/summary screens share Retry and Main Menu flow. Retry resets HP, XP, level, enemies, pickups, marks, director time, upgrades, draft state, page event state, runtime counters, and snaps/rebinds camera follow to the new player at spawn.
 - Opening enemy pacing uses only `inkling_chaser` until the 60s pressure band. `paper_scrap_swarmer` joins after 60s.
 - Opening `inkling_chaser` HP is authored as two starting Waxlight hits. Early health scaling is a readable time-band multiplier: `1.0` opening, `1.15` at 60s, `1.3` at 120s, `1.5` at 240s.
 - Spawn pressure is time-band driven through target budget, interval, and batch size. The gameplay pacing cap was replaced with a high `safety_enemy_cap` of 120 for runaway protection only.
 - Dash prototype tune is shorter: `dash_speed = 14.0`, `dash_active_seconds = 0.15`, expected travel `2.1m`, with dash activation still triggering crossed Waxlight marks.
 - Runtime HUD now shows HP/max HP, level/XP, Waxlight damage, cooldown, active duration, inactive cap, inactive/active mark counts, director rate/band/budget/spawned/active/safety, page event state, weapons, and passives.
-- Draft UI now presents exactly 3 horizontal choices with title, current value, new value, and short effect text. Draft eligibility includes owned weapon upgrades, new documented weapon choices, documented passives, existing Waxlight/player stat upgrades, and fallback stat choices with prototype 5 weapon / 5 passive slot limits.
+- Draft UI now presents exactly 3 centered horizontal choices with equal-size cards, title, current value, new value, and short effect text. The modal hides HUD while open and scales across tested 16:9 sizes: 960x540, 1152x648, 1280x720, 1600x900, and 1920x1080. Draft eligibility includes owned weapon upgrades, new documented weapon choices, documented passives, existing Waxlight/player stat upgrades, and fallback stat choices with prototype 5 weapon / 5 passive slot limits.
 - Prototype data now loads authored `.tres` resources for Waxlight weapon tuning, Star Sticker weapon tuning, enemy families, Candle Spark passive, and upgrade metadata/effects, with fallback factory content retained.
-- Documented second weapon chosen: `star_sticker_swarm`. Reason: documented early-run MVP weapon in the main GDD example, distinct from Waxlight through burst hits, star sticker mark feedback, and multi-target primitive feedback. Damage routes through `DamageModel`.
-- Documented first passive chosen: `candle_spark`. Reason: documented first passive in the main GDD example and catalyst-compatible with Waxlight/Firelight-style play. Prototype effect increases glow/Waxlight runtime damage and appears in HUD stats.
-- Documented first Page Event/objective chosen: `fill_color_well`. Reason: documented MVP Page Event. Prototype starts at 5:00, shows objective text/progress on HUD, gains progress from kills/mark activation, applies light pressure while active, and is visible on the vertical-slice endpoint.
+- Documented second weapon chosen: `star_sticker_swarm`. Reason: documented early-run MVP weapon in the main GDD example, distinct from Waxlight through a readable orbit -> fire -> page-stick -> pop -> reform loop. Immediate hit and page-pop damage route through `DamageModel`, create damage numbers, and all Star Sticker visuals/gameplay artifacts have finite cleanup.
+- Documented first passive chosen: `candle_spark`. Reason: documented first passive in the main GDD example and catalyst-compatible with Waxlight/Firelight-style play. Prototype effect now starts at a chunky +15% glow/Waxlight runtime damage and appears in HUD/draft stats.
+- Documented first Page Event/objective chosen: `fill_color_well`. Reason: documented MVP Page Event. Prototype/test tuning starts it at 60s for fast validation while the full-run GDD rule remains 5:00; HUD shows objective text/progress, gains progress from kills/mark activation, applies light pressure while active, and it remains visible before the 5:00 vertical-slice endpoint.
 - 5:00 vertical-slice end condition now stops gameplay and shows summary with time survived, level, XP collected, enemies defeated, weapons, and passives.
-- Large-file note: `src/runtime/first_playable_runtime.gd` is now 925 lines. The change kept most new gameplay behavior in focused helpers/controllers, but this orchestration file still grew past the 800-line guardrail and should be the next extraction target.
+- Prototype upgrade steps are chunky/readable: Waxlight damage +2, Waxlight cooldown -0.25s, Waxlight active duration +1s, Waxlight unactivated mark cap +3, player max HP +20, Star Sticker level 1 -> 2 gives hit damage 4 -> 6 and stars 1 -> 2, and Candle Spark advances in 15% glow-damage steps.
+- No current attack artifact is indefinite: active Waxlight marks decay, inactive Waxlight marks expire after finite lifetime plus cap enforcement, Waxlight dash pulse visuals clean up, Star Sticker page stickers pop/clean up, and Star Sticker travel/pop feedback is transient.
+- Finite page/map is larger for early-slice movement: playable half-extents are 11.0 x 7.0, visible page mesh is 22 x 14, director spawn bounds and player clamp use the larger extents, camera follow/framing is widened, and Color Mote magnet radius is 8.0 for larger-page pickup readability.
+- Large-file note: `src/runtime/first_playable_runtime.gd` is now 942 lines. This pass added wiring/tuning only in that over-800-line orchestration file; feature behavior lives in focused runtime helpers (`AutoWeaponManager`, `PagecraftManager`, `RunDraftController`, `RunUpgradeState`, `PageEventController`). Extraction below the local guardrail remains the next cleanup target.
 
 ## Validation
 
@@ -142,20 +148,23 @@ First 5-minute vertical slice foundation is now in place with primitive placehol
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/player_death_flow_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/run_level_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/draft_choice_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/draft_layout_scaling_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/upgrade_effects_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/run_director_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/director_time_bands_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/enemy_loop_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/hud_counters_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/page_bounds_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/page_event_timing_smoke_check.gd` passed.
+- `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/star_sticker_loop_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/vertical_slice_mvp_smoke_check.gd` passed.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --script tests/smoke/first_playable_smoke_check.gd` passed.
 - Full `tests/smoke/*.gd` suite passed on 2026-05-11.
 - `Godot_v4.6.2-stable_win64_console.exe --headless --path . --quit-after 1` ran the configured main scene without shell validation errors.
 - Godot AI addon is copied to `addons/godot_ai/` and enabled in `project.godot`; MCP endpoint `http://127.0.0.1:8000/mcp` is not running until the Godot editor opens with the plugin active.
 - MVP Systems Design gate passed on 2026-05-11 with accepted risks documented in `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
-- First playable behavior: `Main.tscn` boots to a start menu, runtime creates a primitive player, input actions, more top-down camera follow, runtime event bus, damage model, pooled damage numbers, a scene-owned run director with early pressure time bands, two placeholder enemy families (`inkling_chaser` and delayed `paper_scrap_swarmer`), Waxlight Comet plus draft-acquired Star Sticker Swarm, documented Candle Spark passive, visible runtime stats HUD, collectible Color Mote XP drops with magnet pull range, run XP thresholds, level-up event flow, exactly 3 horizontal draft choices, runtime upgrades for Waxlight damage, Waxlight duration, Waxlight unactivated mark cap, Waxlight cooldown, and player max HP, finite page bounds clamp, finite spawn bounds, visible Pagecraft marks, dash activation into finite active Waxlight zones, contact-only active Waxlight damage through DamageModel, activated mark decay, unactivated mark cap enforcement, primitive Waxlight dash pulse visuals, 5:00 Fill the Color Well event/objective, and 5:00 victory summary. XP awards only after pickup collection. Player death now opens a `Run Over` death screen with Retry/Main Menu, pauses/stops gameplay, blocks dead-body XP collection, and blocks post-death upgrades/healing. Dead enemies visibly despawn, stop physics, disable collision, and stop being targetable. `move_up`/W moves toward negative Z/page top.
-- Current implementation count: 29 GDScript source files, 22 smoke checks, 7 ADRs. No third-party gameplay/art assets imported.
+- First playable behavior: `Main.tscn` boots to a start menu, runtime creates a primitive player, input actions, widened top-down camera follow, runtime event bus, damage model, pooled damage numbers, a scene-owned run director with early pressure time bands, two placeholder enemy families (`inkling_chaser` and delayed `paper_scrap_swarmer`), Waxlight Comet plus draft-acquired Star Sticker Swarm, documented Candle Spark passive, visible runtime stats HUD, collectible Color Mote XP drops with 8m magnet pull range, run XP thresholds, level-up event flow, exactly 3 centered/equal draft choices, runtime upgrades for Waxlight damage, Waxlight duration, Waxlight unactivated mark cap, Waxlight cooldown, player max HP, Star Sticker damage/count, and Candle Spark glow damage, finite 22x14 page bounds clamp, finite spawn bounds, visible Pagecraft marks, dash activation into finite active Waxlight zones, contact-only active Waxlight damage through DamageModel, activated mark decay, finite inactive mark expiry, primitive finite Waxlight dash pulse visuals, prototype 60s Fill the Color Well event/objective, and 5:00 victory summary. XP awards only after pickup collection. Player death opens a `Run Over` death screen with Retry/Main Menu, pauses/stops gameplay, blocks dead-body XP collection, blocks post-death upgrades/healing, and Retry snaps/rebinds the camera to the new player. Dead enemies visibly despawn, stop physics, disable collision, and stop being targetable. `move_up`/W moves toward negative Z/page top.
+- Current implementation count: 33 GDScript source files, 26 smoke checks, 7 ADRs. No third-party gameplay/art assets imported.
 
 ## Asset Direction Pass
 

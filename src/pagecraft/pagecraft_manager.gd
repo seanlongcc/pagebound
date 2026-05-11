@@ -4,6 +4,8 @@ extends Node
 @export_range(0.05, 2.0, 0.05) var dash_activation_padding := 0.45
 @export_range(0.1, 20.0, 0.1) var base_activation_duration_seconds := 2.0
 @export_range(0.05, 5.0, 0.05) var activation_damage_tick_seconds := 0.35
+@export_range(0.5, 30.0, 0.5) var inactive_mark_lifetime_seconds := 8.0
+@export_range(0.1, 3.0, 0.05) var pulse_lifetime_seconds := 0.75
 @export_range(1, 64, 1) var base_unactivated_mark_cap := 6
 
 var _event_bus: Node
@@ -17,10 +19,12 @@ var _activation_damage_count := 0
 var _last_activation_damage := 0.0
 var _last_mark_position := Vector3.ZERO
 var _pulse_count := 0
+var _pulse_visuals: Array[Dictionary] = []
 
 
 func _physics_process(delta: float) -> void:
-	_tick_active_marks(delta)
+	_tick_marks(delta)
+	_tick_pulse_visuals(delta)
 
 
 ## Configures the Pagecraft manager root and event output.
@@ -50,6 +54,7 @@ func deposit_mark(
 		"source_id": source_id,
 		"activation_damage": activation_damage,
 		"damage_tags": _activation_damage_tags(damage_tags),
+		"inactive_remaining_duration": inactive_mark_lifetime_seconds,
 		"remaining_duration": 0.0,
 		"damage_tick_remaining": 0.0,
 		"visual": mark_visual,
@@ -118,6 +123,11 @@ func debug_pulse_count() -> int:
 	return _pulse_count
 
 
+## Returns current visible pulse visual count for smoke/debug checks.
+func debug_active_pulse_visual_count() -> int:
+	return _pulse_visuals.size()
+
+
 ## Returns current unactivated Waxlight mark cap for smoke/debug checks.
 func debug_unactivated_mark_cap() -> int:
 	return _unactivated_mark_cap()
@@ -140,6 +150,11 @@ func debug_clear_marks() -> void:
 		if visual is Node:
 			(visual as Node).queue_free()
 	_marks.clear()
+	for pulse in _pulse_visuals:
+		var visual = pulse.get("visual", null)
+		if visual is Node:
+			(visual as Node).queue_free()
+	_pulse_visuals.clear()
 	_last_mark_position = Vector3.ZERO
 
 
@@ -166,10 +181,15 @@ func _activate_mark(index: int, start_position: Vector3, end_position: Vector3) 
 	_emit_activated(mark)
 
 
-func _tick_active_marks(delta: float) -> void:
+func _tick_marks(delta: float) -> void:
 	for index in range(_marks.size() - 1, -1, -1):
 		var mark := _marks[index]
 		if not mark.get("activated", false):
+			mark["inactive_remaining_duration"] = float(mark.get("inactive_remaining_duration", inactive_mark_lifetime_seconds)) - delta
+			if float(mark["inactive_remaining_duration"]) <= 0.0:
+				_remove_mark_at(index)
+				continue
+			_marks[index] = mark
 			continue
 		mark["remaining_duration"] = float(mark.get("remaining_duration", 0.0)) - delta
 		mark["damage_tick_remaining"] = float(mark.get("damage_tick_remaining", 0.0)) - delta
@@ -242,7 +262,21 @@ func _create_dash_pulse(start_position: Vector3, end_position: Vector3) -> void:
 		visual.rotation.y = atan2(-normalized_direction.z, normalized_direction.x)
 		visual.material_override = _pulse_material(pulse_colors[lane])
 		_pagecraft_root.add_child(visual)
+		_pulse_visuals.append({"visual": visual, "remaining": pulse_lifetime_seconds})
 		_pulse_count += 1
+
+
+func _tick_pulse_visuals(delta: float) -> void:
+	for index in range(_pulse_visuals.size() - 1, -1, -1):
+		var pulse := _pulse_visuals[index]
+		pulse["remaining"] = float(pulse.get("remaining", 0.0)) - delta
+		if float(pulse["remaining"]) <= 0.0:
+			var visual = pulse.get("visual", null)
+			if visual is Node:
+				(visual as Node).queue_free()
+			_pulse_visuals.remove_at(index)
+			continue
+		_pulse_visuals[index] = pulse
 
 
 func _pulse_material(color: Color) -> StandardMaterial3D:

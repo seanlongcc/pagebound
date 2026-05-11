@@ -145,8 +145,8 @@ func _initialize() -> void:
 		runtime.debug_force_run_time(300.0)
 	await process_frame
 	await physics_frame
-	_assert_true(runtime != null and runtime.has_method("debug_active_page_event_id") and runtime.debug_active_page_event_id() == &"fill_color_well", "5:00 must start documented Page Event", failures)
-	_assert_true(_visible_text(hud).contains("Fill the Color Well"), "HUD must show 5:00 objective text", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_active_page_event_id") and runtime.debug_active_page_event_id() == &"fill_color_well", "5:00 endpoint must retain documented Page Event state", failures)
+	_assert_true(_visible_text(hud).contains("Fill the Color Well"), "HUD must show Page Event objective text by 5:00", failures)
 	_assert_true(_screen_visible(root, "VictoryScreen"), "5:00 must show vertical-slice summary", failures)
 	var summary_text := _visible_text(root.get_node_or_null("UI/ModalLayer/VictoryScreen"))
 	_assert_true(summary_text.contains("Time Survived"), "summary must show time survived", failures)

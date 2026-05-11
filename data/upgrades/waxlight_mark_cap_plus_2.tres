@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_upgrade")
 id = &"waxlight_mark_cap_plus_2"
-display_name = "Max unactivated wax +2"
+display_name = "Max unactivated wax +3"
 description = "More dormant wax marks can exist at once."
 tags = Array[StringName]([&"prototype"])
 choice_type = &"stat"
 effect_id = &"waxlight_mark_cap_plus_2"
 stat_id = &"waxlight_mark_cap"
-value = 2.0
-effect_text = "Wax cap +2"
+value = 3.0
+effect_text = "Wax cap +3"
 draft_weight = 1.0

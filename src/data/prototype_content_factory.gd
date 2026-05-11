@@ -213,11 +213,11 @@ func _candle_spark_passive() -> Resource:
 	var passive = PassiveItemDataScript.new()
 	passive.id = PASSIVE_CANDLE_SPARK
 	passive.display_name = "Candle Spark"
-	passive.description = "Documented Firelight/Waxlight passive. In prototype it increases Waxlight glow damage."
+	passive.description = "Documented Firelight/Waxlight passive. In prototype it gives a chunky Waxlight glow damage boost."
 	passive.tags = _string_name_array([TAG_PROTOTYPE])
 	passive.catalyst_tags = _string_name_array([TAG_FIRELIGHT, PAGECRAFT_TAG_WAXLIGHT])
 	passive.stat_id = &"glow_damage_multiplier"
-	passive.level_values = [0.05, 0.10, 0.10, 0.15, 0.15]
+	passive.level_values = [0.15, 0.30, 0.45, 0.60, 0.75]
 	return passive
 
 
@@ -238,7 +238,7 @@ func _star_sticker_levels() -> Array[Resource]:
 	for level in range(1, 11):
 		var level_data = WeaponLevelDataScript.new()
 		level_data.level = level
-		level_data.base_damage = 3.0 + float(level - 1) * 0.6
+		level_data.base_damage = 4.0 + float(level - 1) * 2.0
 		level_data.cooldown_seconds = maxf(0.85, 2.0 - float(level - 1) * 0.06)
 		level_data.mark_radius_meters = 0.4 + float(level - 1) * 0.02
 		levels.append(level_data)
@@ -254,11 +254,11 @@ func _opening_enemy_health() -> float:
 
 func _fallback_upgrade_choices() -> Array[Resource]:
 	return [
-		_upgrade_choice(&"waxlight_damage_plus_1", "Waxlight damage +1", "Waxlight hits and active wax hit harder.", &"stat", &"waxlight_damage_plus_1", &"", &"", &"waxlight_damage", 1.0),
-		_upgrade_choice(&"waxlight_cooldown_minus_10", "Waxlight cooldown -10%", "Waxlight Comet fires more often.", &"stat", &"waxlight_cooldown_minus_10", &"", &"", &"waxlight_cooldown", -0.10),
+		_upgrade_choice(&"waxlight_damage_plus_1", "Waxlight damage +2", "Waxlight hits and active wax hit harder.", &"stat", &"waxlight_damage_plus_1", &"", &"", &"waxlight_damage", 2.0),
+		_upgrade_choice(&"waxlight_cooldown_minus_10", "Waxlight cooldown -0.25s", "Waxlight Comet fires more often.", &"stat", &"waxlight_cooldown_minus_10", &"", &"", &"waxlight_cooldown", -0.25),
 		_upgrade_choice(&"waxlight_duration_plus_1", "Waxlight duration +1s", "Activated wax stays dangerous longer.", &"stat", &"waxlight_duration_plus_1", &"", &"", &"waxlight_duration", 1.0),
-		_upgrade_choice(&"waxlight_mark_cap_plus_2", "Max unactivated wax +2", "More dormant wax marks can exist at once.", &"stat", &"waxlight_mark_cap_plus_2", &"", &"", &"waxlight_mark_cap", 2.0),
-		_upgrade_choice(&"player_max_hp_plus_10", "Player max HP +10", "Increase maximum HP and refill the new amount.", &"stat", &"player_max_hp_plus_10", &"", &"", &"player_max_hp", 10.0),
+		_upgrade_choice(&"waxlight_mark_cap_plus_2", "Max unactivated wax +3", "More dormant wax marks can exist at once.", &"stat", &"waxlight_mark_cap_plus_2", &"", &"", &"waxlight_mark_cap", 3.0),
+		_upgrade_choice(&"player_max_hp_plus_10", "Player max HP +20", "Increase maximum HP and refill the new amount.", &"stat", &"player_max_hp_plus_10", &"", &"", &"player_max_hp", 20.0),
 	]
 
 

@@ -2,9 +2,10 @@ class_name PageEventController
 extends Node
 
 const EVENT_FILL_COLOR_WELL := &"fill_color_well"
-const EVENT_START_SECONDS := 300.0
 const EVENT_DURATION_SECONDS := 180.0
 const REQUIRED_PROGRESS := 5.0
+
+@export_range(1.0, 1200.0, 1.0) var first_event_time_seconds := 60.0
 
 var _active := false
 var _completed := false
@@ -22,7 +23,7 @@ func reset() -> void:
 
 
 func update(run_time_seconds: float, delta: float) -> void:
-	if not _active and not _completed and not _expired and run_time_seconds >= EVENT_START_SECONDS:
+	if not _active and not _completed and not _expired and run_time_seconds >= first_event_time_seconds:
 		_start_event()
 	if not _active:
 		return
@@ -73,6 +74,10 @@ func is_expired() -> bool:
 
 func progress_ratio() -> float:
 	return clampf(_progress / REQUIRED_PROGRESS, 0.0, 1.0)
+
+
+func debug_first_event_time_seconds() -> float:
+	return first_event_time_seconds
 
 
 func hud_line() -> String:

@@ -31,12 +31,16 @@ func _initialize() -> void:
 		player.global_position = Vector3.ZERO
 		player.debug_integrate(Vector2.RIGHT, false, 5.0)
 		player.debug_integrate(Vector2.DOWN, false, 5.0)
-		_assert_true(player.global_position.x <= 7.8, "player must stay inside page right bound", failures)
-		_assert_true(player.global_position.z <= 4.8, "player must stay inside page lower bound", failures)
+		_assert_true(player.global_position.x > 8.5, "player must move farther than old small page right bound", failures)
+		_assert_true(player.global_position.z > 5.5, "player must move farther than old small page lower bound", failures)
+		_assert_true(player.global_position.x <= 11.1, "player must stay inside larger page right bound", failures)
+		_assert_true(player.global_position.z <= 7.1, "player must stay inside larger page lower bound", failures)
 		player.debug_integrate(Vector2.LEFT, false, 10.0)
 		player.debug_integrate(Vector2.UP, false, 10.0)
-		_assert_true(player.global_position.x >= -7.8, "player must stay inside page left bound", failures)
-		_assert_true(player.global_position.z >= -4.8, "player must stay inside page upper bound", failures)
+		_assert_true(player.global_position.x < -8.5, "player must move farther than old small page left bound", failures)
+		_assert_true(player.global_position.z < -5.5, "player must move farther than old small page upper bound", failures)
+		_assert_true(player.global_position.x >= -11.1, "player must stay inside larger page left bound", failures)
+		_assert_true(player.global_position.z >= -7.1, "player must stay inside larger page upper bound", failures)
 
 	for index in 240:
 		await physics_frame

@@ -9,7 +9,7 @@ roughness = 0.9
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_page"]
 material = SubResource("StandardMaterial3D_page")
-size = Vector2(16, 10)
+size = Vector2(22, 14)
 
 [sub_resource type="Environment" id="Environment_shell"]
 background_mode = 1

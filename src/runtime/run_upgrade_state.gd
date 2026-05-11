@@ -15,10 +15,15 @@ const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
 const PASSIVE_CANDLE_SPARK := &"candle_spark"
 const MAX_WEAPONS := 5
 const MAX_PASSIVES := 5
+const WAXLIGHT_DAMAGE_STEP := 2.0
+const WAXLIGHT_COOLDOWN_REDUCTION_STEP := 0.25
+const PLAYER_MAX_HEALTH_STEP := 20.0
+const WAXLIGHT_MARK_CAP_STEP := 3
+const CANDLE_SPARK_FALLBACK_STEP := 0.15
 
 var _content_factory
 var _waxlight_damage_bonus := 0.0
-var _waxlight_cooldown_multiplier := 1.0
+var _waxlight_cooldown_reduction_seconds := 0.0
 var _player_max_health_bonus := 0.0
 var _waxlight_active_duration_bonus := 0.0
 var _waxlight_unactivated_mark_cap_bonus := 0
@@ -38,7 +43,7 @@ func configure(content_factory) -> void:
 ## Resets temporary run loadout and stat upgrades.
 func reset() -> void:
 	_waxlight_damage_bonus = 0.0
-	_waxlight_cooldown_multiplier = 1.0
+	_waxlight_cooldown_reduction_seconds = 0.0
 	_player_max_health_bonus = 0.0
 	_waxlight_active_duration_bonus = 0.0
 	_waxlight_unactivated_mark_cap_bonus = 0
@@ -74,22 +79,23 @@ func prototype_choices() -> Array[Dictionary]:
 func apply_choice(choice_id: StringName) -> Dictionary:
 	match choice_id:
 		CHOICE_WAXLIGHT_DAMAGE:
-			_waxlight_damage_bonus += 1.0
+			_waxlight_damage_bonus += WAXLIGHT_DAMAGE_STEP
 			return {
 				"choice_id": choice_id,
 				"waxlight_damage_bonus": _waxlight_damage_bonus,
 			}
 		CHOICE_WAXLIGHT_COOLDOWN:
-			_waxlight_cooldown_multiplier *= 0.9
+			_waxlight_cooldown_reduction_seconds += WAXLIGHT_COOLDOWN_REDUCTION_STEP
 			return {
 				"choice_id": choice_id,
-				"waxlight_cooldown_multiplier": _waxlight_cooldown_multiplier,
+				"waxlight_cooldown_reduction_seconds": _waxlight_cooldown_reduction_seconds,
+				"waxlight_cooldown_multiplier": waxlight_cooldown_multiplier(),
 			}
 		CHOICE_PLAYER_MAX_HP:
-			_player_max_health_bonus += 10.0
+			_player_max_health_bonus += PLAYER_MAX_HEALTH_STEP
 			return {
 				"choice_id": choice_id,
-				"player_max_health_delta": 10.0,
+				"player_max_health_delta": PLAYER_MAX_HEALTH_STEP,
 				"player_max_health_bonus": _player_max_health_bonus,
 			}
 		CHOICE_WAXLIGHT_DURATION:
@@ -99,7 +105,7 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 				"waxlight_active_duration_bonus": _waxlight_active_duration_bonus,
 			}
 		CHOICE_WAXLIGHT_MARK_CAP:
-			_waxlight_unactivated_mark_cap_bonus += 2
+			_waxlight_unactivated_mark_cap_bonus += WAXLIGHT_MARK_CAP_STEP
 			return {
 				"choice_id": choice_id,
 				"waxlight_unactivated_mark_cap_bonus": _waxlight_unactivated_mark_cap_bonus,
@@ -149,7 +155,7 @@ func weapon_damage(weapon_id: StringName, base_damage: float) -> float:
 ## Returns cooldown after runtime upgrades for a weapon ID.
 func weapon_cooldown_seconds(weapon_id: StringName, base_cooldown_seconds: float) -> float:
 	if weapon_id == WEAPON_WAXLIGHT_COMET:
-		return maxf(0.05, base_cooldown_seconds * _waxlight_cooldown_multiplier)
+		return maxf(0.25, base_cooldown_seconds - _waxlight_cooldown_reduction_seconds)
 	return base_cooldown_seconds
 
 
@@ -160,7 +166,10 @@ func waxlight_damage_bonus() -> float:
 
 ## Returns current Waxlight cooldown multiplier.
 func waxlight_cooldown_multiplier() -> float:
-	return _waxlight_cooldown_multiplier
+	var base_cooldown := _waxlight_base_cooldown()
+	if base_cooldown <= 0.0:
+		return 1.0
+	return weapon_cooldown_seconds(WEAPON_WAXLIGHT_COMET, base_cooldown) / base_cooldown
 
 
 ## Returns current player max health bonus.
@@ -186,7 +195,7 @@ func glow_damage_multiplier() -> float:
 	var passive := _passive_data(PASSIVE_CANDLE_SPARK)
 	if passive != null and "level_values" in passive and passive.level_values.size() >= level:
 		return float(passive.level_values[level - 1])
-	return 0.05 * float(level)
+	return CANDLE_SPARK_FALLBACK_STEP * float(level)
 
 
 ## Returns currently owned weapon IDs.
@@ -217,23 +226,23 @@ func passive_level(passive_id: StringName) -> int:
 
 func _waxlight_damage_choice() -> Dictionary:
 	var current := _waxlight_damage()
-	return _choice(CHOICE_WAXLIGHT_DAMAGE, "Waxlight damage +1", "Damage %.1f -> %.1f" % [current, current + 1.0], "Waxlight hits and active wax hit harder.")
+	return _choice(CHOICE_WAXLIGHT_DAMAGE, "Waxlight damage +2", "Damage %.1f -> %.1f" % [current, current + WAXLIGHT_DAMAGE_STEP], "Waxlight hits and active wax hit harder.")
 
 
 func _priority_stat_choice() -> Dictionary:
-	if _waxlight_damage_bonus < 1.0:
+	if _waxlight_damage_bonus < WAXLIGHT_DAMAGE_STEP:
 		return _waxlight_damage_choice()
-	if _waxlight_cooldown_multiplier >= 0.999:
+	if _waxlight_cooldown_reduction_seconds <= 0.0:
 		return _waxlight_cooldown_choice()
-	if _player_max_health_bonus < 10.0:
+	if _player_max_health_bonus < PLAYER_MAX_HEALTH_STEP:
 		return _max_hp_choice()
 	return _waxlight_damage_choice()
 
 
 func _waxlight_cooldown_choice() -> Dictionary:
 	var current := _waxlight_cooldown()
-	var next := current * 0.9
-	return _choice(CHOICE_WAXLIGHT_COOLDOWN, "Waxlight cooldown -10%", "Cooldown %.2fs -> %.2fs" % [current, next], "Waxlight Comet fires more often.")
+	var next := maxf(0.25, current - WAXLIGHT_COOLDOWN_REDUCTION_STEP)
+	return _choice(CHOICE_WAXLIGHT_COOLDOWN, "Waxlight cooldown -0.25s", "Cooldown %.2fs -> %.2fs" % [current, next], "Waxlight Comet fires more often.")
 
 
 func _waxlight_duration_choice() -> Dictionary:
@@ -243,25 +252,27 @@ func _waxlight_duration_choice() -> Dictionary:
 
 func _waxlight_cap_choice() -> Dictionary:
 	var current := waxlight_unactivated_mark_cap(6)
-	return _choice(CHOICE_WAXLIGHT_MARK_CAP, "Max unactivated wax +2", "Wax cap %d -> %d" % [current, current + 2], "More dormant wax marks can exist at once.")
+	return _choice(CHOICE_WAXLIGHT_MARK_CAP, "Max unactivated wax +3", "Wax cap %d -> %d" % [current, current + WAXLIGHT_MARK_CAP_STEP], "More dormant wax marks can exist at once.")
 
 
 func _max_hp_choice() -> Dictionary:
 	var current := 50.0 + _player_max_health_bonus
-	return _choice(CHOICE_PLAYER_MAX_HP, "Player max HP +10", "Max HP %.0f -> %.0f" % [current, current + 10.0], "Increase maximum HP and refill the new amount.")
+	return _choice(CHOICE_PLAYER_MAX_HP, "Player max HP +20", "Max HP %.0f -> %.0f" % [current, current + PLAYER_MAX_HEALTH_STEP], "Increase maximum HP and refill the new amount.")
 
 
 func _new_weapon_choice() -> Dictionary:
-	return _choice(CHOICE_NEW_STAR_STICKER, "Star Sticker Swarm", "Weapon slot %d -> %d" % [_owned_weapon_levels.size(), _owned_weapon_levels.size() + 1], "Gain documented orbit/attach stickers that pop on enemies.")
+	return _choice(CHOICE_NEW_STAR_STICKER, "Star Sticker Swarm", "Weapon slot %d -> %d" % [_owned_weapon_levels.size(), _owned_weapon_levels.size() + 1], "Gain orbiting stickers that fire, stick to the page, pop, and reform.")
 
 
 func _star_sticker_upgrade_choice() -> Dictionary:
 	var current := _weapon_level(WEAPON_STAR_STICKER_SWARM)
-	return _choice(CHOICE_STAR_STICKER_LEVEL, "Star Sticker Swarm +1", "Level %d -> %d" % [current, current + 1], "Sticker damage and cadence improve.")
+	var next := mini(10, current + 1)
+	return _choice(CHOICE_STAR_STICKER_LEVEL, "Star Sticker Swarm +1", "Hit %.0f -> %.0f / Stars %d -> %d" % [_star_sticker_damage(current), _star_sticker_damage(next), _star_sticker_count(current), _star_sticker_count(next)], "Sticker hit damage and orbit count improve.")
 
 
 func _new_passive_choice() -> Dictionary:
-	return _choice(CHOICE_NEW_CANDLE_SPARK, "Candle Spark", "Glow damage +0% -> +5%", "Gain documented Firelight/Waxlight passive.")
+	var next := _passive_level_value(PASSIVE_CANDLE_SPARK, 1) * 100.0
+	return _choice(CHOICE_NEW_CANDLE_SPARK, "Candle Spark", "Glow damage +0%% -> +%.0f%%" % next, "Gain documented Firelight/Waxlight passive.")
 
 
 func _candle_spark_upgrade_choice() -> Dictionary:
@@ -322,11 +333,27 @@ func _waxlight_damage() -> float:
 
 
 func _waxlight_cooldown() -> float:
+	var base := _waxlight_base_cooldown()
+	return weapon_cooldown_seconds(WEAPON_WAXLIGHT_COMET, base)
+
+
+func _waxlight_base_cooldown() -> float:
 	var base := 1.15
 	var weapon := _weapon_data(WEAPON_WAXLIGHT_COMET)
 	if weapon != null:
 		base = float(weapon.level_data_for(1).cooldown_seconds)
-	return weapon_cooldown_seconds(WEAPON_WAXLIGHT_COMET, base)
+	return base
+
+
+func _star_sticker_damage(level: int) -> float:
+	var weapon := _weapon_data(WEAPON_STAR_STICKER_SWARM)
+	if weapon == null:
+		return 0.0
+	return weapon_damage(WEAPON_STAR_STICKER_SWARM, float(weapon.level_data_for(level).base_damage))
+
+
+func _star_sticker_count(level: int) -> int:
+	return clampi(level, 1, 4)
 
 
 func _weapon_data(weapon_id: StringName) -> Resource:
@@ -351,4 +378,4 @@ func _passive_level_value(passive_id: StringName, level: int) -> float:
 	var passive := _passive_data(passive_id)
 	if passive != null and "level_values" in passive and passive.level_values.size() >= level:
 		return float(passive.level_values[level - 1])
-	return 0.05 * float(level)
+	return CANDLE_SPARK_FALLBACK_STEP * float(level)

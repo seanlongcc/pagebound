@@ -6,8 +6,8 @@
 script = ExtResource("1_passive")
 id = &"candle_spark"
 display_name = "Candle Spark"
-description = "Documented Firelight/Waxlight passive. Prototype effect increases Waxlight glow damage."
+description = "Documented Firelight/Waxlight passive. Prototype effect gives a chunky Waxlight glow damage boost."
 tags = Array[StringName]([&"prototype"])
 catalyst_tags = Array[StringName]([&"firelight", &"waxlight"])
 stat_id = &"glow_damage_multiplier"
-level_values = Array[float]([0.05, 0.1, 0.1, 0.15, 0.15])
+level_values = Array[float]([0.15, 0.3, 0.45, 0.6, 0.75])

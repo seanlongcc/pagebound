@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_upgrade")
 id = &"waxlight_cooldown_minus_10"
-display_name = "Waxlight cooldown -10%"
+display_name = "Waxlight cooldown -0.25s"
 description = "Waxlight Comet fires more often."
 tags = Array[StringName]([&"prototype"])
 choice_type = &"stat"
 effect_id = &"waxlight_cooldown_minus_10"
 stat_id = &"waxlight_cooldown"
-value = -0.1
-effect_text = "Cooldown -10%"
+value = -0.25
+effect_text = "Cooldown -0.25s"
 draft_weight = 1.0

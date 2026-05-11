@@ -3,7 +3,7 @@ extends Node
 
 @export_range(0.01, 1.0, 0.01) var follow_smoothing_seconds := 0.12
 @export_range(0.0, 2.0, 0.01) var lookahead_seconds := 0.18
-@export var page_half_extents := Vector2(3.0, 1.8)
+@export var page_half_extents := Vector2(6.0, 4.0)
 
 var _target: Node3D
 var _camera_rig: Node3D
@@ -13,6 +13,13 @@ var _camera_rig: Node3D
 func configure(target: Node3D, camera_rig: Node3D) -> void:
 	_target = target
 	_camera_rig = camera_rig
+
+
+## Immediately snaps the rig to the current desired target position.
+func snap_to_target() -> void:
+	if _target == null or _camera_rig == null:
+		return
+	_camera_rig.global_position = _desired_position()
 
 
 func _physics_process(delta: float) -> void:

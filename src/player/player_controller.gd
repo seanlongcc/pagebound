@@ -10,7 +10,7 @@ const InputActionsScript := preload("res://src/input/input_actions.gd")
 @export_range(0.01, 1.0, 0.01) var dash_active_seconds := 0.15
 @export_range(0.0, 1.0, 0.01) var dash_recovery_seconds := 0.14
 @export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 0.9
-@export var page_half_extents := Vector2(7.7, 4.7)
+@export var page_half_extents := Vector2(11.0, 7.0)
 
 var _input_actions = InputActionsScript.new()
 var _camera: Camera3D

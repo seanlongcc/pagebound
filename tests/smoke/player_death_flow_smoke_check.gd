@@ -36,6 +36,11 @@ func _initialize() -> void:
 		)
 
 	if runtime != null and player_health != null:
+		var camera_rig := root.get_node_or_null("RunRoot/CameraRig") as Node3D
+		if player != null:
+			player.global_position = Vector3(7.0, 0.0, 4.0)
+		if camera_rig != null:
+			camera_rig.global_position = Vector3(7.0, 0.0, 4.0)
 		runtime.damage_model().apply_damage(player_health, &"death_smoke", 999.0, [&"smoke"])
 		await process_frame
 
@@ -64,6 +69,23 @@ func _initialize() -> void:
 		await process_frame
 	if runtime != null and runtime.has_method("debug_player_max_health"):
 		_assert_true(is_equal_approx(runtime.debug_player_max_health(), max_health_before), "dead player must not heal from post-death upgrade", failures)
+
+	if runtime != null and runtime.has_method("debug_retry_run"):
+		runtime.debug_retry_run()
+		await process_frame
+		await physics_frame
+	var retry_player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
+	var retry_camera_rig := root.get_node_or_null("RunRoot/CameraRig") as Node3D
+	_assert_true(retry_player != null, "retry must spawn a new player", failures)
+	if retry_player != null:
+		_assert_true(retry_player.global_position.distance_to(Vector3.ZERO) <= 0.1, "retry must reset player near spawn", failures)
+	if retry_camera_rig != null:
+		_assert_true(retry_camera_rig.global_position.distance_to(Vector3.ZERO) <= 0.25, "retry must snap camera rig back near spawn", failures)
+	if retry_player != null and retry_player.has_method("debug_integrate") and retry_camera_rig != null:
+		retry_player.debug_integrate(Vector2.RIGHT, false, 0.5)
+		for _frame in 30:
+			await physics_frame
+		_assert_true(retry_camera_rig.global_position.x > 0.3, "camera must follow new player after retry", failures)
 
 	paused = false
 	root.queue_free()

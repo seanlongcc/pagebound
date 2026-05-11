@@ -18,9 +18,10 @@ const PageEventControllerScript := preload("res://src/runtime/page_event_control
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
-const CAMERA_LOCAL_POSITION := Vector3(0.0, 9.0, 4.4)
-const CAMERA_FOLLOW_HALF_EXTENTS := Vector2(3.8, 2.3)
-const CAMERA_FOV_DEGREES := 61.0
+const PAGE_HALF_EXTENTS := Vector2(11.0, 7.0)
+const CAMERA_LOCAL_POSITION := Vector3(0.0, 13.0, 6.4)
+const CAMERA_FOLLOW_HALF_EXTENTS := Vector2(6.0, 4.0)
+const CAMERA_FOV_DEGREES := 62.0
 
 @export var enable_first_playable_loop := true
 
@@ -97,6 +98,8 @@ func _start_run() -> void:
 		player().global_position = Vector3.ZERO
 		if player().has_method("reset_to_spawn_position"):
 			player().reset_to_spawn_position(Vector3.ZERO)
+		_ensure_camera_follow(player())
+		_snap_camera_to_player()
 	_update_hud()
 
 
@@ -269,8 +272,8 @@ func debug_force_run_time(seconds: float) -> void:
 	var director := _run_director()
 	if director != null and director.has_method("debug_force_run_time"):
 		director.debug_force_run_time(seconds)
-	if _page_event_controller != null and seconds >= 300.0 and _page_event_controller.has_method("force_start"):
-		_page_event_controller.force_start()
+	if _page_event_controller != null and _page_event_controller.has_method("update"):
+		_page_event_controller.update(seconds, 0.0)
 	_update_hud()
 	if seconds >= 300.0:
 		_show_victory_summary()
@@ -315,6 +318,8 @@ func _spawn_player() -> void:
 	player_body.set_script(PlayerControllerScript)
 	_players_root().add_child(player_body)
 	player_body.global_position = Vector3.ZERO
+	if "page_half_extents" in player_body:
+		player_body.page_half_extents = PAGE_HALF_EXTENTS
 	_configure_gameplay_camera()
 	if player_body.has_method("set_follow_camera"):
 		player_body.set_follow_camera(_camera())
@@ -340,7 +345,7 @@ func _ensure_run_director() -> void:
 		director.name = "RunDirector"
 		_run_root().add_child(director)
 	if director.has_method("configure"):
-		director.configure(_enemies_root(), player(), _content_factory, Vector2(7.7, 4.7))
+		director.configure(_enemies_root(), player(), _content_factory, PAGE_HALF_EXTENTS)
 
 
 func _ensure_pagecraft_manager() -> void:
@@ -360,7 +365,7 @@ func _ensure_draft_controller() -> void:
 		_draft_controller.name = "RunDraftController"
 		_run_root().add_child(_draft_controller)
 	if _draft_controller.has_method("configure"):
-		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen(), _upgrade_state)
+		_draft_controller.configure(_event_bus, _modal_layer(), _level_up_screen(), _upgrade_state, _hud())
 
 
 func _ensure_menu_controller() -> void:
@@ -629,6 +634,7 @@ func _prepare_clean_run_state() -> void:
 		director.reset()
 	var follow := _camera_rig().get_node_or_null("GameplayCameraFollow")
 	if follow != null:
+		_camera_rig().remove_child(follow)
 		follow.queue_free()
 
 
@@ -818,6 +824,17 @@ func _ensure_camera_follow(target: Node3D) -> void:
 		follow.configure(target, camera_rig)
 	if "page_half_extents" in follow:
 		follow.page_half_extents = CAMERA_FOLLOW_HALF_EXTENTS
+
+
+func _snap_camera_to_player() -> void:
+	var player_node := player()
+	if player_node == null:
+		return
+	_camera_rig().global_position = Vector3(player_node.global_position.x, 0.0, player_node.global_position.z)
+	var follow := _camera_rig().get_node_or_null("GameplayCameraFollow")
+	if follow != null and follow.has_method("snap_to_target"):
+		follow.snap_to_target()
+	_configure_gameplay_camera()
 
 
 func _configure_gameplay_camera() -> void:

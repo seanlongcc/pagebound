@@ -68,8 +68,19 @@ func _initialize() -> void:
 	if runtime != null:
 		_assert_true(runtime.debug_xp_total() >= 1, "collectible XP flow must award after Color Mote pickup", failures)
 		_assert_true(runtime.has_method("debug_player_health"), "runtime must expose player health for HUD/contact checks", failures)
+		if runtime.has_method("debug_draft_is_open") and runtime.debug_draft_is_open() and runtime.has_method("debug_accept_focused_draft_choice"):
+			runtime.debug_accept_focused_draft_choice()
+			await process_frame
 		if runtime.has_method("debug_player_health"):
 			var contact_enemy := _first_living_enemy(root)
+			if contact_enemy == null:
+				contact_enemy = _first_enemy_any(root)
+				if contact_enemy != null:
+					contact_enemy.visible = true
+					contact_enemy.set_physics_process(false)
+					var contact_health := contact_enemy.get_node_or_null("HealthComponent")
+					if contact_health != null and contact_health.has_method("configure"):
+						contact_health.configure(&"contact_smoke_enemy", 20.0, &"enemy")
 			if contact_enemy != null:
 				contact_enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
 			for contact_frame in 45:
@@ -116,6 +127,16 @@ func _first_visible_pickup(root: Node) -> Node3D:
 		return null
 	for child in pickups.get_children():
 		if child is Node3D and child.visible:
+			return child
+	return null
+
+
+func _first_enemy_any(root: Node) -> Node3D:
+	var enemies_root := root.get_node_or_null("RunRoot/Actors/Enemies")
+	if enemies_root == null:
+		return null
+	for child in enemies_root.get_children():
+		if child is Node3D:
 			return child
 	return null
 

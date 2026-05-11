@@ -74,7 +74,7 @@ func _initialize() -> void:
 	_assert_true(level_up_screen != null and not level_up_screen.visible, "LevelUpScreen must hide after selection", failures)
 	_assert_true(selected_events.size() == 1, "draft choice selected event must emit once", failures)
 	if not selected_events.is_empty():
-		_assert_true(selected_events[0].get("choice_id", &"") == &"waxlight_damage_plus_1", "default focused choice must be Waxlight damage +1", failures)
+		_assert_true(selected_events[0].get("choice_id", &"") == &"waxlight_damage_plus_1", "default focused choice must be Waxlight damage +2", failures)
 
 	root.queue_free()
 	await process_frame
@@ -94,9 +94,10 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> void:
 	var buttons := _choice_buttons(level_up_screen)
 	_assert_true(buttons.size() == 3, "LevelUpScreen must contain exactly 3 choice buttons", failures)
-	_assert_true(_buttons_contain_text(buttons, "Waxlight damage +1"), "draft must include Waxlight damage +1", failures)
+	_assert_true(_buttons_contain_text(buttons, "Waxlight damage +2"), "draft must include chunky Waxlight damage +2", failures)
 	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm"), "draft must include documented second weapon", failures)
 	_assert_true(_buttons_contain_text(buttons, "Candle Spark"), "draft must include documented passive", failures)
+	_assert_true(_buttons_contain_text(buttons, "Glow damage +0% -> +15%"), "Candle Spark draft must show chunky 15% first step", failures)
 
 
 func _choice_buttons(root: Node) -> Array[Button]:
