@@ -20,7 +20,7 @@ Pagebound is a 2.5D storybook action roguelite where tiny hand-drawn heroes figh
 | **Platform** | PC / Steam first, Steam Deck optimization target, co-op later |
 | **Target Audience** | Players who enjoy power-fantasy roguelites, readable buildcraft, pets, collections, and stylized hand-drawn worlds |
 | **Player Count** | Solo first; local/LAN debug co-op second; Steam co-op later |
-| **Session Length** | Standard run targets about 30 minutes, with boss/finale at 25:00 |
+| **Session Length** | Standard run targets about 30 minutes, with boss/finale at 30:00 |
 | **Monetization** | Premium assumed; not yet formally decided |
 | **Estimated Scope** | Large indie scope |
 | **Comparable Titles** | Vampire Survivors, HoloCure, Brotato, Hades for run clarity and build momentum |
@@ -213,7 +213,7 @@ MVP must prove that the core game is fun and visually distinct:
 - One complete chapter.
 - One boss.
 - Timed page events.
-- Boss spawn at 25:00.
+- Boss spawn at 30:00.
 - Victory on boss defeat.
 - Full shared weapon and passive pools as functional placeholder content.
 - At least 3-5 playable characters.

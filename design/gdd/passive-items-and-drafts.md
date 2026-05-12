@@ -19,7 +19,7 @@ Items are not hidden single-weapon upgrades. They shape builds through stat fami
 
 ### Core Rules
 
-1. MVP includes all 20 passive items as data-defined content, placeholder visuals acceptable.
+1. MVP includes all 23 passive items as data-defined content, placeholder visuals acceptable.
 2. Every passive item has exactly 5 levels.
 3. Player can own up to 5 passive item slots in normal MVP runs.
 4. Passive items modify stats, behavior tags, pickup rules, pet power, Pagecraft behavior, survivability, or draft odds through explicit modifier definitions.
@@ -30,6 +30,10 @@ Items are not hidden single-weapon upgrades. They shape builds through stat fami
 9. Item modifiers apply through typed stat/modifier channels, not ad hoc script branches in unrelated systems.
 10. Item data references tags from Resource Data Schemas.
 11. Passive item effects should describe the stat or tag family they affect on draft cards.
+12. Each item has an initial find rarity. That rarity affects only new-item card appearance.
+13. Owned item upgrade cards grant exactly +1 item level regardless of the item's initial find rarity.
+14. Normal passive items have 2 catalyst tags. Legendary `Foundational Keepsake` has all 10 catalyst tags, but only exposes evolution-enabling value at level 5.
+15. MVP item find rarity split is 8 Common, 6 Uncommon, 5 Rare, 3 Epic, and 1 Legendary.
 
 ### States and Transitions
 
@@ -63,21 +67,27 @@ Items are not hidden single-weapon upgrades. They shape builds through stat fami
 
 `item_draft_allowed = item_slot_available or owned_item_below_max_exists`
 
+`item_find_weight = rarity_weight * tag_synergy_weight * timing_weight`
+
+`item_upgrade_value = +1 item level`
+
 Invalid states:
 
 - Passive item has not exactly 5 levels.
 - Item uses unknown catalyst/stat/material tag.
 - New item appears when all 5 passive slots are full.
+- Owned item upgrade grants anything other than exactly +1 item level.
 - Level 5 item is consumed by evolution.
 - Modifier applies directly by editing unrelated system internals.
 
 ## Edge Cases
 
-- If all item slots are full and all items are level 5, normal item choices are removed from draft pools.
+- If all item slots are full and all items are level 5, normal item choices are removed from draft pools until endless overflow rules apply.
 - If an item modifier references an absent downstream system, modifier is ignored with warning until that system exists in prototype builds.
 - If multiple items modify the same stat, stacking rule comes from modifier metadata.
 - If an item is deprecated, existing saves can load it but new drafts cannot offer it unless allowed.
 - If item catalyst matches multiple weapons, all compatible level 10 weapons may become eligible.
+- If an item is Legendary, it should still level through normal +1 item upgrade cards once owned.
 
 ## Dependencies
 
@@ -91,10 +101,12 @@ Invalid states:
 | Knob | Default | Range | Notes |
 |---|---:|---:|---|
 | `max_passive_slots` | `5` | `1-8` | Root GDD assumes 5 for MVP. |
-| `minimum_passive_count_mvp` | `20` | `20+` | Content readiness requirement. |
+| `minimum_passive_count_mvp` | `23` | `23+` | Content readiness requirement. |
 | `item_level_cap` | `5` | fixed | Root GDD rule. |
 | `default_modifier_stack_rule` | `additive` | enum | Override per modifier when needed. |
 | `catalyst_unlock_level` | `5` | fixed | Root GDD rule. |
+| `initial_find_rarity_weights` | `60/25/9/5/1` | tuning | Common/Uncommon/Rare/Epic/Legendary. |
+| `initial_find_rarity_split` | `8/6/5/3/1` | fixed for MVP roster | Totals 23 active passives. |
 | `candle_spark_level_values` | `15/30/45/60/75%` | tuning | Firelight/Waxlight-tagged glow/burn damage. |
 
 ## Visual/Audio Requirements
@@ -112,13 +124,14 @@ Invalid states:
 
 ## Acceptance Criteria
 
-- Passive item system supports 5 item slots and 20 data-defined MVP passives.
+- Passive item system supports 5 item slots and 23 data-defined MVP passives.
 - Items have exactly 5 levels and useful modifiers.
+- Initial item find rarity affects new-item appearance only.
+- Owned item upgrade cards grant fixed +1 item level.
 - Level 5 items expose catalyst tags without being consumed.
 - Item modifiers flow through typed channels.
 - Draft systems can offer new items and item upgrades.
 
 ## Open Questions
 
-- Exact item list and names can follow root GDD/content tables during implementation.
 - Final modifier stacking balance remains tuning-owned.

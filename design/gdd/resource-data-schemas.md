@@ -31,7 +31,7 @@ Players should never notice Resource Data Schemas as a system. They should feel 
 12. Page Events must define timing eligibility, objective type, duration, success rewards, failure consequence, and reward pools.
 13. Enemies and bosses must define stat profile references, movement/AI profile references, reward/drop profile references, and Pagecraft interaction tags. The schema records references; AI/combat systems own behavior.
 14. Schema validation runs in editor/headless smoke paths and fails loudly on missing IDs, duplicate IDs, wrong level counts, unknown tags, missing required references, invalid ranges, or deprecated content used in active pools.
-15. MVP schema completeness requires room for all 20 shared weapons and all 20 passive items, even if some assets are placeholder.
+15. MVP schema completeness requires room for all 20 shared weapons and all 23 passive items, even if some assets are placeholder.
 16. Runtime systems may cache validated resources into fast lookup maps, but authoring source remains the `.tres` resource set.
 17. Deprecated resources remain loadable for saves and migration, but cannot appear in new run draft pools unless explicitly marked `allow_in_new_runs`.
 18. No schema field may require a downstream system to exist for the shell to boot. Missing gameplay systems are allowed; invalid data shape is not.
@@ -100,7 +100,7 @@ The `content_set_readiness` formula is defined as:
 
 The `mvp_content_count_requirements` formula is defined as:
 
-`mvp_content_count_requirements = weapon_count >= 20 and passive_item_count >= 20 and pet_count >= 5 and chapter_count >= 1`
+`mvp_content_count_requirements = weapon_count >= 20 and passive_item_count >= 23 and pet_count >= 5 and chapter_count >= 1`
 
 **Variables:**
 
@@ -112,7 +112,7 @@ The `mvp_content_count_requirements` formula is defined as:
 | `chapter_count` | `C` | int | `0+` | Number of active chapter resources. |
 
 **Output Range:** `true` or `false`.
-**Example:** `20 weapons`, `20 passives`, `5 pets`, and `1 chapter` returns `true`.
+**Example:** `20 weapons`, `23 passives`, `5 pets`, and `1 chapter` returns `true`.
 
 The `resource_reference_integrity` formula is defined as:
 
@@ -177,7 +177,7 @@ Schema tuning is about data validation policy, not gameplay balance:
 | `allow_placeholder_assets_in_dev` | `true` | bool | Tools/QA | Allows prototype resources to reference placeholder paths. |
 | `fail_on_missing_active_assets` | `true` | bool | Tools/QA | Release builds fail when active asset refs are missing. |
 | `minimum_mvp_weapons` | `20` | `20+` | Root GDD | Lower values are invalid for MVP readiness. |
-| `minimum_mvp_passives` | `20` | `20+` | Root GDD | Lower values are invalid for MVP readiness. |
+| `minimum_mvp_passives` | `23` | `23+` | Root GDD | Lower values are invalid for MVP readiness. |
 | `minimum_mvp_pets` | `5` | `5+` | Root GDD | Lower values are invalid for MVP readiness. |
 | `minimum_mvp_chapters` | `1` | `1+` | Root GDD | First playable MVP needs one complete chapter. |
 | `warn_on_unused_active_content` | `true` | bool | Tools/QA | Warns when active content is not reachable from any pool. |
@@ -203,7 +203,7 @@ Schema tuning is about data validation policy, not gameplay balance:
 ## Acceptance Criteria
 
 - All required GDD sections are filled with no placeholder text.
-- The document preserves root GDD commitments: Resources, stable IDs, exact level counts, 20 weapons, 20 passives, 5 pet tiers, 10 character mastery entries, 3-choice drafts, and tag-based evolutions.
+- The document preserves root GDD commitments: Resources, stable IDs, exact level counts, 20 weapons, 23 passives, 5 pet tiers, 10 character mastery entries, 3-choice drafts, and tag-based evolutions.
 - Every downstream MVP system has a clear data contract to consume.
 - Schema validation has explicit blocking conditions for duplicate IDs, missing references, unknown tags, missing required counts, and invalid level/tier counts.
 - Placeholder asset policy is explicit and does not permit untracked third-party asset imports.

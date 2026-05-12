@@ -7,8 +7,8 @@
 **Primary Platform:** PC / Steam  
 **Secondary Platform:** Steam Deck after desktop vertical slice  
 **Mode Targets:** Solo first, local/LAN debug co-op second, Steam co-op third  
-**Run Target:** Boss/finale spawns at 25:00. A normal victory target is about 30:00, but powerful builds can defeat the boss earlier. Endless continues after standard victory/finale.  
-**MVP Content Rule:** MVP includes the complete 20 shared weapons and complete 20 passive items, even if some visuals/audio start as placeholders.  
+**Run Target:** Boss/finale starts at 30:00. A normal strong run should reach run level 50 by the boss start, with 5 Page Events before the finale. Endless continues after standard victory/finale.
+**MVP Content Rule:** MVP includes the complete shared weapon roster and complete 23 passive items, even if some visuals/audio start as placeholders.
 **Progression Rule:** Progression systems use 5-tier or 10-level structures. Weapon levels are 10. Passive item levels are 5. Pet tiers are 5. Character mastery tracks are 10. Permanent upgrades are 5 ranks. Chapter restoration tracks are 5 tiers. Enemy spawn budgets, enemy health curves, and difficulty curves are tuning variables and do not have to be multiples of 5. Upgrade drafts use exactly 3 choices as an intentional readability exception.  
 **Working Title:** Pagebound
 **Revision Note:** v1.5 keeps the v1.4 storybook-fantasy theme, 3-choice drafts, and tag-based evolutions, then restores the useful production detail that was compressed out of v1.1/v1.2. Obsolete school-supply theming, 5-choice drafts, and Pagecraft-gated evolutions remain removed.
@@ -93,7 +93,7 @@ Late run:
 - The player becomes a walking storm of storybook magic.
 - The page is covered in color, waxlight, dream trails, stickers, glowing marks, pet attacks, and combo effects.
 - Damage numbers become large and frequent.
-- The boss enters at 25:00 and can be shredded by a strong build before 30:00.
+- The boss enters at 30:00 and should test a core-complete build rather than finish it.
 - The screen should feel chaotic but not unreadable.
 
 ---
@@ -236,7 +236,7 @@ This creates consistency, easier balancing, and cleaner UI. Players should quick
 - Level-up choices.
 - Finite map exploration.
 - Timed Page Events.
-- 25:00 boss/finale.
+- 30:00 boss/finale.
 - Meta progression between runs.
 - Solo first, co-op later.
 
@@ -270,7 +270,7 @@ Weapons fire automatically. The player controls:
 
 ### Standard Run Timeline
 
-Standard victorious runs target approximately 30 minutes, but the boss spawns at 25:00.
+Standard victorious runs target approximately 30 minutes, with the boss/finale starting at 30:00.
 
 | Time | Event |
 |---:|---|
@@ -285,20 +285,20 @@ Standard victorious runs target approximately 30 minutes, but the boss spawns at
 | 17:30 | Stronger chapter-specific enemy wave. |
 | 20:00 | Page Event 4 spawns with 3:00 countdown. |
 | 22:30 | Pre-boss pressure wave. |
-| 25:00 | Boss/finale spawns. Standard Page Events stop. |
-| 25:00–30:00 | Boss fight. Strong builds can win before 30:00. |
-| 30:00 | Boss enters final pressure/enrage if still alive. |
+| 25:00 | Page Event 5 spawns with 3:00 countdown. |
+| 27:30 | Final pre-boss pressure wave. |
+| 30:00 | Boss/finale starts. Standard Page Events stop. |
+| 35:00 | First post-boss Endless Page Event if endless is active. |
 | Boss defeated | Victory. Rewards shown. Endless option unlocked if applicable. |
 
 ### Boss Ending Rule
 
-The run does **not** have to last exactly 30 minutes.
+The run does **not** have to end exactly at 30 minutes.
 
-- The boss appears at **25:00**.
-- If the player is very strong, they can defeat the boss early.
-- A powerful run might end around **26:30–28:30**.
-- Average successful runs should end around **29:00–31:00**.
-- If the boss is still alive at 30:00, the fight escalates, but the player can still win.
+- The boss appears at **30:00**.
+- A strong normal run should have its core build online before the boss appears.
+- A powerful run may defeat the boss quickly after the 30:00 spawn.
+- If endless is selected or unlocked, Page Events continue every 5 minutes after the boss starts, beginning at 35:00.
 
 ### Page Event Rule
 
@@ -307,7 +307,8 @@ Major Page Events occur at:
 - 5:00,
 - 10:00,
 - 15:00,
-- 20:00.
+- 20:00,
+- 25:00.
 
 Each Page Event:
 
@@ -389,6 +390,12 @@ By 20:00:
 - Pagecraft should cover a meaningful portion of the battlefield.
 
 By 25:00:
+
+- The final pre-boss Page Event should be active or recently resolved.
+- Strong builds should have 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions within reach.
+- Damage numbers and VFX become a major satisfaction driver.
+
+By 30:00:
 
 - Boss appears.
 - Strong builds should feel dangerous to the boss immediately.
@@ -740,7 +747,7 @@ During the run, the player can carry:
 
 ### XP and Run Levels
 
-Standard runs use run levels **1-50**. Endless can continue past 50 with repeated or scaling reward logic.
+Standard runs use run levels **1-50**, and a normal strong run should reach level 50 by the 30:00 boss/finale start. Endless can continue past 50 while normal upgrades remain available, then switch to overflow drafts once weapon, item, and evolution choices are exhausted.
 
 XP thresholds should remain multiples of 5.
 
@@ -775,9 +782,9 @@ Target pacing is:
 | 5:00 | First Page Event spawns. Player should have 2-3 weapons and 1-2 items. |
 | 10:00 | Second Page Event. Player should be filling weapon/item slots. |
 | 15:00 | Third Page Event. Build identity should be clear. |
-| 20:00 | Final pre-boss Page Event. First maxed items/weapons may appear for strong runs. |
-| 25:00 | Boss/finale spawns. Strong builds may already have 1+ evolutions. |
-| 25:00-30:00 | Boss kill window. A powerful build can end the run before 30:00. |
+| 20:00 | Fourth Page Event. First maxed items/weapons may appear for strong runs. |
+| 25:00 | Fifth Page Event. Build should be near core-complete. |
+| 30:00 | Boss/finale starts. Strong builds should have 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions. |
 
 ### Upgrade Drafts
 
@@ -804,10 +811,23 @@ A draft card can be:
 - An **evolution card** if requirements are met.
 - A rare **heal**, **pickup magnet**, or **temporary super attack** when the player is under pressure or the upgrade pool is constrained.
 - A rare **Pagecraft modifier** from Page Events or treasure rewards, not usually from normal level-ups.
+- An **overflow reward** after level 50 only when no normal weapon, item, or evolution upgrades remain.
+
+### Draft Composition Rules
+
+Run levels 5, 10, 20, and 35 are **weapon-only acquisition drafts** when legal new weapons exist. These drafts show only new weapon cards, so the player must choose a new weapon but still chooses which one.
+
+All other normal level-up drafts should use:
+
+- 1 weapon-side card when legal,
+- 1 item-side card when legal,
+- 1 flex card drawn from weapon, item, evolution, utility, or fallback pools.
+
+Page Event reward drafts use build-completion bias: item upgrades, catalyst fixes, eligible evolutions, and high-rarity upgrades are preferred over generic filler.
 
 ### New Weapon Rules
 
-New weapons are primarily acquired from level-up drafts.
+New weapons are primarily acquired from fixed weapon-only level-up drafts.
 
 When the player chooses a new weapon:
 
@@ -817,7 +837,7 @@ When the player chooses a new weapon:
 - It adds its material tags to the player's build profile.
 - It can later be upgraded through level-up cards, Page Event cards, elite chests, or boss rewards.
 
-Draft weighting should strongly offer new weapons early until the player has at least 3 weapons. By around 10:00, most runs should have 3-5 weapons unless the player deliberately chose item upgrades instead.
+Weapon-only drafts occur at run levels 5, 10, 20, and 35 while legal new weapons exist. Normal strong runs should own all 5 weapon slots before the 30:00 boss, but only about 2 weapons are expected to reach level 10 by then.
 
 ### Weapon Upgrade Rules
 
@@ -842,6 +862,8 @@ When the player chooses a new item:
 - At level 5, its catalyst tags can enable eligible weapon evolutions.
 
 Items are not just evolution keys. They must be generally useful even when the player does not have a matching weapon.
+
+Item find rarity affects only new-item card appearance. Once an item is owned, item upgrade cards grant exactly +1 item level regardless of the item's initial find rarity.
 
 ### Passive Item Upgrade Rules
 
@@ -878,12 +900,13 @@ Example:
 
 ### Page Event Reward Drafts
 
-Page Events spawn at 5:00, 10:00, 15:00, and 20:00. Each has a 3-minute countdown.
+Page Events spawn at 5:00, 10:00, 15:00, 20:00, and 25:00. Each has a 3-minute countdown. In endless, Page Events continue every 5 minutes after the boss starts, beginning at 35:00.
 
-Completing a Page Event grants a 3-choice reward draft. Page Event drafts should be stronger than normal level-up drafts and may include:
+Completing a Page Event grants a 3-choice reward draft. Page Event drafts should be stronger than normal level-up drafts and use build-completion bias. They may include:
 
 - +1 weapon level.
 - +1 item level.
+- Catalyst-compatible item help.
 - A new weapon.
 - A new item.
 - An eligible evolution.
@@ -902,7 +925,7 @@ Elite enemies can drop story chests. Story chests use the same 3-choice draft fo
 - rare temporary attacks,
 - evolution offers if eligible.
 
-The boss spawns at 25:00. If killed before 30:00, the run can end immediately with victory rewards. If the boss fight continues past 30:00, the game begins escalating pressure through boss enrage and enemy density, but the intended normal victory time remains about 30 minutes.
+The boss spawns at 30:00. A strong normal run should reach level 50 by the boss start. If the player continues into endless after standard victory/finale, normal upgrades continue while available; once no weapon, item, or evolution upgrades remain, drafts switch to overflow rewards.
 
 ### Example Run Build Flow
 
@@ -911,16 +934,13 @@ A typical successful run might look like this:
 | Time | Example Progression |
 |---:|---|
 | 0:00 | Waxlight Knight starts with Waxlight Comet Lv. 1 and Dog pet. |
-| 2:00 | Player chooses Star Sticker Swarm as second weapon. |
-| 4:00 | Player chooses Candle Spark as first item. |
-| 5:00 | Page Event spawns. Player completes it and upgrades Waxlight Comet. |
-| 8:00 | Player adds Dreamsap Glob and Tiny Crown. |
-| 10:00 | Second event rewards a weapon upgrade. Build has 4 weapons and 3 items. |
-| 15:00 | Waxlight Comet reaches Lv. 10. Candle Spark approaches Lv. 5. |
-| 20:00 | Candle Spark reaches Lv. 5. Waxlight Comet becomes evolution eligible. |
-| 22:00 | Draft offers Solar Wax Dragon. Player evolves Waxlight Comet. |
-| 25:00 | Boss appears. Player has one evolved weapon, several level 5 items, huge damage numbers, and dense Pagecraft coverage. |
-| 27:30 | Strong build kills the boss early and wins. |
+| 5:00 | First Page Event spawns and run level 5 weapon-only draft has added a second weapon. |
+| 10:00 | Second Page Event spawns and run level 10 weapon-only draft has added a third weapon. |
+| 15:00 | Waxlight Comet approaches high level. Candle Spark or another item approaches level 5. |
+| 20:00 | Fourth Page Event spawns and run level 20 weapon-only draft has added a fourth weapon. |
+| 25:00 | Fifth Page Event spawns. First evolution should be possible or close. |
+| 30:00 | Boss appears. Player has 5 weapons owned, 2 level 10 weapons, about 4 level 5 items, 1-2 evolutions, huge damage numbers, and dense Pagecraft coverage. |
+| 32:00+ | Strong build kills the boss, or the run continues into endless rules if selected. |
 
 ## 10. Damage Numbers
 
@@ -1557,7 +1577,7 @@ Each weapon has **10 levels**.
 | 9 | Every 5th fleet launches a large flagship boat. |
 | 10 | Capstone: fleets can form armadas that sweep across wet lanes and carry Pagecraft effects. Becomes eligible for Water/Story evolutions. |
 
-## 12. Passive Items — MVP 20 Items
+## 12. Passive Items — MVP 23 Items
 
 All passive items have **5 levels**.
 
@@ -1569,28 +1589,48 @@ Items are build-shaping stat, tag, behavior, pickup, survivability, draft, pet, 
 
 ### Passive Item Pool
 
-| # | Item | Catalyst Tags | Primary Effect | Max Level Bonus |
-|---:|---|---|---|---|
-| 1 | Tiny Crown | Royal, Command | damage to marked/elites | royal mark burst |
-| 2 | Moon Button | Moon, Dream | cooldown reduction | moonlight echoes |
-| 3 | Lucky Pebble | Fortune, Wonder | luck/rerolls | rare choice weighting |
-| 4 | Dragon Scale Sticker | Dragon, Guard | durability + retaliation | dragon counterburst |
-| 5 | Ribbon Spool | Thread, Binding | chain range | thread duplication |
-| 6 | Firefly Jar | Light, Swarm | pickup visibility + light damage | firefly swarm |
-| 7 | Wooden Star | Star, Focus | crit chance | star crit burst |
-| 8 | Feather Cape | Dash, Wind | move/dash | dash afterimage damage |
-| 9 | Acorn Charm | Bloom, Projectile | projectile count | sprout burst chance |
-| 10 | Cloud Seed | Cloud, Storm | area size | cloud detonation |
-| 11 | Paper Heart | Heart, Clean | health/healing | overheal shield |
-| 12 | Toy Bell | Pet, Command | pet attack rate | pet rally pulse |
-| 13 | Candle Spark | Firelight, Waxlight | burn/glow damage | ignite Pagecraft |
-| 14 | Seashell Lullaby | Water, Echo | slow/knockback | resonance wave |
-| 15 | Dream Thread | Dream, Thread | duration | material combo duration |
-| 16 | Storybook Key | Story, Wonder | Page Event rewards | bonus event chest chance |
-| 17 | Blanket Pin | Guard, Heart | armor/shield | soft shield burst |
-| 18 | Marble Eye | Focus, Giant | targeting/crit focus | boss weakpoint reveal |
-| 19 | Thimble Helm | Guard, Contact | defense + contact damage | charge immunity window |
-| 20 | Button Shield | Shield, Orbit | orbiting defense | shield bash nova |
+The MVP passive pool has 23 active items. Each item has an initial find rarity. Find rarity affects only new-item card appearance; once the item is owned, its upgrade cards grant exactly +1 item level.
+
+| # | Item | Find Rarity | Catalyst Tags | Primary Stat Role | Max Level Bonus |
+|---:|---|---|---|---|---|
+| 1 | Candle Spark | Common | Firelight, Light | damage | capstone spark |
+| 2 | Cloud Seed | Common | Bloom, Wonder | size | larger expiration pop |
+| 3 | Dream Thread | Common | Dream, Thread | duration | first timed mark echoes |
+| 4 | Ribbon Spool | Common | Thread, Star | range | longer link reach |
+| 5 | Moon Button | Common | Moon, Echo | cadence | every 10th cast echoes at partial power |
+| 6 | Firefly Charm | Uncommon | Light, Wonder | proc_chance | first failed proc after a delay is retried |
+| 7 | Seashell Lullaby | Uncommon | Water, Echo | control_strength | control effects leave a tiny resonance pulse |
+| 8 | Acorn Charm | Epic | Bloom, Star | effect_count | first bonus each Page Event is guaranteed |
+| 9 | Pocket Locket | Epic | Dream, Wonder | active_cap | one eligible construct can exceed cap by 1 |
+| 10 | Lucky Pebble | Rare | Star, Wonder | luck | better rare-card weighting |
+| 11 | Blanket Pin | Common | Thread, Light | armor | shield pulse on heavy hit |
+| 12 | Paper Heart | Common | Bloom, Light | max_health | overheal shield |
+| 13 | Dewdrop Thimble | Uncommon | Water, Bloom | health_regen | first heal after Page Event doubles |
+| 14 | Firefly Jar | Uncommon | Light, Wonder | xp_magnet_range | periodic mote pull |
+| 15 | Storybook Key | Uncommon | Dream, Star | xp_gain_rate | Page Event rewards add bonus XP motes |
+| 16 | Wooden Star | Rare | Star, Light | crit_chance | crit sparks |
+| 17 | Tiny Crown | Rare | Light, Wonder | crit_damage | large crits make brighter popups |
+| 18 | Feather Cape | Uncommon | Thread, Moon | dash_range | dash trail hitbox grows |
+| 19 | Button Boots | Rare | Wonder, Thread | dash_count | +3 total charges |
+| 20 | Moonlace Stopwatch | Rare | Moon, Echo | dash_cooldown | first dash after draft has no cooldown |
+| 21 | Paper Pinwheel | Common | Water, Bloom | movement_speed | brief speed burst after pickup streak |
+| 22 | Foundational Keepsake | Legendary | All 10 MVP catalyst families | base_stat_boost | all catalyst tags active at level 5 and lowest core stat improves again |
+| 23 | Second Bookmark | Epic | Dream, Light | revive | revive at 60% health and short invulnerability |
+
+### Item Rarity Rules
+
+| Find Rarity | Item Count | Initial Find Weight |
+|---|---:|---:|
+| Common | 8 | 60 |
+| Uncommon | 6 | 25 |
+| Rare | 5 | 9 |
+| Epic | 3 | 5 |
+| Legendary | 1 | 1 |
+
+- Find rarity affects initial item finds only.
+- Owned item upgrade cards grant fixed +1 item level.
+- Normal passive items have 2 catalyst tags.
+- `Foundational Keepsake` is Legendary and has all 10 MVP catalyst families at level 5.
 
 ### Item Catalyst Rules
 
@@ -1605,174 +1645,21 @@ Items are build-shaping stat, tag, behavior, pickup, survivability, draft, pet, 
 Each item should use this 5-level pattern:
 
 - Level 1: base effect.
-- Level 2: +5% or small reliability boost.
-- Level 3: +10% total or secondary effect.
-- Level 4: +15% total or stronger secondary effect.
+- Level 2: stronger item effect.
+- Level 3: stronger item effect or small secondary behavior.
+- Level 4: stronger item effect.
 - Level 5: capstone modifier and full catalyst value.
 
 Use multiples of 5 for values whenever possible.
 
-### Item Details
+### Broad Item Guardrails
 
-#### Tiny Crown
+`effect_count`, `active_cap`, and `base_stat_boost` are intentionally bounded:
 
-- L1: +5% damage to marked enemies.
-- L2: +10% damage to marked enemies.
-- L3: +15% damage to marked enemies; elites count as marked at low health.
-- L4: +20% damage to marked enemies.
-- L5: marked enemy deaths create a Crown Spark burst.
-
-#### Moon Button
-
-- L1: +5% weapon cooldown reduction.
-- L2: +10% cooldown reduction.
-- L3: Moonlight weapons leave small light pools.
-- L4: +15% cooldown reduction.
-- L5: every 10th weapon cast echoes at 50% power.
-
-#### Lucky Pebble
-
-- L1: +5% luck.
-- L2: +10% luck.
-- L3: +1 reroll per run.
-- L4: +15% luck.
-- L5: level-up choices have better odds to show build-synergy options.
-
-#### Dragon Scale Sticker
-
-- L1: +5 max health.
-- L2: +10 max health.
-- L3: taking damage releases a small dragon spark, cooldown 10s.
-- L4: +15 max health.
-- L5: dragon spark also ignites nearby Waxlight/Color Bloom marks.
-
-#### Ribbon Spool
-
-- L1: +5% chain/link range.
-- L2: +10% chain/link range.
-- L3: Storythread lines last +5s.
-- L4: +15% chain/link range.
-- L5: Storythread effects can duplicate once at 50% strength.
-
-#### Firefly Jar
-
-- L1: pickup radius +5% and small firefly damage pulse.
-- L2: pickup radius +10%.
-- L3: fireflies reveal hidden/blank enemies.
-- L4: pickup radius +15%.
-- L5: every 50 pickups releases a firefly swarm.
-
-#### Wooden Star
-
-- L1: +5% crit chance.
-- L2: +10% crit chance.
-- L3: crits spawn tiny star sparks.
-- L4: +15% crit chance.
-- L5: every 5th crit creates a Star Sticker node.
-
-#### Feather Cape
-
-- L1: +5% move speed.
-- L2: +10% move speed.
-- L3: dash cooldown -5%.
-- L4: +15% move speed.
-- L5: dash leaves a damaging feather afterimage.
-
-#### Acorn Charm
-
-- L1: +5% projectile count chance.
-- L2: +10% projectile count chance.
-- L3: projectile hits can plant small sprouts.
-- L4: +15% projectile count chance.
-- L5: sprout marks burst when dashed over.
-
-#### Cloud Seed
-
-- L1: +5% area size.
-- L2: +10% area size.
-- L3: area effects drift slightly toward enemies.
-- L4: +15% area size.
-- L5: large area effects create a soft cloud detonation at expiration.
-
-#### Paper Heart
-
-- L1: +5 max health.
-- L2: healing +10%.
-- L3: first heal after each Page Event grants a small shield.
-- L4: +15 max health.
-- L5: overhealing creates temporary Paper Heart shield.
-
-#### Toy Bell
-
-- L1: pets attack +5% faster.
-- L2: pets attack +10% faster.
-- L3: pet attacks can trigger small bell shockwaves.
-- L4: pets attack +15% faster.
-- L5: dash commands equipped pet to perform a bonus attack, cooldown 10s.
-
-#### Candle Spark
-
-- L1: +15% Firelight/Waxlight-tagged glow/burn damage.
-- L2: +30% Firelight/Waxlight-tagged glow/burn damage.
-- L3: +45% Firelight/Waxlight-tagged glow/burn damage; Waxlight and Color Bloom can ignite briefly.
-- L4: +60% Firelight/Waxlight-tagged glow/burn damage.
-- L5: +75% Firelight/Waxlight-tagged glow/burn damage; ignited marks spread once to nearby marks and Candle Spark's catalyst tags are fully evolution-enabling.
-
-#### Seashell Lullaby
-
-- L1: slows from player effects are +5% stronger.
-- L2: +10% slow strength.
-- L3: knockback effects create tiny resonance rings.
-- L4: +15% slow strength.
-- L5: slowed enemies take a resonance pulse every 5s.
-
-#### Dream Thread
-
-- L1: Pagecraft duration +5%.
-- L2: Pagecraft duration +10%.
-- L3: material combo windows last +5s.
-- L4: Pagecraft duration +15%.
-- L5: first material combo every 10s triggers twice at 50% power.
-
-#### Storybook Key
-
-- L1: Page Event reward Pigment +5%.
-- L2: Page Event reward Pigment +10%.
-- L3: Page Events have +5% chance to offer rare run rewards.
-- L4: Page Event reward Pigment +15%.
-- L5: completed Page Events have a chance to spawn a bonus story chest.
-
-#### Blanket Pin
-
-- L1: +5 armor/shield value.
-- L2: damage taken -5%.
-- L3: gaining shield releases a soft pulse.
-- L4: damage taken -10%.
-- L5: shield break creates a blanket shockwave.
-
-#### Marble Eye
-
-- L1: targeting prioritizes elites slightly better.
-- L2: +5% damage to the highest-health visible enemy.
-- L3: bosses reveal a weakpoint every 10s.
-- L4: +10% damage to highest-health visible enemy.
-- L5: weakpoint hits create a large priority damage number.
-
-#### Thimble Helm
-
-- L1: +5 armor.
-- L2: +10 armor.
-- L3: brief contact immunity after dash for 0.25s.
-- L4: +15 armor.
-- L5: contact immunity triggers a small bash pulse, cooldown 5s.
-
-#### Button Shield
-
-- L1: one orbiting button blocks one hit every 20s.
-- L2: cooldown 15s.
-- L3: blocked hits deal small damage nearby.
-- L4: cooldown 10s.
-- L5: blocking creates a Button Shield nova.
+- `effect_count` uses bonus-effect chance, not unconditional global count increases.
+- `active_cap` uses overflow grace and a small capstone cap increase, not unconditional global cap increases.
+- `base_stat_boost` affects only damage, size, duration, range, cadence, and control_strength.
+- `base_stat_boost` does not affect crit, XP, dash count, revive, effect_count, or active_cap.
 
 ---
 
@@ -2448,7 +2335,7 @@ Each chapter is a finite storybook page/spread with:
 - unique visual identity,
 - unique environmental mechanics,
 - 2 unique enemies,
-- a boss/finale at 25:00,
+- a boss/finale at 30:00,
 - chapter-specific Page Event variants,
 - unique restoration nodes,
 - pet unlock opportunities.
@@ -2691,7 +2578,8 @@ Use elites and map enemies for actual threat. Use basic enemies as satisfying ho
 
 ### Page Event Rules
 
-- Spawn at 5:00, 10:00, 15:00, 20:00.
+- Spawn at 5:00, 10:00, 15:00, 20:00, 25:00.
+- In endless, continue every 5 minutes after the boss starts, beginning at 35:00.
 - Each has a visible 3-minute countdown.
 - Completing events gives strong rewards.
 - Failing events creates a hazard, enemy wave, corruption spread, or reduced reward.
@@ -2854,7 +2742,7 @@ Failure:
 
 ### Boss Spawn Rule
 
-At 25:00, the boss/finale starts.
+At 30:00, the boss/finale starts.
 
 Page Events stop spawning. Normal waves continue but become boss-support waves.
 
@@ -2876,17 +2764,17 @@ Bosses should:
 
 Boss health should support:
 
-- strong builds killing in 1.5–3 minutes,
-- average winning builds killing in 4–6 minutes,
-- weak builds struggling into the 30:00 enrage.
+- strong builds killing in 1.5-3 minutes after boss spawn,
+- average winning builds killing in 4-6 minutes after boss spawn,
+- weak builds struggling into post-30:00 boss pressure.
 
-### 30:00 Enrage
+### Post-30:00 Pressure
 
-At 30:00 if the boss is alive:
+After the boss starts at 30:00:
 
-- boss attack frequency increases,
-- support wave density increases,
-- boss exposes weakpoints more often,
+- boss attack frequency can increase over time,
+- support wave density can increase over time,
+- endless Page Events can continue if endless is active,
 - player can still win.
 
 This preserves the 30-minute target without forcing a hard fail at exactly 30:00.
@@ -3089,7 +2977,7 @@ Must show:
 - passive slots 1–5,
 - pet icon and tier,
 - Page Event countdown if active,
-- boss health after 25:00,
+- boss health after 30:00,
 - Pigment/Treat pickup feedback,
 - damage numbers.
 
@@ -3251,9 +3139,9 @@ Music layers:
 - calm chapter start,
 - growing mid-run rhythm,
 - Page Event motif,
-- 20:00 pre-boss tension,
-- 25:00 boss theme,
-- 30:00 boss escalation layer,
+- 25:00 final Page Event tension,
+- 30:00 boss theme,
+- endless escalation layer,
 - victory flourish.
 
 Instrumentation inspiration:
@@ -3737,12 +3625,12 @@ MVP includes:
 - Godot 4.6.x project.
 - One complete chapter: Waxlight Castle.
 - One boss: Crooked Crown.
-- Four Page Events at 5/10/15/20.
-- Boss spawn at 25.
+- Five Page Events at 5/10/15/20/25.
+- Boss spawn at 30.
 - Victory on boss defeat.
 - 30-minute target.
 - Full 20 weapons as functional placeholder behaviors.
-- Full 20 passives as functional modifiers.
+- Full 23 passives as functional modifiers.
 - At least 5 pets implemented.
 - At least 3 characters fully implemented.
 - Character mastery framework.
@@ -3839,7 +3727,7 @@ Acceptance:
 Tasks:
 
 - Implement all 20 weapons.
-- Implement all 20 passives.
+- Implement all 23 passives.
 - Add level 1–10 weapon scaling.
 - Add level 1–5 passive scaling.
 - Add evolution framework.
@@ -3855,10 +3743,10 @@ Tasks:
 
 - RunClock timeline.
 - QuestDirector.
-- Event spawn at 5/10/15/20.
+- Event spawn at 5/10/15/20/25.
 - 3-minute countdown UI.
 - Complete/fail logic.
-- Boss spawn at 25.
+- Boss spawn at 30.
 - Boss health bar and victory screen.
 
 Acceptance:
@@ -3928,7 +3816,7 @@ The following older content should **not** be restored:
 - Five-choice upgrade drafts.
 - Infinite maps.
 - Untimed Page Events.
-- Boss spawning only at exactly 30:00.
+- Boss spawning before the player can complete a core build.
 - Pets as mostly passive/cosmetic followers.
 
 ### What v1.4 compressed too aggressively and is restored below
@@ -4018,7 +3906,7 @@ Target build state at 10:00:
 | Element | Target |
 |---|---:|
 | Player run level | 10-20 |
-| Weapons | 3-5 |
+| Weapons | 3 |
 | Items | 2-4 |
 | First item near max | Possible |
 | First weapon near high level | Possible |
@@ -4041,14 +3929,14 @@ The player should have:
 
 The game should feel crowded. It should not feel weak.
 
-### 34.5 Boss Window: 25:00-30:00
+### 34.5 Boss Window: 30:00+
 
-At 25:00, the boss/finale starts.
+At 30:00, the boss/finale starts.
 
 Design intent:
 
-- Strong builds can kill the boss before 30:00.
-- Average successful builds win around 29:00-31:00.
+- Strong builds can kill the boss quickly after it appears.
+- Average successful builds win shortly after the 30:00 boss start.
 - Weak builds may lose to boss pressure or timeout escalation.
 - Boss attacks should force movement and dash decisions.
 - Boss damage intake should produce large, satisfying numbers.
@@ -4283,8 +4171,9 @@ Expected run-level pacing:
 | 10:00 | 10-20 |
 | 15:00 | 20-30 |
 | 20:00 | 30-40 |
-| 25:00 | 40-50 |
-| 30:00 | 45-55 |
+| 25:00 | 40-48 |
+| 30:00 | 50 |
+| 35:00 | 55-60 if endless continues |
 
 These are tuning targets, not hard caps.
 
@@ -4331,24 +4220,29 @@ A draft card can be:
 
 The draft generator should weight toward useful build construction.
 
-Early run:
+Weapon-only acquisition drafts:
 
-- Strongly offer new weapons until player has at least 3 weapons.
-- Offer items that match weapon material/catalyst tags.
-- Avoid offering too many niche modifiers before the player understands the build.
+- Run levels 5, 10, 20, and 35 show only legal new-weapon cards.
+- If no legal new weapon cards exist, the draft falls back to normal composition.
 
-Mid run:
+Normal non-weapon-only drafts:
 
-- Offer upgrades for owned weapons/items.
-- Offer items with compatible catalyst tags.
-- Begin showing evolution hints.
-- Increase Pagecraft modifier rewards through Page Events.
+- Show 1 weapon-side card when legal.
+- Show 1 item-side card when legal.
+- Show 1 flex card from weapon, item, evolution, utility, or fallback pools.
 
-Late run:
+Page Event reward drafts:
+
+- Use build-completion bias.
+- Prefer item upgrades, catalyst fixes, eligible evolutions, and high-rarity upgrades.
+
+Late and endless:
 
 - Prioritize evolution cards if requirements are met.
 - Offer capstone upgrades and big-effect choices.
 - Avoid dead cards for maxed equipment.
+- After level 50, continue normal upgrades while available.
+- Once no normal weapon, item, or evolution upgrades remain, switch to overflow drafts.
 
 ### 37.7 Evolution Eligibility Rule
 
@@ -4389,10 +4283,11 @@ The catalyst item is **not consumed**.
 | 15:00 | Page Event 3 spawns, 3-minute countdown. |
 | 17:30 | Map-unique enemies increase. |
 | 20:00 | Page Event 4 spawns, 3-minute countdown. |
-| 22:30 | Pre-boss pressure wave. |
-| 24:30 | Boss warning. |
-| 25:00 | Boss/finale spawns. Standard Page Events stop. |
-| 30:00 | Boss pressure escalates if still alive. |
+| 22:30 | Pre-event pressure wave. |
+| 25:00 | Page Event 5 spawns, 3-minute countdown. |
+| 29:30 | Boss warning. |
+| 30:00 | Boss/finale starts. Standard Page Events stop. |
+| 35:00 | First Endless Page Event if endless is active. |
 
 ### 38.2 Spawn Philosophy
 
@@ -4592,7 +4487,7 @@ extends Resource
 
 ### 40.4 Boss Fight Rules
 
-- Boss appears at 25:00.
+- Boss appears at 30:00.
 - Boss entrance should clear or push normal spawn clutter briefly.
 - Boss must have strong silhouette and visible shadow.
 - Boss attacks should be telegraphed on top of Pagecraft marks.
@@ -5393,7 +5288,7 @@ The first chapter should naturally introduce:
 | First dash prompt | Dash through a mark to activate it. |
 | 5:00 event | Page Events have timers and rewards. |
 | First pet cue | Pets attack automatically. |
-| Boss warning | Boss appears at 25:00. |
+| Boss warning | Boss appears at 30:00. |
 | Victory | Spend Pigment/Treats in hub. |
 
 ### 51.3 Hint Style
@@ -5404,7 +5299,7 @@ Use short, storybook-style hints:
 - “This page remembers your marks.”
 - “A pet doodle is nearby. Save it before the timer runs out.”
 - “A level 10 weapon and a level 5 matching catalyst can evolve.”
-- “The boss arrives at 25:00.”
+- “The boss arrives at 30:00.”
 
 ---
 
@@ -5487,8 +5382,8 @@ A true vertical slice is not just a combat test. It must include:
 - chapter select,
 - character select,
 - pet select,
-- a full 25:00 boss run target,
-- 4 timed Page Events,
+- a full 30:00 boss run target,
+- 5 timed Page Events,
 - at least one evolution,
 - victory screen,
 - hub return,
@@ -5556,7 +5451,7 @@ Acceptance:
 Deliverables:
 
 - all 20 weapons implemented functionally,
-- all 20 items implemented functionally,
+- all 23 items implemented functionally,
 - 40 evolution paths data-defined,
 - at least 8 evolved weapons implemented,
 - draft weighting.
@@ -5569,9 +5464,9 @@ Acceptance:
 
 Deliverables:
 
-- 25:00 boss spawn,
-- 30:00 target victory pacing,
-- 4 Page Events at 5-minute marks,
+- 30:00 boss spawn,
+- level 50 target by boss start,
+- 5 Page Events at 5-minute marks before boss,
 - run rewards,
 - victory/failure screen.
 
@@ -5906,7 +5801,7 @@ Use these names consistently.
 - Do not turn the game into a classroom/school-supply theme.
 - Do not make maps infinite.
 - Do not hide damage numbers by default.
-- Do not make the boss wait until exactly 30:00.
+- Do not start the boss before the player can complete a core build.
 - Do not make Page Events untimed.
 - Do not hard-code content into player scripts.
 - Do not render every page mark as an individual physics object.

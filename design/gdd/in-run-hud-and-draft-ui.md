@@ -75,7 +75,7 @@ Invalid states:
 - If gamepad disconnects during modal, keyboard navigation remains valid.
 - If icon missing in prototype content, use approved placeholder icon and log warning.
 - If text overflows card/container, UI must wrap/resize within constraints.
-- If Page Event and boss warning overlap, boss warning takes priority after 25:00.
+- If Page Event and boss warning overlap, boss warning takes priority after 30:00.
 - If damage numbers clutter HUD, combat feedback reduces/suppresses numbers before HUD hides required info.
 
 ## Dependencies
@@ -124,4 +124,3 @@ Invalid states:
 
 - Exact final UI art/style waits for asset direction pass and UI asset provenance.
 - Pause/options details belong to Accessibility and Options later.
-

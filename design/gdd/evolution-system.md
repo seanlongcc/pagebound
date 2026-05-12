@@ -26,7 +26,8 @@ Evolutions should feel like the build blooming into something bigger. The player
 7. If multiple evolution paths are eligible for one weapon, draft pools may offer one or more over time; selecting one locks that weapon.
 8. Evolution cards may appear in level-up drafts, Page Event rewards, elite chests, and boss rewards.
 9. Evolved weapons inherit base weapon material identity plus catalyst identity.
-10. Evolution data comes from Resource Data Schemas.
+10. Legendary `Foundational Keepsake` is a wildcard passive: at level 5 it can satisfy any of the 10 MVP catalyst families.
+11. Evolution data comes from Resource Data Schemas.
 
 ### States and Transitions
 
@@ -70,6 +71,7 @@ Invalid states:
 ## Edge Cases
 
 - If two level 5 items satisfy the same evolution, either item can support eligibility; neither is consumed.
+- If `Foundational Keepsake` is level 5, it can satisfy any catalyst requirement, but it still does not consume itself and does not let a base weapon evolve more than once.
 - If base weapon is deprecated mid-development, migration rules must map old IDs before save compatibility matters.
 - If evolved weapon resource is missing, validation blocks it before runtime.
 - If a draft offers an evolution and the player changes eligibility before selection, the choice revalidates on selection.
@@ -115,4 +117,3 @@ Invalid states:
 ## Open Questions
 
 - Exact evolved weapon list can be smaller than 20 for early prototype but MVP content plan targets at least 8 implemented evolutions from root GDD milestone guidance.
-

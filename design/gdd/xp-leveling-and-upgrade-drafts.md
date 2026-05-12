@@ -22,15 +22,20 @@ Every level-up should feel like a sharp, readable power decision. The player sho
 3. Filling XP threshold increments run level and opens a 3-choice upgrade draft.
 4. Every normal upgrade draft shows exactly 3 choices.
 5. Draft categories include new weapon, new passive item, +1 weapon level, +1 passive item level, evolution card, heal, pickup magnet, temporary super attack, Pagecraft modifier, and pet-synergy reward.
-6. New weapons are weighted strongly until player owns at least 3 weapons.
+6. Run levels 5, 10, 20, and 35 are weapon-only acquisition drafts when legal, showing only new weapon cards.
 7. New weapon choices are blocked when 5 weapon slots are full.
 8. New passive item choices are blocked when 5 passive slots are full.
 9. Owned weapons below 10 and owned passives below 5 can appear as upgrade choices.
 10. If normal eligibility produces fewer than 3 choices, approved fallback choices fill the draft.
-11. Page Event, elite, chest, and boss reward drafts can use stronger pools but still use 3 choices unless a later GDD explicitly overrides.
-12. Draft UI may pause or slow combat; this system owns draft state, not modal layout.
-13. One-stat weapon range cards can appear for owned weapons and must not also change damage, count, cooldown, or weapon level.
-14. Draft card rarity must be visible through simple rarity-colored borders.
+11. Non-weapon-only normal drafts use 1 weapon-side card, 1 item-side card, and 1 flex card when legal choices exist.
+12. Page Event reward drafts use build-completion bias for item upgrades, catalyst fixes, evolutions, and high-rarity upgrades.
+13. Page Event, elite, chest, and boss reward drafts can use stronger pools but still use 3 choices unless a later GDD explicitly overrides.
+14. Strong normal runs should reach run level 50 by the 30:00 boss/finale start.
+15. Overleveling past 50 is allowed. Normal weapon, item, and evolution upgrades continue while available.
+16. Once no normal weapon, item, or evolution upgrades remain, endless drafts switch to overflow rewards.
+17. Draft UI may pause or slow combat; this system owns draft state, not modal layout.
+18. One-stat weapon range cards can appear for owned weapons and must not also change damage, count, cooldown, or weapon level.
+19. Draft card rarity must be visible through simple rarity-colored borders.
 
 ### States and Transitions
 
@@ -65,19 +70,28 @@ Every level-up should feel like a sharp, readable power decision. The player sho
 
 `choice_weight = base_weight * rarity_weight * tag_synergy_weight * timing_weight * eligibility_multiplier`
 
+`weapon_only_draft_level = run_level in [5, 10, 20, 35] and owned_weapon_count < 5`
+
+`normal_draft_shape = weapon_side_slot + item_side_slot + flex_slot`
+
+`overflow_draft_allowed = run_level > 50 and no_normal_weapon_item_or_evolution_choices_exist`
+
 Invalid states:
 
 - A normal draft has not exactly 3 choices.
+- A weapon-only acquisition draft includes non-weapon cards while legal new weapons exist.
 - Draft offers a new weapon with no weapon slot available.
 - Draft offers a new passive with no passive slot available.
 - Draft offers an upgrade for maxed weapon/item.
+- An owned item upgrade grants more or less than +1 item level.
 - Fewer than 3 eligible choices and no fallback pool exists.
 
 ## Edge Cases
 
 - If XP gain crosses multiple levels, queue drafts one at a time.
 - If player dies during draft, death/victory flow decides whether the draft is canceled or resolved first.
-- If all weapons/items are maxed and no evolution is available, fallback rewards use heal, currency, magnet, temporary super attack, or Pagecraft modifier pools.
+- If all weapons/items are maxed and no evolution is available before endless overflow is active, fallback rewards use heal, currency, magnet, temporary super attack, or Pagecraft modifier pools.
+- If all weapons/items/evolutions are exhausted during endless, overflow drafts offer small repeatable stats, utility, heals/shields, currency, or risk/reward modifiers.
 - If draft UI cannot open, store pending draft and log blocking error.
 - If a reward source has special pool rules, it still returns exactly 3 choices unless explicitly exempted later.
 - If XP pickup pool is exhausted, pickup may merge values into nearby Color Mote.
@@ -95,9 +109,11 @@ Invalid states:
 | Knob | Default | Range | Notes |
 |---|---:|---:|---|
 | `draft_choice_count` | `3` | fixed | Root GDD rule. |
-| `early_new_weapon_target` | `3` | `1-5` | Strongly offer new weapons until met. |
+| `weapon_only_draft_levels` | `5/10/20/35` | tuning | New-weapon-only acquisition drafts. |
+| `normal_draft_composition` | `weapon/item/flex` | enum | One weapon-side, one item-side, one flex card when legal. |
 | `max_weapon_slots` | `5` | fixed for MVP | Shared with weapon system. |
 | `max_passive_slots` | `5` | fixed for MVP | Shared with item system. |
+| `strong_run_level_at_boss` | `50` | tuning | Target by 30:00 boss start. |
 | `xp_curve_base` | `10` | `1+` | Prototype tuning. |
 | `xp_curve_growth` | `1.12` | `1.0-1.5` | Prototype tuning. |
 | `rarity_weights` | `60/25/9/5/1` | tuning | Common/Uncommon/Rare/Epic/Legendary. |
@@ -118,7 +134,11 @@ Invalid states:
 
 - Color Mote XP can fill a run-level bar.
 - Level-up opens exactly 3 choices.
+- Run levels 5, 10, 20, and 35 produce weapon-only acquisition drafts when legal new weapons exist.
+- Non-weapon-only normal drafts follow weapon-side/item-side/flex composition when legal choices exist.
 - Draft eligibility respects 5 weapon slots, 5 item slots, weapon level 10, and item level 5.
+- Owned item upgrade choices grant fixed +1 item level.
+- Overlevel drafts continue normal progression while normal choices exist, then switch to overflow rewards.
 - Fallback pool prevents fewer-than-3-choice drafts.
 - Selection applies one reward and returns to run state.
 

@@ -11,14 +11,14 @@
 
 ## Player Fantasy
 
-The page should feel pressured but fair. Enemies arrive from believable edges and lanes, Page Events pull the player across the finite page, and the 25:00 boss window feels like the planned climax of a run.
+The page should feel pressured but fair. Enemies arrive from believable edges and lanes, Page Events pull the player across the finite page, and the 30:00 boss window feels like the planned climax of a run.
 
 ## Detailed Design
 
 ### Core Rules
 
-1. Standard run timeline uses boss/finale spawn at 25:00 and normal victory target around 30:00.
-2. Page Events spawn at 5:00, 10:00, 15:00, and 20:00; standard Page Events stop when boss/finale starts.
+1. Standard run timeline uses boss/finale spawn at 30:00.
+2. Page Events spawn at 5:00, 10:00, 15:00, 20:00, and 25:00; standard Page Events stop when boss/finale starts.
 3. Director owns spawn budgets by time band, chapter, difficulty, player strength, and active objectives.
 4. Spawns occur inside finite chapter bounds, generally outside camera view but not outside the map.
 5. Director requests enemy instances from pools and enemy profiles from resources.
@@ -47,7 +47,7 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 | Pagecraft Materials and Grid | Upstream/consumer | Uses map bounds and may react to material pressure. |
 | Enemies and AI Movement | Downstream | Requests enemy spawn/despawn and gives target context. |
 | Page Events and Objectives | Bidirectional | Schedules events and reacts to event state. |
-| Boss and Victory Flow | Downstream | Starts boss/finale at 25:00. |
+| Boss and Victory Flow | Downstream | Starts boss/finale at 30:00. |
 | Object Pooling and Performance Debug | Supporting | Provides enemy pool counts and cap warnings. |
 | In-Run HUD and Draft UI | Downstream | Receives run timer, event warnings, boss warnings. |
 
@@ -63,7 +63,7 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 
 Invalid states:
 
-- Boss/finale fails to start at 25:00 in normal MVP run.
+- Boss/finale fails to start at 30:00 in normal MVP run.
 - Spawn occurs outside finite map bounds without explicit staging rule.
 - Active enemies exceed hard cap by director budget alone.
 - Page Event schedule continues normal events after boss start.
@@ -74,7 +74,7 @@ Invalid states:
 - If no valid offscreen spawn point exists, use a safe distant edge point or delay spawn.
 - If player camps a map corner, spawn logic avoids unfair instant body blocking but can increase pressure lanes.
 - If pool exhausted, director delays low-priority spawns and logs pressure loss.
-- If Page Event is active at 25:00, boss start rules resolve event first by Page Event policy.
+- If Page Event is active at 30:00, boss start rules resolve event first by Page Event policy.
 - If run is paused for draft UI, run timer pauses unless design later chooses slow motion.
 - If player is overpowered, director may increase density but must not erase strong-build fantasy.
 
@@ -84,18 +84,19 @@ Invalid states:
 - **Enemies and AI Movement**: Required enemy actors.
 - **Pagecraft Materials and Grid**: Required map bounds/material context.
 - **Object Pooling and Performance Debug**: Required enemy pooling.
-- **Boss and Victory Flow**: Required 25:00 finale handoff.
+- **Boss and Victory Flow**: Required 30:00 finale handoff.
 
 ## Tuning Knobs
 
 | Knob | Default | Range | Notes |
 |---|---:|---:|---|
-| `boss_start_seconds` | `1500` | fixed MVP | 25:00 root GDD rule. |
-| `event_times_seconds` | `300,600,900,1200` | fixed MVP | 5/10/15/20 minutes. |
+| `boss_start_seconds` | `1800` | fixed MVP | 30:00 root GDD rule. |
+| `event_times_seconds` | `300,600,900,1200,1500` | fixed MVP | 5/10/15/20/25 minutes. |
+| `endless_event_first_seconds` | `2100` | fixed MVP | 35:00 if endless is active. |
 | `event_countdown_seconds` | `180` | fixed MVP | Page Event rule. |
 | `spawn_margin_from_camera_m` | `8` | `2-30` | Prevents visible pop-in. |
 | `active_enemy_stress_target` | `300` | `100-800` | Profiling target. |
-| `pre_boss_wave_time_seconds` | `1350` | `1200-1490` | Root GDD uses 22:30. |
+| `pre_boss_wave_time_seconds` | `1650` | `1500-1790` | Root GDD uses 27:30. |
 
 ## Visual/Audio Requirements
 
@@ -110,14 +111,13 @@ Invalid states:
 
 ## Acceptance Criteria
 
-- Director can run a 25:00 MVP timeline with Page Events at 5/10/15/20.
+- Director can run a 30:00 MVP timeline with Page Events at 5/10/15/20/25.
 - Spawns stay within finite map bounds and generally outside camera view.
 - Director respects enemy pool/cap data.
-- Boss flow starts at 25:00 and normal Page Events stop.
+- Boss flow starts at 30:00 and normal Page Events stop.
 - Director cleanup stops spawning and returns pooled actors.
 
 ## Open Questions
 
 - Exact spawn curves are prototype-tuned after enemy and player controller implementation.
 - Chapter-specific spawn anchors belong to Chapter and Map Construction.
-

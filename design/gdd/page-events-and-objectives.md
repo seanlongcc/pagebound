@@ -17,7 +17,7 @@ Page Events should make the finite page matter. The player chooses to route towa
 
 ### Core Rules
 
-1. Major Page Events occur at 5:00, 10:00, 15:00, and 20:00.
+1. Major Page Events occur at 5:00, 10:00, 15:00, 20:00, and 25:00.
 2. Each Page Event has a 3-minute countdown.
 3. Events spawn in reachable finite-map locations.
 4. Event objectives can include cleanse marks, defend object, escort/rescue pet, dash challenge, defeat elite, collect fragments, repair map tear, or fill/paint zone.
@@ -27,6 +27,7 @@ Page Events should make the finite page matter. The player chooses to route towa
 8. MVP should support at least 10 Page Event definitions, even if some share prototype logic.
 9. Page Events stop normal scheduling when boss/finale starts.
 10. Event state emits progress for HUD, audio, debug, save/meta handoff later.
+11. In endless, Page Events continue every 5 minutes after the boss starts, beginning at 35:00.
 
 ### States and Transitions
 
@@ -93,8 +94,9 @@ Invalid states:
 
 | Knob | Default | Range | Notes |
 |---|---:|---:|---|
-| `event_spawn_times_seconds` | `300,600,900,1200` | fixed MVP | Root GDD rule. |
+| `event_spawn_times_seconds` | `300,600,900,1200,1500` | fixed MVP | 5/10/15/20/25 minutes. |
 | `event_duration_seconds` | `180` | fixed MVP | 3-minute countdown. |
+| `endless_event_first_seconds` | `2100` | fixed MVP | 35:00 if endless is active. |
 | `minimum_event_count_mvp` | `10` | `10+` | Root GDD content target. |
 | `event_reward_tier_bonus` | `1` | `0-5` | Stronger than normal level-up. |
 | `objective_marker_radius_m` | `2.5` | `0.5-10.0` | Readability tuning. |
@@ -115,14 +117,14 @@ Invalid states:
 
 ## Acceptance Criteria
 
-- Events can spawn at 5/10/15/20 with 3-minute countdowns.
+- Events can spawn at 5/10/15/20/25 with 3-minute countdowns.
 - Event objectives can track progress and resolve success/failure.
 - Success opens a stronger 3-choice reward draft.
 - Failure applies a defined consequence.
 - Events integrate with finite map markers and stop/resolve at boss start.
+- Endless can continue Page Event cadence every 5 minutes after 35:00.
 
 ## Open Questions
 
 - Exact first 10 event names can follow root GDD production spec during content implementation.
 - Pet rescue persistence belongs to Pets/Save later.
-

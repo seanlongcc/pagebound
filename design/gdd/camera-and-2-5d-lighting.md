@@ -70,7 +70,7 @@ Invalid states:
 
 - If player target is missing, camera holds last valid position and logs warning.
 - If player reaches map edge, camera clamps while preserving player visibility.
-- If boss and Page Event request zoom together, boss focus wins after 25:00.
+- If boss and Page Event request zoom together, boss focus wins after 30:00.
 - If heavy VFX hides telegraphs, lighting/camera do not solve it alone; feedback systems must reduce clutter.
 - If sprites/card actors pop at steep angles, billboard mode or camera pitch is adjusted before final art import.
 
@@ -117,4 +117,3 @@ Invalid states:
 
 - Exact chapter lighting palettes belong to Art Bible and Chapter GDDs.
 - Steam Deck performance fallback for shadows remains profiling-driven.
-
