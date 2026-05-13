@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-13
 > **Implements Pillar**: Simple Controls, Deep Pagecraft
 
 ## Overview
@@ -21,7 +21,7 @@ The hero should feel tiny, nimble, and reliable. Movement is simple, but dash ti
 2. Movement direction is camera-relative and derived from input system output.
 3. The player has no precision aim input requirement.
 4. Dash direction uses current movement input; if no input exists, it uses last nonzero movement direction.
-5. Dash has startup, active travel, and recovery timing so feedback and Pagecraft hooks can attach cleanly.
+5. Dash has startup, active travel, recovery timing, and charge recharge timing so feedback and Pagecraft hooks can attach cleanly.
 6. Dash samples the traveled path and emits a dash-path event for Pagecraft; it does not directly mutate Pagecraft.
 7. Movement can be slowed, sped up, or blocked by downstream status/Pagecraft systems through typed modifiers.
 8. Player scene mounts under `RunRoot/Actors/Players`.
@@ -57,7 +57,9 @@ The hero should feel tiny, nimble, and reliable. Movement is simple, but dash ti
 
 `dash_distance = dash_speed * dash_active_seconds`
 
-`dash_available = dash_cooldown_remaining <= 0 and state == MoveReady`
+`dash_available = dash_charge_count > 0 and state == MoveReady`
+
+`dash_recharge_ready = dash_recharge_remaining <= 0 and dash_charge_count < max_dash_charges`
 
 `dash_path = segment(dash_start_position, dash_end_position)`
 
@@ -90,10 +92,12 @@ Invalid states:
 | Knob | Default | Range | Notes |
 |---|---:|---:|---|
 | `move_speed` | `7.0 m/s` | `4.0-10.0` | Base player speed before modifiers. |
-| `dash_speed` | `18.0 m/s` | `10.0-28.0` | Active dash travel speed. |
-| `dash_active_seconds` | `0.18` | `0.08-0.35` | Determines dash distance. |
+| `dash_speed` | `14.0 m/s` | `10.0-28.0` | Active dash travel speed. |
+| `dash_active_seconds` | `0.15` | `0.08-0.35` | Determines dash distance. |
 | `dash_recovery_seconds` | `0.18` | `0.05-0.40` | Post-dash lockout. |
-| `dash_cooldown_seconds` | `1.0` | `0.4-2.0` | Time until next dash. |
+| `max_dash_charges` | `1` | `1-8` | Base charge count before items/character modifiers. |
+| `dash_recharge_seconds` | `2.0` | `0.4-4.0` | Time to restore one spent dash charge. |
+| `dash_invulnerability_seconds` | `0.15` | `0.0-0.5` | Brief i-frame window during active dash. |
 | `dash_invulnerable` | `true` | bool | Can vary by character profile later. |
 
 ## Visual/Audio Requirements
@@ -105,15 +109,15 @@ Invalid states:
 
 ## UI Requirements
 
-- HUD needs optional dash cooldown and player health hooks.
-- Debug overlay needs player position, velocity, state, dash cooldown, and dash path sample.
+- HUD needs optional dash charge/recharge and player health hooks.
+- Debug overlay needs player position, velocity, state, dash charge count, dash recharge, and dash path sample.
 - Interact prompts use input system prompt metadata and player interaction query results.
 
 ## Acceptance Criteria
 
 - A `CharacterBody3D` player can move on X/Z under the shell's `Players` root.
 - Movement is camera-relative and normalized.
-- Dash uses current or last movement direction and respects cooldown/recovery.
+- Dash uses current or last movement direction and respects available charges, recharge, and recovery.
 - Dash emits or exposes a dash path for Pagecraft without directly owning Pagecraft simulation.
 - Controller can run with no weapons, no enemies, and no HUD.
 
@@ -121,4 +125,3 @@ Invalid states:
 
 - Exact starting character dash variants belong to `Character Roster and Mastery`.
 - Exact invulnerability tuning remains prototype-driven.
-

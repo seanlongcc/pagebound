@@ -1,4 +1,4 @@
-# First 5-Minute Slice Facts (2026-05-11)
+# First 5-Minute Slice Facts (updated 2026-05-13)
 
 - Branch `feat/mvp` now boots to a start menu; run timer, director, weapons, pickups, and player control stay idle until start/accept.
 - Content implementation guardrail: initial weapon/passive/enemy/event/chapter/Pagecraft content work must consult `PAGEBOUND_CODEX_GDD_v1_5.md` relevant chapter plus focused `design/gdd/*` doc, and record the design source in bead/session-state.
@@ -6,7 +6,7 @@
 - Opening pacing: only `inkling_chaser` before 60s; `paper_scrap_swarmer` joins after 60s. Opening chaser HP equals two starting Waxlight hits.
 - Early health scaling uses readable director time-band multipliers: 1.0 opening, 1.15 at 60s, 1.3 at 120s, 1.5 at 240s.
 - Spawn pressure is time-band driven by target budget, interval, and batch size. Corrective mild-bump tuning uses opening target 8 at 1.45s, first-pressure target 16 at 1.10s, then 26 at 0.88s and 42 at 0.70s. `safety_enemy_cap = 120` is only runaway protection, not gameplay pacing.
-- Dash tune: speed 14.0, active 0.15s, recovery 0.14s, cooldown 0.9s, expected travel 2.1m. Dash still activates crossed Waxlight marks.
+- Dash tune: speed 14.0, active 0.15s, recovery 0.14s, cooldown 0.9s, expected travel 2.1m. Vertical-slice smoke coverage asserts `debug_dash_distance()` is 2.1m and dash still activates a nearby Waxlight mark.
 - HUD shows HP/max HP, level/XP, Waxlight damage/cooldown/duration/cap/inactive-active marks, director pressure/band/budget/spawned/active/safety, Page Event state, weapons, and passives.
 - Draft UI is centered 3-card vertical layout with equal card sizes, rarity-colored borders, and viewport-safe scaling across tested 16:9 sizes: 960x540, 1152x648, 1280x720, 1600x900, and 1920x1080. Choices show category/rarity, title, stat line, and wrapped effect text. Draft generation uses rarity weights: `common` 60, `uncommon` 25, `rare` 9, `epic` 5, `legendary` 1; avoids duplicate choices; uses 5 weapon / 5 passive slot limits; and uses weapon-pick levels `[2, 6, 10, 14]` when enough new weapons are available.
 - `.tres` resources now exist for prototype Waxlight, Star Sticker Swarm, Inkling Chaser, Paper Scrap Swarmer, Candle Spark, and upgrade metadata/effects, with fallback factory data retained. Content resources include draft rarity metadata.
@@ -19,4 +19,4 @@
 - No current attack artifact is indefinite: active Waxlight marks decay, inactive Waxlight marks expire plus cap enforcement, Waxlight dash pulses clean up, and Star Sticker page stickers pop/clean up.
 - Finite page/map is larger: playable half-extents 11.0 x 7.0, visible mesh 22 x 14, and director/player/camera use larger bounds. Color Mote magnet radius is back to close-range 3.0 so pickup requires nearby movement again.
 - Follow-up bead `pagebound-hup`: extract `src/runtime/first_playable_runtime.gd` below local 800-line guardrail. This corrective pass added display-name wiring only there; GDD-backed primitive weapon behavior lives in `src/weapons/mvp_weapon_effects.gd`.
-- Full `tests/smoke/*.gd` suite and headless boot passed after this work.
+- Full `tests/smoke/*.gd` suite passed on 2026-05-11; targeted vertical-slice smoke check passed after dash retune on 2026-05-13.

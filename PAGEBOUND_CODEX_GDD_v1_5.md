@@ -1031,9 +1031,9 @@ Numbers should be rendered as camera-facing 3D text/quads or viewport-based UI p
 ---
 
 
-## 11. Weapons — MVP 20 Shared Weapons
+## 11. Weapons — MVP Shared Weapon Rules
 
-All 20 weapons are in the MVP. This is a content commitment, not a stretch goal.
+MVP weapon roster rows and candidate counts live in `design/gdd/mvp-weapon-candidate-pool.md`. This root section defines only stable weapon design rules.
 
 The theme has shifted away from school-supply fantasy, but the mechanical identity has not been removed. Every weapon still has a **type**, **material tags**, and **Pagecraft behavior**. Every attack should alter the page in some way.
 
@@ -1046,7 +1046,7 @@ Each weapon must define:
 - **Page alteration**: what mark/object/zone the weapon leaves on the page.
 - **Dash interaction**: what happens when the player dashes through, across, or near the weapon's marks.
 - **Maximum range**: how far the weapon can target or place its effect at the current level.
-- **10 exact levels**: every level must have a specific effect.
+- **10 progression levels**: milestone levels and upgrade-card pools must be defined in the focused weapon sheet.
 - **2 evolution catalyst tags**: the tags that can transform the weapon at level 10.
 
 Weapons should be powerful and visually expressive. A weapon that only deals invisible damage is not acceptable for Pagebound.
@@ -1067,517 +1067,29 @@ Every weapon must do at least one of these:
 Each weapon has **10 levels**.
 
 - Level 1: base behavior.
-- Levels 2-4: reliability, stat growth, or additional hit count.
-- Level 5: major behavior breakpoint.
-- Levels 6-9: scaling, dash synergy, and visual escalation.
-- Level 10: capstone and evolution eligibility.
+- Levels 2-4: one-stat upgrade cards from the weapon's upgrade pool.
+- Level 5: major behavior breakpoint plus one upgrade card.
+- Levels 6-9: one-stat upgrade cards from the weapon's upgrade pool.
+- Level 10: capstone and evolution eligibility plus one upgrade card.
 - Range can also be upgraded by separate one-stat draft cards. A range card must not bundle damage, projectile count, cooldown, or level increases.
 
 ### MVP Weapon Pool
 
-| # | Weapon | Type | Materials | Evolution Tags | Starter Candidate |
-|---:|---|---|---|---|---|
-| 1 | Waxlight Comet | Homing projectile / trail | Waxlight, Firelight | Firelight, Royal | Waxlight Knight |
-| 2 | Star Sticker Swarm | Orbit / attach / ricochet | Star Sticker, Dreamlight | Star, Moon | Sticker Mage |
-| 3 | Dreamsap Glob | Puddle / snare | Dreamsap, Binding | Binding, Water | Dreamsap Goblin |
-| 4 | Color Bloom | Burst / growing zone | Color Bloom, Bloom | Bloom, Cloud | Paint Witch |
-| 5 | Moonbeam Scribble | Piercing line / beam | Moonlight, Story Ink | Moon, Focus | Moonline Ranger |
-| 6 | Paper Thorn | Terrain hazard / fold wall | Paperfold, Bloom | Guard, Bloom | Paper Prince |
-| 7 | Clean Page Pulse | Nova / cleanse / push | Clean Page, Heart | Clean, Heart | Mender Monk |
-| 8 | Watercolor Wave | Directional wave / channel | Watercolor, Color Bloom | Water, Moon | Watercolor Kid |
-| 9 | Rainbow Thread | Chain / tether / dash rail | Storythread, Dreamlight | Thread, Dream | Pet Warden secondary |
-| 10 | Crown Spark | Priority mark / execution | Royal Light, Dreamlight | Royal, Light | General |
-| 11 | Button Beetle | Creature summon / swarm | Creature, Pet, Physical Wonder | Pet, Swarm | General |
-| 12 | Ribbon Whip | Sweeping arc / pull | Storythread, Ribbon | Thread, Dash | General |
-| 13 | Lantern Wisp | Homing light / reveal | Light, Firelight | Light, Firelight | General |
-| 14 | Acorn Barrage | Bouncing projectile / sprout | Bloom, Projectile | Bloom, Projectile | General |
-| 15 | Seashell Song | Pulse / resonance | Water, Echo | Echo, Water | General |
-| 16 | Toy Soldier March | Marching summon / lane | Creature, Paperfold, Command | Command, Royal | General |
-| 17 | Dragon Doodle | Doodle creature / breath | Dragon, Firelight | Dragon, Firelight | General |
-| 18 | Fairy Ring | Trap circle / delayed burst | Dream, Moonlight | Dream, Moon | General |
-| 19 | Marble Meteor | Falling impact / rolling hazard | Physical Wonder, Giant, Focus | Giant, Focus | General |
-| 20 | Paper Boat Fleet | Fleet summon / channel rider | Paperfold, Watercolor, Story | Water, Story | General |
+The exact MVP weapon candidate roster, L1/L5/L10 milestones, upgrade-card pools, catalyst assignments, and per-weapon tuning live in `design/gdd/mvp-weapon-candidate-pool.md`. That focused sheet is the source for weapon rows and level details.
 
-### 1. Waxlight Comet
+Root-GDD weapon invariants:
 
-| Field | Spec |
-|---|---|
-| Type | Homing projectile / trail maker |
-| Pagecraft Materials | Waxlight, Firelight |
-| Page Alteration | Leaves glowing wax trails and impact splats that damage enemies crossing them. |
-| Dash Interaction | Dash through a wax trail to trigger a short rainbow slash along the trail. |
-| Compatible Evolution Tags | Firelight, Royal |
+- The MVP target remains a readable shared weapon pool; the focused sheet may track extra candidates before final roster lock.
+- Each weapon has 10 levels.
+- L1 is base behavior, L5 is a major behavior breakpoint, and L10 is capstone plus evolution eligibility.
+- Non-milestone levels use one-stat upgrade cards from that weapon's upgrade pool.
+- Every weapon must visibly affect the page through marks, temporary objects, terrain effects, dash interactions, or Pagecraft state.
+- Range upgrades are separate one-stat draft cards and must not bundle damage, projectile count, cadence, or level increases.
 
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Fires 1 glowing comet at the nearest enemy every 1.5s. The comet leaves a 5s Waxlight trail. |
-| 2 | Comet damage +10%. Impact splat radius +5%. |
-| 3 | Waxlight trail duration increases to 10s. Enemies crossing trails take light tick damage. |
-| 4 | Every 5th cast fires a second smaller comet at 50% damage. |
-| 5 | Impact splits into 3 Waxlight sparks that seek nearby enemies. |
-| 6 | Cooldown reduced by 10%. Trails visually thicken under repeated casts. |
-| 7 | Waxlight trails stack up to 5 layers. At 5 layers, trails slow enemies by 15%. |
-| 8 | Comets pierce 1 enemy before exploding. |
-| 9 | Every 5th cast becomes a large comet with +50% size and a longer trail. |
-| 10 | Capstone: large comets periodically carve a wide Waxlight lane across the visible page. Becomes eligible for Firelight/Royal evolutions. |
+Do not duplicate weapon candidate rows or level tables in this root document. Update `design/gdd/mvp-weapon-candidate-pool.md` first, then adjust this section only when a stable rule changes.
 
 
-### 2. Star Sticker Swarm
-
-| Field | Spec |
-|---|---|
-| Type | Orbit / attach / ricochet |
-| Pagecraft Materials | Star Sticker, Dreamlight |
-| Page Alteration | Places raised glossy sticker nodes on enemies and the page. |
-| Dash Interaction | Dash launches nearby sticker nodes as piercing projectiles. |
-| Compatible Evolution Tags | Star, Moon |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Creates 2 orbiting star stickers that strike nearby enemies every 2s. |
-| 2 | Sticker damage +10%. Orbit radius +5%. |
-| 3 | Adds +1 orbiting sticker. |
-| 4 | Stickers can attach to enemies for 1s before popping. |
-| 5 | Attached stickers pop into 3 tiny star shards. |
-| 6 | Cooldown reduced by 10%. Stickers re-form faster after launch. |
-| 7 | Adds +1 orbiting sticker. Sticker pop radius +10%. |
-| 8 | Sticker shards ricochet 1 time. |
-| 9 | Dash-launched stickers pierce 2 enemies and leave small sticker nodes on the page. |
-| 10 | Capstone: sticker storms periodically rain around the player, coating the page with star nodes. Becomes eligible for Star/Moon evolutions. |
-
-
-### 3. Dreamsap Glob
-
-| Field | Spec |
-|---|---|
-| Type | Puddle / snare / area control |
-| Pagecraft Materials | Dreamsap, Binding |
-| Page Alteration | Creates sticky sap puddles that slow, damage, and merge into larger traps. |
-| Dash Interaction | Dash through sap to stretch it into a sticky snare line between dash start and end. |
-| Compatible Evolution Tags | Binding, Water |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Drops 1 sticky Dreamsap glob near an enemy cluster every 2s. Puddle lasts 8s. |
-| 2 | Puddle damage +10%. Slow strength +5%. |
-| 3 | Puddle radius +10%. |
-| 4 | Drops 2 globs per cast if at least 10 enemies are nearby. |
-| 5 | Overlapping puddles merge into a larger Dreamsap pool. |
-| 6 | Cooldown reduced by 10%. Puddle duration increases to 10s. |
-| 7 | Enemies inside merged pools are snared for 0.5s every 5s. |
-| 8 | Dash-stretched snare lines deal +25% damage. |
-| 9 | Every 5th glob becomes a heavy glob with +50% radius and stronger slow. |
-| 10 | Capstone: merged Dreamsap pools pulse in waves and can cover major lanes. Becomes eligible for Binding/Water evolutions. |
-
-
-### 4. Color Bloom
-
-| Field | Spec |
-|---|---|
-| Type | Burst / growing zone |
-| Pagecraft Materials | Color Bloom, Bloom |
-| Page Alteration | Creates colorful blooming zones that pulse, spread, and visually repaint the page. |
-| Dash Interaction | Dash through a bloom to splash color outward in a ring. |
-| Compatible Evolution Tags | Bloom, Cloud |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Creates a small Color Bloom burst under a nearby enemy every 1.8s. |
-| 2 | Burst damage +10%. Bloom radius +5%. |
-| 3 | Bloom zone remains for 5s and deals light tick damage. |
-| 4 | Bloom burst triggers twice if it kills an enemy. |
-| 5 | Bloom zones pulse once before fading. |
-| 6 | Cooldown reduced by 10%. Bloom duration increases to 10s. |
-| 7 | Bloom zones can spread to a nearby empty page cell every 5s. |
-| 8 | Dash splash from a bloom creates 5 smaller droplets. |
-| 9 | Every 5th bloom becomes a giant flower burst with +50% radius. |
-| 10 | Capstone: bloom chains can propagate across enemy clusters and create page-wide flower patterns. Becomes eligible for Bloom/Cloud evolutions. |
-
-
-### 5. Moonbeam Scribble
-
-| Field | Spec |
-|---|---|
-| Type | Piercing line / beam |
-| Pagecraft Materials | Moonlight, Story Ink |
-| Page Alteration | Draws luminous moon-lines on the page that linger as damaging streaks. |
-| Dash Interaction | Dash across a moon-line to send a beam burst along its full length. |
-| Compatible Evolution Tags | Moon, Focus |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Draws 1 short piercing moonbeam line toward the nearest enemy every 1.6s. |
-| 2 | Beam damage +10%. Line length +5%. |
-| 3 | Moon-line lingers for 5s and damages enemies crossing it. |
-| 4 | Beam pierces +2 additional enemies. |
-| 5 | Enemies hit by the beam receive a Moonlit mark for 5s. |
-| 6 | Cooldown reduced by 10%. Linger duration increases to 10s. |
-| 7 | Beams fork once from Moonlit marked enemies at 50% damage. |
-| 8 | Dash-triggered beam bursts deal +25% damage. |
-| 9 | Every 5th beam becomes a wide crescent slash. |
-| 10 | Capstone: rotating moon scripts sweep huge arcs around the player. Becomes eligible for Moon/Focus evolutions. |
-
-
-### 6. Paper Thorn
-
-| Field | Spec |
-|---|---|
-| Type | Terrain hazard / fold wall |
-| Pagecraft Materials | Paperfold, Bloom |
-| Page Alteration | Raises folded-paper thorns and ridges from the page. |
-| Dash Interaction | Dash along a paper ridge to raise a temporary fold wall. |
-| Compatible Evolution Tags | Guard, Bloom |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Raises 1 thorn cluster near enemies every 2s. Thorns damage on contact. |
-| 2 | Thorn damage +10%. Cluster size +5%. |
-| 3 | Thorns remain for 5s as small blockers for minor enemies. |
-| 4 | Creates 2 thorn clusters per cast. |
-| 5 | Thorns briefly root enemies hit at the center of the cluster. |
-| 6 | Cooldown reduced by 10%. Thorn duration increases to 10s. |
-| 7 | Thorn clusters connect into short jagged paper ridges when close together. |
-| 8 | Fold walls raised by dash last +5s and deal contact damage. |
-| 9 | Every 5th cast creates a long thorn row across a lane. |
-| 10 | Capstone: thorn rows can erupt into defensive paper bastions. Becomes eligible for Guard/Bloom evolutions. |
-
-
-### 7. Clean Page Pulse
-
-| Field | Spec |
-|---|---|
-| Type | Nova / cleanse / push |
-| Pagecraft Materials | Clean Page, Heart |
-| Page Alteration | Creates clean circles that remove corruption and damage enemies. |
-| Dash Interaction | Dash through a Clean Page zone to emit a second smaller pulse. |
-| Compatible Evolution Tags | Clean, Heart |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Emits a soft cleansing pulse around the player every 4s. |
-| 2 | Pulse damage +10%. Push force +5%. |
-| 3 | Pulse leaves a Clean Page zone for 5s. |
-| 4 | Clean Page zones lightly heal the player once when created if the player is below 50% health. |
-| 5 | Pulse removes minor enemy marks and converts them into small damage bursts. |
-| 6 | Cooldown reduced by 10%. Clean Page zone duration increases to 10s. |
-| 7 | Clean zones increase player damage by 10% while standing inside them. |
-| 8 | Dash-triggered secondary pulse gains +25% radius. |
-| 9 | Every 5th pulse becomes a large cleansing nova. |
-| 10 | Capstone: Clean Page zones detonate after absorbing enough corruption and can stabilize boss arenas. Becomes eligible for Clean/Heart evolutions. |
-
-
-### 8. Watercolor Wave
-
-| Field | Spec |
-|---|---|
-| Type | Directional wave / spreading channel |
-| Pagecraft Materials | Watercolor, Color Bloom |
-| Page Alteration | Paints wet channels that carry other materials and make the page shimmer. |
-| Dash Interaction | Dash through a wet channel to create a ripple burst that pushes enemies and spreads color. |
-| Compatible Evolution Tags | Water, Moon |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Sends 1 small watercolor wave in the player movement direction every 2s. |
-| 2 | Wave damage +10%. Width +5%. |
-| 3 | Wave leaves a wet color channel for 5s. |
-| 4 | Wave carries Color Bloom and Dreamsap marks 5 units farther. |
-| 5 | Wave creates 3 ripple hits along its path. |
-| 6 | Cooldown reduced by 10%. Wet channel duration increases to 10s. |
-| 7 | Wet channels slow enemies by 10% and spread Moonlight lines slightly. |
-| 8 | Dash ripple deals +25% damage and pushes minor enemies harder. |
-| 9 | Every 5th wave becomes a wide sweeping tide. |
-| 10 | Capstone: waves can flood huge lanes and carry multiple Pagecraft materials at once. Becomes eligible for Water/Moon evolutions. |
-
-
-### 9. Rainbow Thread
-
-| Field | Spec |
-|---|---|
-| Type | Chain / tether / dash rail |
-| Pagecraft Materials | Storythread, Dreamlight |
-| Page Alteration | Connects enemies and page nodes with glowing thread lines. |
-| Dash Interaction | Dash along a thread line to accelerate and trigger chain damage. |
-| Compatible Evolution Tags | Thread, Dream |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Links up to 3 nearby enemies every 2s. Linked enemies share damage pulses. |
-| 2 | Thread damage +10%. Link range +5%. |
-| 3 | Threads remain on the page for 5s after linked enemies die. |
-| 4 | Links up to 4 enemies. |
-| 5 | Thread lines become dash rails that damage enemies crossed during dash. |
-| 6 | Cooldown reduced by 10%. Thread duration increases to 10s. |
-| 7 | Links up to 5 enemies. Shared pulse damage +10%. |
-| 8 | Dash rail damage +25% and creates a small burst at dash end. |
-| 9 | Every 5th cast creates a web between all enemies in a small cluster. |
-| 10 | Capstone: thread webs can bind whole packs and pull them into detonations. Becomes eligible for Thread/Dream evolutions. |
-
-
-### 10. Crown Spark
-
-| Field | Spec |
-|---|---|
-| Type | Priority mark / execution spark |
-| Pagecraft Materials | Royal Light, Dreamlight |
-| Page Alteration | Places glowing crown marks that detonate and focus damage. |
-| Dash Interaction | Dash near a crowned enemy triggers a small royal burst. |
-| Compatible Evolution Tags | Royal, Light |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Marks 1 priority enemy every 2s. Marked enemies take +10% damage from all sources. |
-| 2 | Spark damage +10%. Mark duration +5s. |
-| 3 | Marked enemy deaths create a tiny crown burst. |
-| 4 | Can maintain 2 active crown marks. |
-| 5 | Crown burst chains to 2 nearby enemies. |
-| 6 | Cooldown reduced by 10%. Mark damage bonus increases to +15%. |
-| 7 | Can maintain 3 active crown marks. |
-| 8 | Dash-triggered royal burst deals +25% damage. |
-| 9 | Every 5th mark targets an elite or highest-health visible enemy. |
-| 10 | Capstone: crown marks periodically call down royal beams on clusters. Becomes eligible for Royal/Light evolutions. |
-
-
-### 11. Button Beetle
-
-| Field | Spec |
-|---|---|
-| Type | Creature summon / swarm |
-| Pagecraft Materials | Creature, Pet, Physical Wonder |
-| Page Alteration | Summons tiny button beetles that crawl across the page and leave dotted paths. |
-| Dash Interaction | Dash commands nearby beetles to charge in the dash direction. |
-| Compatible Evolution Tags | Pet, Swarm |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Summons 2 button beetles that ram nearby enemies for 10s. |
-| 2 | Beetle damage +10%. Beetle move speed +5%. |
-| 3 | Summons +1 beetle. |
-| 4 | Beetles leave dotted trails that deal light damage for 5s. |
-| 5 | Beetles leap at elites and stun minor enemies for 0.5s. |
-| 6 | Cooldown reduced by 10%. Beetle duration increases to 15s. |
-| 7 | Summons +1 beetle. Dotted trails last 10s. |
-| 8 | Dash command causes beetles to charge and pierce 3 enemies. |
-| 9 | Every 5th summon creates a large beetle captain. |
-| 10 | Capstone: beetle waves march from page edges during heavy combat. Becomes eligible for Pet/Swarm evolutions. |
-
-
-### 12. Ribbon Whip
-
-| Field | Spec |
-|---|---|
-| Type | Sweeping arc / pull / tether |
-| Pagecraft Materials | Storythread, Ribbon |
-| Page Alteration | Draws ribbon arcs and tether loops on the page. |
-| Dash Interaction | Dash through a ribbon loop pulls enemies toward the loop center. |
-| Compatible Evolution Tags | Thread, Dash |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Swings 1 ribbon arc around the player every 1.7s. |
-| 2 | Arc damage +10%. Arc width +5%. |
-| 3 | Arc leaves a ribbon loop on the page for 5s. |
-| 4 | Every 3rd swing hits twice. |
-| 5 | Ribbon loops lightly pull enemies inward. |
-| 6 | Cooldown reduced by 10%. Ribbon loop duration increases to 10s. |
-| 7 | Arc range +15%. Pull strength +10%. |
-| 8 | Dash through a loop triggers a larger pull burst. |
-| 9 | Every 5th swing becomes a full circle slash. |
-| 10 | Capstone: ribbon cyclones wrap and drag whole enemy packs. Becomes eligible for Thread/Dash evolutions. |
-
-
-### 13. Lantern Wisp
-
-| Field | Spec |
-|---|---|
-| Type | Homing light / reveal |
-| Pagecraft Materials | Light, Firelight |
-| Page Alteration | Places glowing lantern motes that reveal hidden enemies and ignite light pools. |
-| Dash Interaction | Dash through a lantern mote creates a short light beam in dash direction. |
-| Compatible Evolution Tags | Light, Firelight |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Creates 1 lantern wisp that homes into enemies every 2s. |
-| 2 | Wisp damage +10%. Homing range +5%. |
-| 3 | Wisps leave light pools for 5s. |
-| 4 | Creates +1 wisp every cast. |
-| 5 | Light pools reveal hidden, blank, or shadow enemies and make them take +10% damage. |
-| 6 | Cooldown reduced by 10%. Light pool duration increases to 10s. |
-| 7 | Wisps pierce 1 enemy before fading. |
-| 8 | Dash-triggered light beams deal +25% damage. |
-| 9 | Every 5th cast creates a large lantern that pulses 5 times. |
-| 10 | Capstone: lanterns connect into constellations that fire beams across the page. Becomes eligible for Light/Firelight evolutions. |
-
-
-### 14. Acorn Barrage
-
-| Field | Spec |
-|---|---|
-| Type | Bouncing projectile / sprout |
-| Pagecraft Materials | Bloom, Projectile |
-| Page Alteration | Plants small sprouts where acorns hit, creating living hazards. |
-| Dash Interaction | Dash over sprouts to burst them into thorn petals. |
-| Compatible Evolution Tags | Bloom, Projectile |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Fires 3 bouncing acorns toward nearby enemies every 2s. |
-| 2 | Acorn damage +10%. Bounce distance +5%. |
-| 3 | Acorns bounce 1 additional time. |
-| 4 | Acorn impacts have a 25% chance to plant a small sprout for 5s. |
-| 5 | Sprouts shoot tiny thorns at nearby enemies. |
-| 6 | Cooldown reduced by 10%. Sprout duration increases to 10s. |
-| 7 | Fires +2 acorns per barrage. |
-| 8 | Dash-burst sprouts release 5 thorn petals. |
-| 9 | Every 5th barrage drops a giant acorn that cracks into 10 seeds. |
-| 10 | Capstone: great-oak bursts create dense fields of damaging sprouts. Becomes eligible for Bloom/Projectile evolutions. |
-
-
-### 15. Seashell Song
-
-| Field | Spec |
-|---|---|
-| Type | Pulse / resonance / slow |
-| Pagecraft Materials | Water, Echo |
-| Page Alteration | Creates expanding resonance rings on the page. |
-| Dash Interaction | Dash through a resonance ring replays it at 50% power. |
-| Compatible Evolution Tags | Echo, Water |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Emits 1 expanding shell ring every 2.5s. |
-| 2 | Ring damage +10%. Ring radius +5%. |
-| 3 | Rings slow enemies by 10% for 5s. |
-| 4 | Each ring echoes once at 50% damage after 1s. |
-| 5 | Rings that hit 10+ enemies create a small healing note. |
-| 6 | Cooldown reduced by 10%. Slow duration increases to 10s. |
-| 7 | Ring radius +15%. Echo damage increases to 75%. |
-| 8 | Dash replay creates a second ring at dash end. |
-| 9 | Every 5th song emits 3 rings in quick succession. |
-| 10 | Capstone: overlapping shell hymns wash across the battlefield in huge waves. Becomes eligible for Echo/Water evolutions. |
-
-
-### 16. Toy Soldier March
-
-| Field | Spec |
-|---|---|
-| Type | Marching summon / lane control |
-| Pagecraft Materials | Creature, Paperfold, Command |
-| Page Alteration | Creates marching lanes that occupy space and push enemies back. |
-| Dash Interaction | Dash through a soldier lane rallies soldiers to swing faster for 5s. |
-| Compatible Evolution Tags | Command, Royal |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Summons 3 toy soldiers that march in a line for 8s, damaging enemies they touch. |
-| 2 | Soldier damage +10%. March speed +5%. |
-| 3 | Summons +1 soldier. |
-| 4 | Soldiers leave a faint banner trail that buffs allied attacks by +5%. |
-| 5 | Soldier line blocks minor enemies briefly. |
-| 6 | Cooldown reduced by 10%. Soldier duration increases to 10s. |
-| 7 | Summons +2 soldiers. Banner trail lasts 10s. |
-| 8 | Dash rally gives soldiers +25% attack speed for 5s. |
-| 9 | Every 5th march summons a captain with a larger hitbox. |
-| 10 | Capstone: multiple soldier lanes march from the page edge in formation. Becomes eligible for Command/Royal evolutions. |
-
-
-### 17. Dragon Doodle
-
-| Field | Spec |
-|---|---|
-| Type | Doodle creature / breath line |
-| Pagecraft Materials | Dragon, Firelight |
-| Page Alteration | Draws scorched glowing breath strokes and claw marks onto the page. |
-| Dash Interaction | Dash through dragon breath reignites it into a second flame stroke. |
-| Compatible Evolution Tags | Dragon, Firelight |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Summons a small doodle dragon that breathes firelight at nearby enemies every 2s. |
-| 2 | Breath damage +10%. Breath length +5%. |
-| 3 | Breath leaves a firelight stroke for 5s. |
-| 4 | Dragon bites enemies that get close to the player. |
-| 5 | Breath ignites Waxlight and Color Bloom marks for bonus damage. |
-| 6 | Cooldown reduced by 10%. Firelight stroke duration increases to 10s. |
-| 7 | Dragon breath width +15%. Bite damage +10%. |
-| 8 | Dash reignition deals +25% damage and spreads along nearby marks. |
-| 9 | Every 5th breath becomes a sweeping wing flame. |
-| 10 | Capstone: the dragon grows temporarily and circles the player, breathing across huge lanes. Becomes eligible for Dragon/Firelight evolutions. |
-
-
-### 18. Fairy Ring
-
-| Field | Spec |
-|---|---|
-| Type | Trap circle / delayed detonation |
-| Pagecraft Materials | Dream, Moonlight |
-| Page Alteration | Places glowing rings that detonate, buff allies, and mark the page. |
-| Dash Interaction | Dash through a fairy ring detonates it immediately with bonus radius. |
-| Compatible Evolution Tags | Dream, Moon |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Places 1 fairy ring near a cluster every 3s. Ring detonates after 2s. |
-| 2 | Ring damage +10%. Ring radius +5%. |
-| 3 | Ring leaves a dream circle for 5s that slows enemies. |
-| 4 | Places 2 rings per cast. |
-| 5 | Enemies inside a ring when it detonates are Moonlit for 5s. |
-| 6 | Cooldown reduced by 10%. Dream circle duration increases to 10s. |
-| 7 | Ring radius +15%. Detonation delay reduced by 0.5s. |
-| 8 | Dash detonation creates 5 tiny fairy sparks. |
-| 9 | Every 5th cast places a large royal fairy court ring. |
-| 10 | Capstone: overlapping rings create a persistent court zone that melts enemy packs. Becomes eligible for Dream/Moon evolutions. |
-
-
-### 19. Marble Meteor
-
-| Field | Spec |
-|---|---|
-| Type | Falling impact / rolling hazard |
-| Pagecraft Materials | Physical Wonder, Giant, Focus |
-| Page Alteration | Creates dents, glowing impact rings, and rolling marble lanes. |
-| Dash Interaction | Dash through an impact ring launches shards outward. |
-| Compatible Evolution Tags | Giant, Focus |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Drops 1 marble meteor on a high-density enemy cluster every 3s. |
-| 2 | Meteor damage +10%. Impact radius +5%. |
-| 3 | Impact leaves a glowing ring for 5s. |
-| 4 | Meteor bounces once after landing, rolling in a random direction. |
-| 5 | Rolling marble knocks back minor enemies. |
-| 6 | Cooldown reduced by 10%. Impact ring duration increases to 10s. |
-| 7 | Meteor impact radius +15%. Roll distance +10%. |
-| 8 | Dash through an impact ring releases 8 shards. |
-| 9 | Every 5th meteor becomes a giant marble with +50% radius. |
-| 10 | Capstone: giant marbles ricochet around the visible page and crush waves. Becomes eligible for Giant/Focus evolutions. |
-
-
-### 20. Paper Boat Fleet
-
-| Field | Spec |
-|---|---|
-| Type | Fleet summon / channel rider |
-| Pagecraft Materials | Paperfold, Watercolor, Story |
-| Page Alteration | Creates tiny boat wakes that travel through wet/color channels. |
-| Dash Interaction | Dash through a boat wake launches a bonus boat in dash direction. |
-| Compatible Evolution Tags | Water, Story |
-
-| Level | Exact Upgrade |
-|---:|---|
-| 1 | Launches 1 paper boat every 3s. Boat sails toward enemies and deals contact damage. |
-| 2 | Boat damage +10%. Boat speed +5%. |
-| 3 | Boat leaves a wake channel for 5s. |
-| 4 | Boats follow Watercolor, Color Bloom, and Dreamsap paths when available. |
-| 5 | Launches +1 boat per cast. |
-| 6 | Cooldown reduced by 10%. Wake duration increases to 10s. |
-| 7 | Boats carry small Star Sticker charges that pop on impact. |
-| 8 | Dash through wake launches a bonus boat with +25% damage. |
-| 9 | Every 5th fleet launches a large flagship boat. |
-| 10 | Capstone: fleets can form armadas that sweep across wet lanes and carry Pagecraft effects. Becomes eligible for Water/Story evolutions. |
-
-## 12. Passive Items — MVP 23 Items
+## 12. Passive Items — MVP Item Rules
 
 All passive items have **5 levels**.
 
@@ -1585,37 +1097,22 @@ Every item should be a magical keepsake, toy, natural object, storybook relic, o
 
 Items are not 1:1 keys for specific weapons. Items have **catalyst tags**. At item level 5, those tags can enable any level 10 weapon with a matching compatible evolution path.
 
-Items are build-shaping stat, tag, behavior, pickup, survivability, draft, pet, or Pagecraft modifiers. They must not be hidden single-weapon upgrades. If an item references a material family such as Firelight/Waxlight, it modifies that tag family through an explicit channel instead of hardcoding one weapon ID.
+Items are build-shaping stat, behavior, pickup, survivability, draft, pet, or Pagecraft modifiers. They must not be hidden single-weapon upgrades. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel. Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive item stat bonuses.
 
 ### Passive Item Pool
 
-The MVP passive pool has 23 active items. Each item has an initial find rarity. Find rarity affects only new-item card appearance; once the item is owned, its upgrade cards grant exactly +1 item level.
+The exact 23-item passive roster, L1-L5 values, capstone bonuses, catalyst tags, and stat-channel definitions live in `design/gdd/mvp-item-candidate-pool.md`. That focused sheet is the source for item rows and numeric item tuning.
 
-| # | Item | Find Rarity | Catalyst Tags | Primary Stat Role | Max Level Bonus |
-|---:|---|---|---|---|---|
-| 1 | Candle Spark | Common | Firelight, Light | damage | capstone spark |
-| 2 | Cloud Seed | Common | Bloom, Wonder | size | larger expiration pop |
-| 3 | Dream Thread | Common | Dream, Thread | duration | first timed mark echoes |
-| 4 | Ribbon Spool | Common | Thread, Star | range | longer link reach |
-| 5 | Moon Button | Common | Moon, Echo | cadence | every 10th cast echoes at partial power |
-| 6 | Firefly Charm | Uncommon | Light, Wonder | proc_chance | first failed proc after a delay is retried |
-| 7 | Seashell Lullaby | Uncommon | Water, Echo | control_strength | control effects leave a tiny resonance pulse |
-| 8 | Acorn Charm | Epic | Bloom, Star | effect_count | first bonus each Page Event is guaranteed |
-| 9 | Pocket Locket | Epic | Dream, Wonder | active_cap | one eligible construct can exceed cap by 1 |
-| 10 | Lucky Pebble | Rare | Star, Wonder | luck | better rare-card weighting |
-| 11 | Blanket Pin | Common | Thread, Light | armor | shield pulse on heavy hit |
-| 12 | Paper Heart | Common | Bloom, Light | max_health | overheal shield |
-| 13 | Dewdrop Thimble | Uncommon | Water, Bloom | health_regen | first heal after Page Event doubles |
-| 14 | Firefly Jar | Uncommon | Light, Wonder | xp_magnet_range | periodic mote pull |
-| 15 | Storybook Key | Uncommon | Dream, Star | xp_gain_rate | Page Event rewards add bonus XP motes |
-| 16 | Wooden Star | Rare | Star, Light | crit_chance | crit sparks |
-| 17 | Tiny Crown | Rare | Light, Wonder | crit_damage | large crits make brighter popups |
-| 18 | Feather Cape | Uncommon | Thread, Moon | dash_range | dash trail hitbox grows |
-| 19 | Button Boots | Rare | Wonder, Thread | dash_count | +3 total charges |
-| 20 | Moonlace Stopwatch | Rare | Moon, Echo | dash_cooldown | first dash after draft has no cooldown |
-| 21 | Paper Pinwheel | Common | Water, Bloom | movement_speed | brief speed burst after pickup streak |
-| 22 | Foundational Keepsake | Legendary | All 10 MVP catalyst families | base_stat_boost | all catalyst tags active at level 5 and lowest core stat improves again |
-| 23 | Second Bookmark | Epic | Dream, Light | revive | revive at 60% health and short invulnerability |
+Root-GDD item invariants:
+
+- The MVP passive pool has 23 active items.
+- Each item has an initial find rarity; once owned, upgrade cards grant exactly +1 item level.
+- Normal passive items have 2 catalyst tags.
+- `Foundational Keepsake` is Legendary and has all 10 MVP catalyst families at level 5.
+- Normal passive stat bonuses apply globally to player-owned sources unless an item explicitly names an eligible authored channel.
+- Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive stat bonuses.
+
+Do not duplicate the item row table in this root document. Update `design/gdd/mvp-item-candidate-pool.md` first, then adjust this section only when a stable rule changes.
 
 ### Item Rarity Rules
 
@@ -1648,16 +1145,23 @@ Each item should use this 5-level pattern:
 - Level 2: stronger item effect.
 - Level 3: stronger item effect or small secondary behavior.
 - Level 4: stronger item effect.
-- Level 5: capstone modifier and full catalyst value.
+- Level 5: normal stat maximum, modest capstone modifier, and full catalyst value.
 
 Use multiples of 5 for values whenever possible.
 
+Chance wording means additive `+X% chance`, not relative percent scaling. Exact item ladders, item-specific exceptions, HP-scale item values, and low-health ward values live in `design/gdd/mvp-item-candidate-pool.md`.
+
+Crit chance is global and capped at 75%. Base crit multiplier is 2.0x. Crit damage adds to that multiplier, so +50% crit damage changes 2.0x to 2.5x. Final crit multiplier is capped at 4.0x.
+
+Luck uses raffle math for draft rarity only: Common/basic weights stay unchanged, Uncommon-and-higher weights multiply by `1 + luck`, then the table is normalized.
+
 ### Broad Item Guardrails
 
-`effect_count`, `active_cap`, and `base_stat_boost` are intentionally bounded:
+`effect_count`, `active_cap`, `dash_count`, and `base_stat_boost` are intentionally bounded. Exact ladders live in `design/gdd/mvp-item-candidate-pool.md`.
 
-- `effect_count` uses bonus-effect chance, not unconditional global count increases.
-- `active_cap` uses overflow grace and a small capstone cap increase, not unconditional global cap increases.
+- `effect_count` applies only to authored eligible count channels.
+- `active_cap` applies only to authored eligible active-object channels.
+- `dash_count` adds charges and does not change recharge time.
 - `base_stat_boost` affects only damage, size, duration, range, cadence, and control_strength.
 - `base_stat_boost` does not affect crit, XP, dash count, revive, effect_count, or active_cap.
 
@@ -1948,7 +1452,7 @@ Character XP sources:
 | 5 | Unlock exclusive evolution: **Dreamsap Maw**. Dreamsap Glob can create pulsing sticky mouths. |
 | 6 | Pre-run trait choice: wider puddles, stronger snare, or longer Dreamsap duration. |
 | 7 | Enemies trapped in Dreamsap take +10% damage from pets and creatures. |
-| 8 | Sap Slide Dash cooldown -10% while standing on Dreamsap. |
+| 8 | Sap Slide Dash recharge -10% while standing on Dreamsap. |
 | 9 | Unlock second exclusive evolution: **Golden Lagoon**, combining Dreamsap + Seashell Song/Watercolor. |
 | 10 | Max mastery: start runs with Dreamsap zones immune to the first 5 seconds of enemy Blankness decay; bonus cosmetic: amber goblin skin. |
 
@@ -2885,6 +2389,17 @@ Example node:
 | 4 | 200 Pigment | +20% pickup radius total |
 | 5 | 400 Pigment | +25% pickup radius total |
 
+Wonder Box stat-node details live in `design/gdd/mvp-item-candidate-pool.md` under the long-term meta progression section. That focused sheet is the source for exact Wonder Box stat tracks and rank values.
+
+Root-GDD Wonder Box invariants:
+
+- Wonder Box stat nodes should stay below in-run item strength so draft choices still matter.
+- Wonder Box uses 5 ranks per stat node.
+- Wonder Box does **not** include `base_stat_boost`, `revive`, `effect_count`, `active_cap`, or `dash_count` stat tracks. Those remain item-only or explicit content effects.
+- The pickup-radius table above is an example cost/effect pattern, not the full stat-track roster.
+
+Do not duplicate the Wonder Box stat-track table in this root document. Update `design/gdd/mvp-item-candidate-pool.md` first, then adjust this section only when a stable rule changes.
+
 ### Character Progression
 
 Each character has 10 mastery levels and gameplay rewards at every level. Cosmetics only appear as bonus rewards at max mastery or milestones.
@@ -3336,7 +2851,7 @@ extends Resource
 @export var preferred_material: StringName
 @export var base_max_health: int
 @export var base_move_speed: float
-@export var base_dash_cooldown: float
+@export var base_dash_recharge: float
 @export var mastery_track: Array[Dictionary]
 ```
 
@@ -3680,7 +3195,7 @@ Tasks:
 - Add Camera3D, DirectionalLight3D, WorldEnvironment.
 - Create placeholder paper arena mesh.
 - Create player planar movement on X/Z.
-- Add dash with cooldown.
+- Add dash with charge recharge.
 - Add camera follow.
 
 Acceptance:
@@ -4049,7 +3564,7 @@ Secondary audience:
 ### 36.3 Input Rules
 
 - Dash buffers for 0.12 seconds.
-- Dash can be queued shortly before cooldown ends.
+- Dash can be queued shortly before recharge completes.
 - Dash direction comes from current movement input.
 - If no movement input is active, dash uses last non-zero movement direction.
 - Combat does not require aiming.
@@ -4091,12 +3606,13 @@ Player.tscn
 
 | Stat | Default | Notes |
 |---|---:|---|
-| Max HP | 100 | Survivability baseline |
+| Max HP | 1000 | Survivability baseline |
 | Move speed | 4.5 m/s | Tuning range 4.0-5.0 |
-| Dash distance | 3.5 m | Modified by upgrades |
-| Dash duration | 0.18 s | Main movement burst |
-| Dash cooldown | 1.25 s | Important balance lever |
-| Dash invulnerability | 0.15 s | Do not make full cooldown safe |
+| Dash distance | 2.1 m | Modified by upgrades |
+| Dash duration | 0.15 s | Main movement burst |
+| Dash charges | 1 | Modified by items/characters |
+| Dash recharge | 2.0 s per charge | If a charge is available, the player can dash without waiting for recharge |
+| Dash invulnerability | 0.15 s | Very brief i-frame window; do not make full dash safe |
 | Pickup radius | 1.4 m | Modified by items/pets |
 | Damage multiplier | 1.0 | Global outgoing damage |
 | Cooldown multiplier | 1.0 | Lower is faster |
@@ -4104,7 +3620,7 @@ Player.tscn
 | Duration multiplier | 1.0 | Affects Pagecraft duration |
 | Amount multiplier | 1.0 | Affects projectiles/summons |
 | Pet power | 1.0 | Affects pet damage/frequency |
-| Luck | 0 | Draft/drop modifier |
+| Luck | 0 | Draft rarity modifier only |
 
 ### 36.6 Player States
 
@@ -4656,7 +4172,7 @@ Required HUD elements:
 - Run timer.
 - XP bar.
 - Run level.
-- Dash cooldown.
+- Dash charges/recharge.
 - Weapon slots, levels, and evolved state.
 - Item slots and levels.
 - Pet icon, tier, and special/attack feedback.
@@ -5643,12 +5159,12 @@ Implement:
 3. Placeholder finite paper mesh arena.
 4. Player CharacterBody3D with movement and dash.
 5. Camera follow.
-6. Basic debug overlay showing FPS, player position, dash cooldown.
+6. Basic debug overlay showing FPS, player position, dash charges/recharge.
 
 Acceptance:
 - Project runs in Godot 4.6.x.
 - Player moves on X/Z plane.
-- Dash works and has cooldown.
+- Dash works and has charge recharge.
 - Camera follows player.
 - Directional light casts visible shadows.
 ```

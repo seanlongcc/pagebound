@@ -2,14 +2,14 @@
 
 > Status: Draft review document  
 > Owner: Design  
-> Source bead: pagebound-nge  
-> Last updated: 2026-05-12
+> Source beads: pagebound-nge, pagebound-xhi
+> Last updated: 2026-05-13
 
 ## Purpose
 
 This document captures the active MVP item/stat model based on the latest item, draft, and endless-mode decisions. It answers current design questions, defines the 23-entry passive item pool, defines 5-tier long-term meta progression tracks, and adds rules to reduce "missed required item" frustration.
 
-This is the active MVP passive-item roster draft. The root GDD and focused system docs should reference 23 passive items after the matching documentation update.
+This is the active MVP passive-item and Wonder Box stat-track source for exact roster rows, L1-L5 values, capstone bonuses, catalyst tags, and long-term meta rank values. The root GDD and focused system docs should reference this sheet instead of duplicating those tables.
 
 Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 12, 20, and 37; `design/gdd/passive-items-and-drafts.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/mvp-weapon-candidate-pool.md`.
 
@@ -36,7 +36,9 @@ Use this structure for MVP review:
 - Use initial find weights: Common 60, Uncommon 25, Rare 9, Epic 5, Legendary 1.
 - Give normal passives 2 catalyst tags.
 - Give Legendary `Foundational Keepsake` all 10 catalyst tags at level 5.
-- Keep the broadest three stats - `effect_count`, `active_cap`, and `base_stat_boost` - bounded through chance, overflow, and capstone limits instead of raw global count multiplication.
+- Treat normal item stat bonuses as global player-owned stat bonuses; catalyst tags drive evolutions and draft synergy, not stat scope.
+- Keep the broadest raw-count stats - `effect_count`, `active_cap`, and `dash_count` - limited to authored eligible channels.
+- Keep `base_stat_boost` Legendary-only and out of Wonder Box meta progression.
 - Normal strong-run target by the 30:00 boss: 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions.
 
 ## In-Run Item Rules
@@ -72,6 +74,7 @@ Draft defaults:
 | By run level 4 or first Page Event | If the player has no passive item, force at least one legal new item offer. |
 | Around 5:00 | Expected build has 2-3 weapons and 1-2 items. |
 | Around 10:00 | Expected build has the 3-weapon core and is filling item slots. |
+| Around 10:00-12:00 | Focused builds can reasonably reach a first level 5 passive item; casual or unfocused runs may reach this closer to 15:00. |
 | Around 20:00 | Expected build has 4 weapons and several owned items approaching level 5. |
 | Around 30:00 | Normal strong build has 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions. |
 | Endless | Normal upgrades continue after level 50 while available; overflow drafts start only after no normal weapon/item/evolution upgrades remain. |
@@ -87,6 +90,23 @@ All passive items use 5 levels.
 | 3 | Improves the item effect or adds a small secondary behavior. |
 | 4 | Improves the item effect. |
 | 5 | Capstone effect and full evolution catalyst value. |
+
+### Stat and Terminology Rules
+
+- Normal passive item stat bonuses apply globally to player-owned sources unless a stat explicitly says otherwise.
+- Catalyst tags are evolution and draft-synergy tags. They do not limit normal item stat bonuses.
+- Level 5 normally reaches +50% or an equivalent fifth-step value plus a modest capstone. `Foundational Keepsake` is the exception because it affects multiple core stats and carries all catalyst tags.
+- `cadence` means attack/cast rate, not cooldown reduction.
+- Chance bonuses use player-facing `+X% chance` wording. They add directly to the base chance and still respect each effect's cap.
+- `proc_chance` means trigger chance for authored optional effects such as spark release, node spawn, pollen chance, fork chance, chain eruption, absorb chance, ignite chance, giant cast, or dash loop effects.
+- `effect_count` only affects authored eligible count channels such as extra projectiles, pulses, echoes, links, sparks, or repeated effects.
+- `active_cap` only affects authored eligible active-object channels such as living pools, beacons, sentries, wells, gates, towers, zones, constructs, or summons.
+- `dash_count` adds dash charges. Dash recharge time refills spent charges; if a charge is available, the player can dash without waiting for recharge.
+- Base dash recharge time is 2.0s per charge. Baseline dash invulnerability is 0.15s.
+- Base player max HP is 1000 for the MVP balance scale.
+- Crit chance is global, additive, and capped at 75%.
+- Base crit multiplier is 2.0x. Crit damage adds to that multiplier; for example, +50% crit damage changes 2.0x to 2.5x. Final crit multiplier is capped at 4.0x.
+- Luck uses raffle math: Common/basic weights stay unchanged, Uncommon-and-higher draft rarity weights multiply by `1 + luck`, then the table is normalized.
 
 ## Build Reliability Rules
 
@@ -155,29 +175,29 @@ This table uses 23 active passive items because the requested stat list has 23 r
 
 | # | Working Item Name | Find Rarity | Stat Role | Catalyst Tags | L1 | L2 | L3 | L4 | L5 |
 |---:|---|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Candle Spark | Common | damage | Firelight, Light | +5% | +10% | +15% | +20% | +25% and capstone spark |
-| 2 | Cloud Seed | Common | size | Bloom, Wonder | +5% | +10% | +15% | +20% | +25% and larger expiration pop |
-| 3 | Dream Thread | Common | duration | Dream, Thread | +5% | +10% | +15% | +20% | +25% and first timed mark echoes |
-| 4 | Ribbon Spool | Common | range | Thread, Star | +5% | +10% | +15% | +20% | +25% and longer link reach |
-| 5 | Moon Button | Common | cadence | Moon, Echo | +5% | +10% | +15% | +20% | +25% and every 10th cast echoes at partial power |
-| 6 | Firefly Charm | Uncommon | proc_chance | Light, Wonder | +5 pp | +10 pp | +15 pp | +20 pp | +25 pp and first failed proc after a delay is retried |
-| 7 | Seashell Lullaby | Uncommon | control_strength | Water, Echo | +5% | +10% | +15% | +20% | +25% and control effects leave a tiny resonance pulse |
-| 8 | Acorn Charm | Epic | effect_count | Bloom, Star | +10% bonus effect chance | +15% | +20% | +25% | +30% and first bonus each Page Event is guaranteed |
-| 9 | Pocket Locket | Epic | active_cap | Dream, Wonder | +10% cap overflow grace | +15% | +20% | +25% | +30% and one eligible construct can exceed cap by 1 |
-| 10 | Lucky Pebble | Rare | luck | Star, Wonder | +5% | +10% | +15% | +20% | +25% and better rare-card weighting |
-| 11 | Blanket Pin | Common | armor | Thread, Light | +1 | +2 | +3 | +4 | +5 and shield pulse on heavy hit |
-| 12 | Paper Heart | Common | max_health | Bloom, Light | +10 | +20 | +30 | +40 | +50 and overheal shield |
-| 13 | Dewdrop Thimble | Uncommon | health_regen | Water, Bloom | +0.2/s | +0.4/s | +0.6/s | +0.8/s | +1.0/s and first heal after Page Event doubles |
-| 14 | Firefly Jar | Uncommon | xp_magnet_range | Light, Wonder | +10% | +20% | +30% | +40% | +50% and periodic mote pull |
-| 15 | Storybook Key | Uncommon | xp_gain_rate | Dream, Star | +5% | +10% | +15% | +20% | +25% and Page Event rewards add bonus XP motes |
-| 16 | Wooden Star | Rare | crit_chance | Star, Light | +3 pp | +6 pp | +9 pp | +12 pp | +15 pp and crit sparks |
-| 17 | Tiny Crown | Rare | crit_damage | Light, Wonder | +10% | +20% | +30% | +40% | +50% and large crits make brighter popups |
-| 18 | Feather Cape | Uncommon | dash_range | Thread, Moon | +5% | +10% | +15% | +20% | +25% and dash trail hitbox grows |
-| 19 | Button Boots | Rare | dash_count | Wonder, Thread | +1 charge | +1 charge, faster refill after Page Event | +2 charges | +2 charges, first empty dash refunds once | +3 charges |
-| 20 | Moonlace Stopwatch | Rare | dash_cooldown | Moon, Echo | -5% | -10% | -15% | -20% | -25% and first dash after draft has no cooldown |
-| 21 | Paper Pinwheel | Common | movement_speed | Water, Bloom | +3% | +6% | +9% | +12% | +15% and brief speed burst after pickup streak |
-| 22 | Foundational Keepsake | Legendary | base_stat_boost | Firelight, Moon, Star, Dream, Thread, Bloom, Water, Light, Echo, Wonder | +2% | +4% | +6% | +8% | +10%, all catalyst tags active, and improves lowest core stat again |
-| 23 | Second Bookmark | Epic | revive | Dream, Light | 1 revive at 20% health | 30% | 40% | 50% | 60% and short invulnerability |
+| 1 | Candle Spark | Common | damage | Firelight, Light | +10% | +20% | +30% | +40% | +50%; first player-owned hit per enemy deals +10% damage |
+| 2 | Cloud Seed | Common | size | Bloom, Wonder | +10% | +20% | +30% | +40% | +50%; every 5th eligible cast gets extra +50% size |
+| 3 | Dream Thread | Common | duration | Dream, Thread | +10% | +20% | +30% | +40% | +50%; every 5th eligible timed effect gets extra +50% duration |
+| 4 | Ribbon Spool | Common | range | Thread, Star | +10% | +20% | +30% | +40% | +50%; outer 25% range hits/effects are 10% stronger |
+| 5 | Moon Button | Common | cadence | Moon, Echo | +10% | +20% | +30% | +40% | +50%; +10% cadence while HP is at or below 50% |
+| 6 | Firefly Charm | Uncommon | proc_chance | Light, Wonder | +10% chance | +20% chance | +30% chance | +40% chance | +50% chance; first failed eligible trigger retries after cooldown |
+| 7 | Seashell Lullaby | Uncommon | control_strength | Water, Echo | +10% | +20% | +30% | +40% | +50%; eligible control touch applies +10% damage taken for 1s |
+| 8 | Acorn Charm | Epic | effect_count | Bloom, Star | +1 | +2 | +3 | +4 | +5; eligible casts have 20% chance for one extra effect |
+| 9 | Pocket Locket | Epic | active_cap | Dream, Wonder | +2 | +4 | +6 | +8 | +10; cap-replaced objects persist as faded echoes for 2s |
+| 10 | Lucky Pebble | Rare | luck | Star, Wonder | +20% Luck | +40% Luck | +60% Luck | +80% Luck | +100% Luck; promote one weapon-upgrade draft card to Epic once per run |
+| 11 | Blanket Pin | Common | armor | Thread, Light | 10% mitigation | 20% mitigation | 30% mitigation | 40% mitigation | 50% mitigation; post-hit 1s invulnerability, 60s cooldown |
+| 12 | Paper Heart | Common | max_health | Bloom, Light | +100 HP | +200 HP | +300 HP | +400 HP | +500 HP; later run level-ups heal 100 HP |
+| 13 | Dewdrop Thimble | Uncommon | health_regen | Water, Bloom | +5 HP/s | +10 HP/s | +15 HP/s | +20 HP/s | +25 HP/s; drops 100 HP dewdrop every 60s, max 3 active |
+| 14 | Firefly Jar | Uncommon | xp_magnet_range | Light, Wonder | +10% | +20% | +30% | +40% | +50%; pulls Color Motes from Page Event area after event |
+| 15 | Storybook Key | Uncommon | xp_gain_rate | Dream, Star | +10% | +20% | +30% | +40% | +50%; Page Event success tags current enemies for 30s, tagged kills drop double XP |
+| 16 | Wooden Star | Rare | crit_chance | Star, Light | +10% chance | +20% chance | +30% chance | +40% chance | +50% chance; crits have 1% execute chance on normal non-elite, non-boss enemies |
+| 17 | Tiny Crown | Rare | crit_damage | Light, Wonder | +10% | +20% | +30% | +40% | +50%; crit kills splash 50% overkill damage in a small area |
+| 18 | Feather Cape | Uncommon | dash_range | Thread, Moon | +10% | +20% | +30% | +40% | +50%; dash leaves a 2s slow trail |
+| 19 | Button Boots | Rare | dash_count | Wonder, Thread | +1 charge | +1 charge | +2 charges | +2 charges | +3 charges; dashing through player Pagecraft refunds 1 charge, 10s cooldown |
+| 20 | Moonlace Stopwatch | Rare | dash_recharge | Moon, Echo | -10% | -20% | -30% | -40% | -50%; next player-owned hit after dash deals +50% damage |
+| 21 | Paper Pinwheel | Common | movement_speed | Water, Bloom | +10% | +20% | +30% | +40% | +50%; after dash ends, +25% movement speed for 1s |
+| 22 | Foundational Keepsake | Legendary | base_stat_boost | Firelight, Moon, Star, Dream, Thread, Bloom, Water, Light, Echo, Wonder | +2% | +4% | +6% | +8% | +10%; all catalyst tags active and opens one Legendary weapon-upgrade draft |
+| 23 | Second Bookmark | Epic | low_health_ward | Dream, Light | 20% HP trigger, 100 HP/s for 2s, 60s cooldown, 0.5s invuln | 30% trigger, 3s regen, 55s cooldown, 0.6s invuln | 40% trigger, 4s regen, 50s cooldown, 0.7s invuln | 50% trigger, 5s regen, 45s cooldown, 0.8s invuln | 60% trigger, 6s regen, 40s cooldown, 1s invuln; one full-HP revive, cleanse, 2s invuln |
 
 ### Find Rarity Rules
 
@@ -200,8 +220,8 @@ This table uses 23 active passive items because the requested stat list has 23 r
 
 Recommended handling:
 
-- `effect_count` item uses bonus-effect chance, not unconditional global +5 effects.
-- `active_cap` item uses overflow grace and a small capstone cap increase, not unconditional global +5 active objects.
+- `effect_count` uses direct `+1/+2/+3/+4/+5`, but only on authored eligible count channels.
+- `active_cap` uses direct `+2/+4/+6/+8/+10`, but only on authored eligible active-object channels.
 - `base_stat_boost` item affects only damage, size, duration, range, cadence, and control_strength; it does not affect crit, XP, dash count, revive, effect_count, or active_cap.
 - `dash_count` can grant extra dash charges, but should be balanced around player safety and dash payoff damage.
 
@@ -236,34 +256,30 @@ Permanent progression lives in the Wonder Box. Each node has 5 tiers. These bonu
 - Meta bonuses stack additively with item bonuses unless a stat says otherwise.
 - Crit chance respects the 75% global cap.
 - Crit multiplier respects the 4x final multiplier cap.
-- Flat-count meta tracks use controlled breakpoints or chance-based relief, not raw +1 every tier.
+- Wonder Box does not include `base_stat_boost`, `revive`, `effect_count`, `active_cap`, or `dash_count` stat tracks.
+- Wonder Box Luck uses the same raffle math as Lucky Pebble, at half item strength.
 - The Wonder Box should not replace in-run build decisions. It should make weak starts less punishing and unlock more build consistency over time.
 
 | Stat Track | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 | Notes |
 |---|---:|---:|---:|---:|---:|---|
-| damage | +2% | +4% | +6% | +8% | +10% | Applies to player-owned damage. |
-| size | +2% | +4% | +6% | +8% | +10% | Area, width, footprint. |
-| duration | +2% | +4% | +6% | +8% | +10% | Includes lifetime. |
-| range | +2% | +4% | +6% | +8% | +10% | Target, placement, travel, link, seek reach. |
-| cadence | +2% | +4% | +6% | +8% | +10% | Faster weapon cadence. |
-| proc_chance | +1 pp | +2 pp | +3 pp | +4 pp | +5 pp | Per-effect caps still apply. |
-| control_strength | +2% | +4% | +6% | +8% | +10% | Slow, pull, push, snare, knockback. |
-| effect_count | +5% bonus effect chance | +10% | +15% | +20% | +25% | Controlled substitute for global flat count. |
-| active_cap | +5% overflow grace | +10% | +15% | +20% | +25% | Chance to avoid immediate replacement when at cap. |
-| luck | +2% | +4% | +6% | +8% | +10% | Affects rarity/draft odds, not guaranteed outcomes. |
-| armor | +1 | +2 | +3 | +4 | +5 | Flat damage mitigation or armor formula input. |
-| max_health | +5 | +10 | +15 | +20 | +25 | Starting max health. |
-| health_regen | +0.1/s | +0.2/s | +0.3/s | +0.4/s | +0.5/s | Passive health recovery. |
+| damage | +5% | +10% | +15% | +20% | +25% | Applies to player-owned damage. |
+| size | +5% | +10% | +15% | +20% | +25% | Area, width, footprint. |
+| duration | +5% | +10% | +15% | +20% | +25% | Includes lifetime. |
+| range | +5% | +10% | +15% | +20% | +25% | Target, placement, travel, link, seek reach. |
+| cadence | +5% | +10% | +15% | +20% | +25% | Faster weapon attack/cast rate. |
+| proc_chance | +5% chance | +10% chance | +15% chance | +20% chance | +25% chance | Additive trigger chance; per-effect caps still apply. |
+| control_strength | +5% | +10% | +15% | +20% | +25% | Slow, pull, push, snare, knockback. |
+| luck | +10% Luck | +20% Luck | +30% Luck | +40% Luck | +50% Luck | Draft rarity raffle modifier only. |
+| armor | 5% mitigation | 10% mitigation | 15% mitigation | 20% mitigation | 25% mitigation | Incoming damage mitigation. |
+| max_health | +50 HP | +100 HP | +150 HP | +200 HP | +250 HP | Starting max health. |
+| health_regen | +2 HP/s | +4 HP/s | +6 HP/s | +8 HP/s | +10 HP/s | Passive health recovery. |
 | xp_magnet_range | +5% | +10% | +15% | +20% | +25% | Pickup radius for XP motes. |
-| xp_gain_rate | +3% | +6% | +9% | +12% | +15% | Multiplies XP gained. |
-| crit_chance | +1 pp | +2 pp | +3 pp | +4 pp | +5 pp | Global crit chance, cap 75%. |
+| xp_gain_rate | +5% | +10% | +15% | +20% | +25% | Multiplies XP gained. |
+| crit_chance | +5% chance | +10% chance | +15% chance | +20% chance | +25% chance | Global crit chance, cap 75%. |
 | crit_damage | +5% | +10% | +15% | +20% | +25% | Adds to crit multiplier bonus, final cap 4x. |
-| dash_range | +3% | +6% | +9% | +12% | +15% | Dash distance. |
-| dash_count | emergency charge after Page Event | +1 emergency charge per 10:00 | +1 max dash charge | emergency charge after boss warning | +1 max dash charge | Breakpoint track, not linear +1 each tier. |
-| dash_cooldown | -3% | -6% | -9% | -12% | -15% | Dash cooldown only. Does not affect weapon cadence. |
-| movement_speed | +2% | +4% | +6% | +8% | +10% | Player movement speed. |
-| base_stat_boost | +1% | +2% | +3% | +4% | +5% | Applies only to damage, size, duration, range, cadence, and control_strength. |
-| revive | unlock 1 revive at 20% health | revive at 30% | revive at 40% | revive at 50% | revive at 60% and cleanse | One revive per run unless a separate source grants more. |
+| dash_range | +5% | +10% | +15% | +20% | +25% | Dash distance. |
+| dash_recharge | -5% | -10% | -15% | -20% | -25% | Dash charge recharge time only. Does not affect weapon cadence. |
+| movement_speed | +5% | +10% | +15% | +20% | +25% | Player movement speed. |
 
 ## Anti-Frustration Design Around Required Items
 

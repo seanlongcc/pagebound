@@ -77,7 +77,7 @@ func _initialize() -> void:
 			_assert_true(later_health.max_health > opening_health.max_health, "later enemies must scale to higher max HP", failures)
 
 	if player != null and player.has_method("debug_dash_distance"):
-		_assert_true(float(player.debug_dash_distance()) < 3.0, "prototype dash distance must be shortened below long value", failures)
+		_assert_float_equal(float(player.debug_dash_distance()), 2.1, 0.01, "default dash distance must be 2.1 meters", failures)
 	if pagecraft != null and pagecraft.has_method("debug_deposit_test_mark") and player != null and player.has_method("debug_integrate"):
 		pagecraft.debug_clear_marks()
 		player.global_position = Vector3.ZERO

@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document archives the active MVP weapon candidate pool after the upgrade-model revision. It is still a candidate document, not the active root-GDD section 11 roster. The root GDD remains the content source of truth until a later final-roster update replaces it.
+This document owns the active MVP weapon candidate details after the upgrade-model revision. The root GDD references this sheet for roster rows, weapon milestones, upgrade pools, catalyst assignments, and numeric weapon tuning.
 
 Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/gdd/weapons-and-auto-attacks.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/passive-items-and-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/pagecraft-materials-and-grid.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/resource-data-schemas.md`.
 
@@ -66,7 +66,7 @@ Upgrade stat channels:
 | duration | Common +10%, Uncommon +20%, Rare +35%, Epic +50%, Legendary +75% | How long marks, zones, constructs, or effects remain |
 | range | Common +10%, Uncommon +20%, Rare +35%, Epic +50%, Legendary +75% | Target, placement, link, reach, travel, or homing distance |
 | cadence | Common +10%, Uncommon +20%, Rare +35%, Epic +50%, Legendary +75% | How frequently the scoped effect acts |
-| proc_chance | +10/+20/+35/+50/+75 percentage points | Chance for an optional special effect, capped per row if needed |
+| proc_chance | +10/+20/+35/+50/+75% chance | Additive chance for an optional special effect, capped per row if needed |
 | control_strength | Common +10%, Uncommon +20%, Rare +35%, Epic +50%, Legendary +75% | Slow, pull, push, snare, or knockback strength |
 | effect_count | Common +1, Uncommon +1, Rare +2, Epic +2, Legendary +3 | Extra projectiles, pulses, echoes, links, sparks, or repeated effects |
 | active_cap | Common +1, Uncommon +1, Rare +2, Epic +2, Legendary +3 | Extra living wells, gates, sentries, summons, zones, or constructs |

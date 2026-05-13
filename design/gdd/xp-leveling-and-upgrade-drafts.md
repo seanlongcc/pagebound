@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-13
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -36,6 +36,7 @@ Every level-up should feel like a sharp, readable power decision. The player sho
 17. Draft UI may pause or slow combat; this system owns draft state, not modal layout.
 18. One-stat weapon range cards can appear for owned weapons and must not also change damage, count, cooldown, or weapon level.
 19. Draft card rarity must be visible through simple rarity-colored borders.
+20. Luck modifies draft rarity weights only. It does not change draft categories, legal pools, XP, currency, or drop rates.
 
 ### States and Transitions
 
@@ -68,7 +69,9 @@ Every level-up should feel like a sharp, readable power decision. The player sho
 
 `draft_choice_count = 3`
 
-`choice_weight = base_weight * rarity_weight * tag_synergy_weight * timing_weight * eligibility_multiplier`
+`choice_weight = base_weight * luck_adjusted_rarity_weight * tag_synergy_weight * timing_weight * eligibility_multiplier`
+
+`luck_adjusted_rarity_weight = rarity_weight if rarity == Common else rarity_weight * (1.0 + luck)`
 
 `weapon_only_draft_level = run_level in [5, 10, 20, 35] and owned_weapon_count < 5`
 

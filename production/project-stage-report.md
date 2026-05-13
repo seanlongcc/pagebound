@@ -1,23 +1,22 @@
 # Project Stage Analysis Report
 
 **Generated**: 2026-05-10
-**Last Updated**: 2026-05-11
-**Stage**: Technical Setup
-**Stage Confidence**: PASS WITH ACCEPTED RISKS - MVP Systems Design gate passed; architecture, ADRs, test setup, and first implementation stories are now the active focus.
+**Last Updated**: 2026-05-13
+**Stage**: Technical Setup moving into early Production prototype
+**Stage Confidence**: CONCERNS - `production/stage.txt` still correctly records the formal gate as Technical Setup, but the repo now has a smoke-tested first playable prototype and enough implementation to behave like early Production.
 **Analysis Scope**: Full project
-**Post-Setup Update**: Automatic setup on 2026-05-10 configured Godot 4.6.2, created starter concept and systems-index artifacts, and wrote `production/stage.txt`. Some findings below describe the pre-setup state that triggered those actions.
 
 ---
 
 ## Executive Summary
 
-Pagebound has a substantial root-level design document, `PAGEBOUND_CODEX_GDD_v1_5.md`, with project vision, mechanics, content, technical architecture notes, production milestones, and Godot 4.6.x direction. The project is not empty from a design standpoint.
+Pagebound has completed MVP systems design and now has a working Godot first-playable prototype on `feat/mvp`. The project should not pause to fully design every weapon, event, pet, enemy, and character before more implementation. The best next move is to keep building in narrow, high-standard vertical slices so design quality is validated through play feel.
 
-At scan time, the template workflow was not ready to consume that work directly. Automatic setup has since created `design/gdd/game-concept.md`, `design/gdd/systems-index.md`, and engine configuration. Per-system GDDs, ADRs, sprint plans, source files, prototypes, and tests still need to be created.
+The right content strategy is **one exemplar per category before bulk production**: one polished character, one polished pet, one polished Page Event, one polished boss encounter, one polished enemy family set, and one polished weapon/passive bundle. Each exemplar should set the quality bar, resource shape, smoke-test pattern, and art/UX expectations before scaling to many variants.
 
-**Current Focus**: Technical Setup for first playable foundation: architecture/ADRs, test setup, and Resource Data Schemas implementation.
-**Blocking Issues**: Master architecture, ADRs, architecture traceability, control manifest, and full test setup are still missing.
-**Estimated Time to Next Stage**: 2-5 focused sessions to create Technical Setup artifacts and start the first playable foundation.
+**Current Focus**: stabilize the prototype architecture, move hardcoded tuning into resources, then build a polished exemplar vertical slice.
+**Blocking Issues**: `src/runtime/first_playable_runtime.gd` is over the local guardrail; production planning is still informal; Vertical Slice systems are not designed yet.
+**Estimated Time to Next Stage**: 2-4 focused sessions to clean runtime boundaries and define the first exemplar slice; more to reach formal Production gate.
 
 ---
 
@@ -25,142 +24,135 @@ At scan time, the template workflow was not ready to consume that work directly.
 
 ### Design Documentation
 
-- **Status**: MVP systems design complete; Vertical Slice/Alpha/Full Vision systems remain future design work
-- **Files Found**: 4 documents in `design/`
-  - GDD sections: 2 files in `design/gdd/`
-  - Narrative docs: 0 files in `design/narrative/`
-  - Level designs: 0 files in `design/levels/`
-  - Root-level GDD: 1 large document, `PAGEBOUND_CODEX_GDD_v1_5.md` (5,924 lines)
+- **Status**: MVP design complete enough for implementation; Vertical Slice design not started.
+- **Files Found**: 25 GDD/review files in `design/gdd/`.
+- **Systems Index**: 29 total systems, 19 MVP systems approved, 0/7 Vertical Slice systems designed.
+- **Current Ownership**:
+  - Root GDD keeps stable rules and cross-system intent.
+  - `design/gdd/mvp-weapon-candidate-pool.md` owns exact weapon candidate rows and tuning.
+  - `design/gdd/mvp-item-candidate-pool.md` owns exact item and Wonder Box rows/tuning.
 - **Key Gaps**:
-  - [ ] Move or retrofit the root GDD into template-readable GDD artifacts.
-  - [x] Create `design/gdd/game-concept.md`.
-  - [x] Create `design/gdd/systems-index.md`.
-  - [x] Split or retrofit MVP systems into per-system GDDs with required sections.
-  - [ ] Design Vertical Slice systems when MVP foundation implementation needs them.
+  - [ ] Vertical Slice systems need focused GDDs when they become implementation blockers: character roster, pets, save/profile, hub/meta, chapter construction, audio.
+  - [ ] Existing MVP candidate pools need implementation-selected subsets, not full-roster production immediately.
+  - [ ] Root GDD and focused sheets now need periodic consistency checks after source-of-truth reshaping.
 
 ### Source Code
 
-- **Status**: Godot Project Shell implemented; gameplay systems not implemented yet
-- **Files Found**: Shell scripts in `src/shell/`
-- **Major Systems Identified**: Godot Project Shell exists with smoke validation
+- **Status**: first playable prototype implemented; not production-structured enough for sustained feature growth.
+- **Files Found**: 35 GDScript source files, about 6382 lines in `src/`.
+- **Major Systems Identified**:
+  - `src/runtime/` - run orchestration, draft flow, director, upgrades, Page Event prototype.
+  - `src/data/` - schema/resource foundation and prototype content factory.
+  - `src/weapons/` - auto weapon manager plus MVP effect helpers.
+  - `src/pagecraft/` - Pagecraft mark deposit, activation, damage, and debug hooks.
+  - `src/player/`, `src/camera/`, `src/combat/`, `src/feedback/`, `src/enemies/`, `src/pickups/`, `src/input/`.
 - **Key Gaps**:
-  - [x] Godot project skeleton exists.
-  - [ ] No gameplay, core, UI, AI, or networking modules exist beyond shell.
-  - [ ] Resource Data Schemas implementation is the next practical build step.
+  - [ ] `src/runtime/first_playable_runtime.gd` remains over the local 800-line guardrail and is tracked by bead `pagebound-hup`.
+  - [ ] More prototype content needs to move from fallback/runtime code into `.tres` resources.
+  - [ ] Save/profile, pets, real character variants, boss actor flow, and hub/meta systems are not implemented.
 
 ### Architecture Documentation
 
-- **Status**: 10% complete
-- **ADRs Found**: 0 decisions documented in `docs/architecture/`
-- **Found**:
-  - `docs/architecture/tr-registry.yaml` exists.
-  - Root GDD contains architecture notes for Godot 4.6.x, folder structure, resources, networking, performance, and debug tools.
+- **Status**: useful ADR foundation exists, but no master architecture overview/control manifest yet.
+- **ADRs Found**: 7 decisions in `docs/architecture/`.
+- **Coverage**:
+  - Resource schemas, player input, camera follow, event bus/damage, pooled feedback, first combat prototype, and Pagecraft hook are documented.
+  - Runtime orchestration and prototype content ownership have evolved beyond the current ADR set.
 - **Key Gaps**:
-  - [ ] No `docs/architecture/architecture.md`.
-  - [ ] No ADR files.
-  - [ ] No `docs/architecture/control-manifest.md`.
-  - [ ] No persistent architecture traceability matrix.
+  - [ ] No standalone `docs/architecture/architecture.md`.
+  - [ ] No generated control manifest for implementation rules.
+  - [ ] Need architecture decision or architecture note after extracting runtime orchestration.
 
 ### Production Management
 
-- **Status**: 10% complete
+- **Status**: Beads are active; sprint/milestone files are not.
 - **Found**:
-  - Sprint plans: 0 in `production/sprints/`
-  - Milestones: 0 in `production/milestones/`
-  - Roadmap: Missing as a standalone artifact
-  - Review mode: `lean` in `production/review-mode.txt`
-  - Root GDD contains a milestone sequence from project skeleton through co-op prototype.
+  - `production/stage.txt`: Technical Setup.
+  - `production/session-state/active.md`: current first-playable facts and validation history.
+  - `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
+  - No `production/sprints/` or `production/milestones/` files.
 - **Key Gaps**:
-  - [x] Authoritative `production/stage.txt` exists from automatic setup.
-  - [ ] No sprint plan.
-  - [ ] No `production/sprint-status.yaml`.
-  - [ ] Root GDD milestones should be converted into production artifacts after adoption.
+  - [ ] No sprint plan for the next playable increment.
+  - [ ] No explicit milestone definition for "exemplar vertical slice".
+  - [ ] Current status lives partly in session notes and beads, not a producer-facing plan.
 
 ### Testing
 
-- **Status**: 0% complete
-- **Test Files**: 0 in `tests/`
-- **Coverage by System**: No systems implemented
+- **Status**: strong smoke coverage for prototype stage; limited unit/integration layering.
+- **Test Files**: 30 GDScript smoke checks, 60 files including Godot `.uid` sidecars.
+- **Coverage by System**:
+  - Good: shell, schemas, player movement/dash, camera, damage model, damage numbers, combat, XP, drafts, Pagecraft, run director, Page Events, HUD, first playable, vertical slice.
+  - Weak/missing: save/profile, pets, characters, boss actor flow, hub/meta, content migration, broad performance soak.
 - **Key Gaps**:
-  - [ ] No test framework selected in `.codex/docs/technical-preferences.md`.
-  - [ ] No smoke tests, unit tests, integration tests, or Godot test helpers exist.
+  - [ ] No full Godot test helper layer beyond smoke scripts.
+  - [ ] No automated perf/soak baseline for dense late-run content.
+  - [ ] Exemplar content needs smoke tests before bulk variants.
 
 ### Prototypes
 
-- **Active Prototypes**: 0 in `prototypes/`
-- **Archived**: 0
-- **Key Gaps**:
-  - [ ] No throwaway prototype exists for the core Pagecraft/combat loop.
+- **Active Prototypes**: 0 separate `prototypes/` directories.
+- **Current Prototype Location**: main Godot project on `feat/mvp`.
+- **Key Gap**:
+  - [ ] Prototype is no longer throwaway; architecture cleanup is required before more content is added.
 
 ---
 
 ## Stage Classification Rationale
 
-**Why Technical Setup?**
+**Why Technical Setup moving into early Production prototype?**
 
-The project has a clear, detailed game design direction in a root-level GDD, a template-readable concept, a systems index, and approved MVP per-system GDDs. The Godot Project Shell has been implemented and smoke-tested. The Systems Design gate passed on 2026-05-11 with accepted risks. The project is now in Technical Setup because architecture artifacts, ADRs, test setup, and implementation stories are required before broad production work.
+The formal stage remains Technical Setup because the project has not passed a Production gate and still lacks master architecture/control-manifest/sprint artifacts. However, implementation has moved past a bare setup stage: the Godot project runs, the core loop exists, and 30 smoke checks cover a playable prototype.
 
-**Indicators for this stage**:
+**Indicators**:
 
-- A full game concept and system descriptions exist in `PAGEBOUND_CODEX_GDD_v1_5.md`.
-- Godot Project Shell implementation source exists.
-- No engine project exists.
-- Template-readable systems index now exists as a first-pass draft.
-- Engine configuration is written to `.codex/docs/technical-preferences.md`.
-- MVP Systems Design review exists at `design/gdd/reviews/mvp-systems-design-review-2026-05-11.md`.
-- Gate report exists at `production/gates/systems-design-to-technical-setup-2026-05-11.md`.
+- `production/stage.txt` explicitly says Technical Setup.
+- MVP systems are designed and reviewed.
+- First playable run loop exists in `Main.tscn` and `src/`.
+- Drafts, prototype weapons, one passive, two enemy families, one Page Event, death/retry, and 5:00 summary exist.
+- Smoke coverage is substantial for the prototype.
 
-**Technical Setup requirements**:
+**Next stage requirements**:
 
-- [ ] Adopt or retrofit the root GDD into the expected template artifact structure.
-- [x] Configure Godot 4.6.x through `/setup-engine`.
-- [x] Create `design/gdd/game-concept.md`.
-- [x] Create `design/gdd/systems-index.md`.
-- [x] Prepare MVP system GDDs needed for architecture work.
-- [ ] Create master architecture document.
-- [ ] Create foundation ADRs.
-- [ ] Create architecture traceability and control manifest.
-- [ ] Initialize full Godot test setup beyond current smoke script.
+- [ ] Extract runtime orchestration below guardrail.
+- [ ] Move remaining prototype tuning/content into resource data.
+- [ ] Define an exemplar vertical-slice milestone.
+- [ ] Implement one high-standard exemplar each for character, pet, event, boss, enemy set, and weapon/passive bundle.
+- [ ] Create a sprint plan and update stage only after a gate review.
 
 ---
 
-## Gaps Identified (with Clarifying Questions)
+## Gaps Identified
 
 ### Critical Gaps
 
-1. **Root GDD is not in the template's expected GDD structure**
-   - **Impact**: Skills such as `/map-systems`, `/design-system`, `/create-architecture`, and `/create-stories` may miss requirements or fail to find inputs.
-   - **Question**: Should `PAGEBOUND_CODEX_GDD_v1_5.md` remain as the source-of-truth master document while derived template artifacts are created from it?
-   - **Suggested Action**: Run `/adopt PAGEBOUND_CODEX_GDD_v1_5.md`, then retrofit or split the GDD into template-ready files.
+1. **Runtime orchestration is too large**
+   - **Impact**: Adding pets, bosses, save/profile, more events, and more content directly into `FirstPlayableRuntime` will compound maintenance risk.
+   - **Question**: Should the next implementation session claim `pagebound-hup` and extract orchestration before new gameplay?
+   - **Suggested Action**: Do `pagebound-hup` first.
 
-2. **Engine was not configured in technical preferences at scan time**
-   - **Impact**: Architecture, implementation, testing, and specialist routing cannot reliably use the Godot 4.6.x decision from the GDD.
-   - **Question**: Is Godot 4.6.2 + GDScript acceptable as the pinned setup going forward?
-   - **Suggested Action**: Complete - automatic setup pinned Godot 4.6.2 and GDScript.
+2. **No exemplar milestone definition**
+   - **Impact**: The project can drift between designing everything and implementing random pieces.
+   - **Question**: Which exemplar should define the standard first: character, pet, Page Event, boss, or weapon/passive bundle?
+   - **Suggested Action**: Define a small milestone: "one chapter-ready run slice with one polished sample per major content category."
 
 ### Important Gaps
 
-3. **Systems index needs review**
-   - **Impact**: System dependency ordering, MVP scope, and later story creation have no machine-readable source.
-   - **Question**: Does the generated first-pass systems list match the intended MVP ordering?
-   - **Suggested Action**: Review `design/gdd/systems-index.md`, then start per-system GDDs.
+3. **Vertical Slice systems are not designed**
+   - **Impact**: Pets, characters, save/profile, hub/meta, and chapter construction will need design before durable implementation.
+   - **Question**: Should these be designed all at once, or just-in-time as each exemplar becomes next?
+   - **Suggested Action**: Design just-in-time. Start with the next exemplar's focused doc only.
 
-4. **Architecture exists only inside the GDD**
-   - **Impact**: Architecture review, ADR dependency checks, and control manifest generation have no standalone architecture docs to read.
-   - **Question**: Should architecture notes be extracted after design adoption or rewritten through `/create-architecture`?
-   - **Suggested Action**: Run `/create-architecture`, followed by required `/architecture-decision` entries.
-
-5. **Production milestones exist only inside the GDD**
-   - **Impact**: Sprint planning and status reporting have no production tracking files.
-   - **Question**: Should the GDD milestone sequence become the first roadmap/sprint planning source?
-   - **Suggested Action**: Run `/sprint-plan` after design and architecture gates are ready.
+4. **Production planning is informal**
+   - **Impact**: Beads track tasks, but there is no single sprint/milestone plan for the next playable increment.
+   - **Question**: Should the next plan be a sprint or a milestone definition?
+   - **Suggested Action**: Create a short sprint plan after `pagebound-hup` or alongside it.
 
 ### Nice-to-Have Gaps
 
-6. **No prototype documented**
-   - **Impact**: Core Pagecraft and combat feel are not validated before production planning.
-   - **Question**: Should the first prototype target the combat loop, Pagecraft spreading/cleansing, or both together?
-   - **Suggested Action**: Run `/prototype` after engine setup.
+5. **No imported art/audio assets yet**
+   - **Impact**: Gameplay readability and "up to my standards" feel cannot be fully judged with primitives.
+   - **Question**: Should exemplar content include curated placeholder-quality assets with provenance, or stay primitive until mechanics pass?
+   - **Suggested Action**: Use curated assets only for the exemplar slice after mechanics stabilize.
 
 ---
 
@@ -168,72 +160,90 @@ The project has a clear, detailed game design direction in a root-level GDD, a t
 
 ### Immediate Priority
 
-1. **Audit template compliance for the existing GDD**
-   - Suggested skill: `/adopt PAGEBOUND_CODEX_GDD_v1_5.md`
-   - Estimated effort: 30 min
+1. **Extract first playable runtime orchestration**
+   - Bead: `pagebound-hup`.
+   - Why: prevents every new feature from worsening the biggest current code health risk.
+   - Effort: M.
 
-2. **Configure the engine**
-   - Suggested skill: `/setup-engine`
-   - Estimated effort: 15-30 min
+2. **Define the Exemplar Vertical Slice**
+   - Suggested output: one milestone or sprint plan.
+   - Include one high-standard example of each:
+     - 1 character with distinct dash/passive.
+     - 1 pet with attack, tier progression, and Pagecraft hook.
+     - 1 Page Event with objective, UI, reward, fail consequence.
+     - 1 boss with warning, health bar, phase or telegraph, victory handoff.
+     - 1 enemy family set beyond the two prototypes.
+     - 1 weapon/passive bundle from the focused MVP sheets.
+   - Effort: S/M.
 
 ### Short-Term
 
-3. **Create or retrofit game concept and systems index**
-   - Suggested skills: `/map-systems`, `/design-system retrofit PAGEBOUND_CODEX_GDD_v1_5.md`
+3. **Make content resource-driven**
+   - Move prototype weapon, passive, enemy, upgrade, and event values into `.tres`.
+   - Add guard smoke checks for resource coverage.
 
-4. **Create master architecture**
-   - Suggested skill: `/create-architecture`
+4. **Implement the first polished content bundle**
+   - Best candidate: one weapon/passive/Pagecraft loop because it tests the heart of the game.
+   - Then add enemy/event pressure around it.
 
-5. **Create required ADRs**
-   - Suggested skill: `/architecture-decision`
+5. **Design only the next blocking Vertical Slice system**
+   - If pet is next: create `design/gdd/pets-and-companion-combat.md`.
+   - If character is next: create `design/gdd/character-roster-and-mastery.md`.
+   - Avoid designing all future content in one pass.
 
 ### Medium-Term
 
-6. **Run architecture review and gate check**
-   - Suggested skills: `/architecture-review`, `/gate-check`
+6. **Add save/profile when meta becomes real**
+   - Required before Wonder Box, character unlocks, pet unlocks, or chapter progression matter.
 
-7. **Prototype the first playable loop**
-   - Suggested skill: `/prototype`
+7. **Replace primitives in the exemplar slice**
+   - Import curated assets only with source URL, creator, license, cost, and commercial-use note.
 
-8. **Plan first sprint**
-   - Suggested skill: `/sprint-plan`
-
----
-
-## Follow-Up Skills to Run
-
-- `/adopt PAGEBOUND_CODEX_GDD_v1_5.md` - Check whether the existing GDD can drive the template workflow.
-- `/setup-engine` - Write Godot 4.6.x and project standards into technical preferences.
-- `/map-systems` - Convert the master GDD into an ordered systems index.
-- `/design-system retrofit PAGEBOUND_CODEX_GDD_v1_5.md` - Fill missing GDD sections for template compliance.
-- `/create-architecture` - Create standalone architecture documentation from approved design requirements.
+8. **Run a gate/milestone review**
+   - Use it to decide when to move from Technical Setup to Production formally.
 
 ---
 
-## Appendix: File Counts by Directory
+## Direct Answer: Design All First Or Implement Now?
+
+Implement now, but do it through polished exemplars.
+
+Do not design all characters, pets, events, enemies, and bosses before implementation. That creates too much untested paper design. Instead, create one of each up to your standards, verify it in-game, then use those as production templates.
+
+This gives you:
+
+- real play-feel data,
+- a quality bar for future content,
+- reusable resource/schema patterns,
+- smoke-test examples,
+- less wasted design work.
+
+---
+
+## Follow-Up Skills To Run
+
+- `/sprint-plan` - create the next work plan around `pagebound-hup` and exemplar vertical slice.
+- `/design-system character-roster-and-mastery` - when character exemplar becomes next.
+- `/design-system pets-and-companion-combat` - when pet exemplar becomes next.
+- `/design-system save-profile-and-migration` - before durable meta progression.
+- `/milestone-review` - after the exemplar slice is implemented.
+
+---
+
+## Appendix: Current Counts
 
 ```text
-design/
-  gdd/           2 files
-  narrative/     0 files
-  levels/        0 files
+design/gdd/             25 files
+design/narrative/        0 files
+design/levels/           0 files
 
-src/
-  source files   0 files
+src/*.gd                35 files
+src LOC               6382 lines
 
-docs/
-  architecture/  0 ADRs
+tests/smoke/*.gd        30 files
+tests total             60 files including .uid sidecars
 
-production/
-  sprints/       0 plans
-  milestones/    0 definitions
-
-tests/           0 test files
-prototypes/      0 directories
+docs/architecture/       7 ADRs plus tr-registry.yaml
+production/              6 files
+prototypes/              0 files
 ```
-
----
-
-**End of Report**
-
-Generated by `/project-stage-detect`.

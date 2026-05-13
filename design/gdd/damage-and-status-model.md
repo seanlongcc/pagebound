@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-13
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -54,6 +54,10 @@ Every hit should feel legible and rewarding. The player sees enemies melt under 
 
 `final_damage = max(0, base_damage * source_multiplier * tag_multiplier * crit_multiplier * resistance_multiplier + flat_bonus)`
 
+`crit_multiplier = min(4.0, 2.0 + crit_damage_bonus)`
+
+`crit_roll_chance = min(0.75, base_crit_chance + crit_chance_bonus)`
+
 `health_after_damage = clamp(current_health - final_damage, 0, max_health)`
 
 `status_tick_damage = status_base_damage * status_stack_multiplier * tick_delta`
@@ -89,6 +93,8 @@ Invalid states:
 |---|---:|---:|---|
 | `minimum_visible_damage` | `1` | `0-10` | Display clamp, not math clamp. |
 | `crit_multiplier_default` | `2.0` | `1.25-4.0` | Tuned by weapon/item stats later. |
+| `crit_chance_cap` | `75%` | fixed MVP | Global player-owned crit chance cap. |
+| `crit_multiplier_cap` | `4.0x` | fixed MVP | Final crit multiplier cap after item/evolution bonuses. |
 | `status_tick_interval` | `0.25 s` | `0.1-1.0` | Also affects number aggregation. |
 | `contact_damage_cooldown` | `0.5 s` | `0.1-2.0` | Prevents repeated enemy body hits. |
 | `player_grace_after_hit` | `0.4 s` | `0.0-1.5` | MVP feel tuning. |
@@ -118,4 +124,3 @@ Invalid states:
 
 - Exact damage type taxonomy is finalized in Resource implementation.
 - Fine balance belongs to weapon/enemy/boss tuning passes.
-

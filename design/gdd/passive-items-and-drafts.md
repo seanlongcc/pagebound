@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-13
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -13,7 +13,7 @@
 
 Items should feel like build-shaping keepsakes, not boring keys. A level 5 item should improve the run on its own and also open exciting evolution paths for compatible level 10 weapons.
 
-Items are not hidden single-weapon upgrades. They shape builds through stat families, material/tag families, pickup rules, survivability, pets, Pagecraft behavior, or draft odds. A tag-family item such as Candle Spark modifies Firelight/Waxlight-tagged damage through a typed modifier channel, not a hardcoded weapon ID.
+Items are not hidden single-weapon upgrades. They shape builds through global stat bonuses, eligible authored stat channels, pickup rules, survivability, pets, Pagecraft behavior, or draft odds. Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive item stat bonuses.
 
 ## Detailed Design
 
@@ -34,6 +34,11 @@ Items are not hidden single-weapon upgrades. They shape builds through stat fami
 13. Owned item upgrade cards grant exactly +1 item level regardless of the item's initial find rarity.
 14. Normal passive items have 2 catalyst tags. Legendary `Foundational Keepsake` has all 10 catalyst tags, but only exposes evolution-enabling value at level 5.
 15. MVP item find rarity split is 8 Common, 6 Uncommon, 5 Rare, 3 Epic, and 1 Legendary.
+16. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel.
+17. `effect_count`, `active_cap`, and `dash_count` apply only to authored eligible channels.
+18. Chance bonuses use additive `+X% chance` wording and respect per-effect caps.
+19. Luck affects draft rarity weights only. Common/basic weights stay unchanged, Uncommon-and-higher weights multiply by `1 + luck`, then the draft table is normalized.
+20. Base player max HP for current item balance is 1000. Base dash recharge is 2.0s per charge and baseline dash invulnerability is 0.15s.
 
 ### States and Transitions
 
@@ -67,7 +72,9 @@ Items are not hidden single-weapon upgrades. They shape builds through stat fami
 
 `item_draft_allowed = item_slot_available or owned_item_below_max_exists`
 
-`item_find_weight = rarity_weight * tag_synergy_weight * timing_weight`
+`item_find_weight = luck_adjusted_rarity_weight * tag_synergy_weight * timing_weight`
+
+`luck_adjusted_rarity_weight = rarity_weight if rarity == Common else rarity_weight * (1.0 + luck)`
 
 `item_upgrade_value = +1 item level`
 
@@ -107,7 +114,14 @@ Invalid states:
 | `catalyst_unlock_level` | `5` | fixed | Root GDD rule. |
 | `initial_find_rarity_weights` | `60/25/9/5/1` | tuning | Common/Uncommon/Rare/Epic/Legendary. |
 | `initial_find_rarity_split` | `8/6/5/3/1` | fixed for MVP roster | Totals 23 active passives. |
-| `candle_spark_level_values` | `15/30/45/60/75%` | tuning | Firelight/Waxlight-tagged glow/burn damage. |
+| `normal_percent_item_values` | `10/20/30/40/50%` | tuning | Default in-run item percentage ladder. |
+| `base_stat_boost_values` | `2/4/6/8/10%` | fixed for MVP roster | Legendary-only broad core stat boost. |
+| `armor_item_values` | `10/20/30/40/50%` | tuning | Incoming damage mitigation. |
+| `health_item_values` | `100/200/300/400/500 HP` | tuning | Max health ladder using 1000 base HP. |
+| `health_regen_item_values` | `5/10/15/20/25 HP/s` | tuning | Passive health recovery ladder. |
+| `luck_item_values` | `20/40/60/80/100% Luck` | tuning | Draft rarity raffle modifier. |
+| `effect_count_item_values` | `1/2/3/4/5` | tuning | Eligible authored count channels only. |
+| `active_cap_item_values` | `2/4/6/8/10` | tuning | Eligible authored active-object channels only. |
 
 ## Visual/Audio Requirements
 
