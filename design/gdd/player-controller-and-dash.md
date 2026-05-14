@@ -105,7 +105,7 @@ Invalid states:
 - Player placeholder can be primitive/card art until character assets are selected.
 - Dash must have a visible trail/cue that reads over paper ground and Pagecraft marks.
 - Hit and death cues must be distinguishable from enemy damage.
-- Dash SFX should be short and not mask weapon/pet hits.
+- Dash SFX should be short and not mask weapon or pet support feedback.
 
 ## UI Requirements
 

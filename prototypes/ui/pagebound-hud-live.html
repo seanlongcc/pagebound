@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pagebound HUD C Focus</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --night: oklch(0.17 0.035 292);
+      --night-blue: oklch(0.19 0.045 245);
+      --paper: oklch(0.95 0.032 91);
+      --paper-lit: oklch(0.985 0.024 96);
+      --paper-edge: oklch(0.83 0.04 80);
+      --ink: oklch(0.2 0.026 55);
+      --ink-soft: oklch(0.39 0.028 60);
+      --rule: oklch(0.55 0.036 76 / 0.46);
+      --wax: oklch(0.83 0.155 78);
+      --wax-deep: oklch(0.52 0.12 70);
+      --moon: oklch(0.72 0.13 238);
+      --moon-deep: oklch(0.43 0.11 246);
+      --bloom: oklch(0.68 0.155 24);
+      --clean: oklch(0.84 0.08 158);
+      --blank: oklch(0.25 0.07 304);
+      --blank-lit: oklch(0.59 0.13 298);
+      --slot-paper: oklch(0.98 0.028 94);
+      --shadow: 0 18px 44px oklch(0.12 0.03 292 / 0.34);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 8%, oklch(0.34 0.08 295 / 0.46), transparent 30%),
+        radial-gradient(circle at 88% 16%, oklch(0.32 0.08 235 / 0.4), transparent 30%),
+        linear-gradient(140deg, var(--night), var(--night-blue));
+      color: var(--paper-lit);
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1500px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .prototype-note {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 18px;
+    }
+
+    h1,
+    h2,
+    .banner-title,
+    .objective-count,
+    .level-badge strong {
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+
+    .prototype-note h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.08;
+    }
+
+    .prototype-note p {
+      margin: 6px 0 0;
+      max-width: 82ch;
+      color: oklch(0.78 0.024 92);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .state-strip {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .state-pill {
+      border: 1px solid oklch(0.76 0.035 92 / 0.45);
+      color: oklch(0.91 0.018 94);
+      background: oklch(0.27 0.045 292);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mockup-list {
+      display: grid;
+      gap: 26px;
+      justify-items: center;
+    }
+
+    .mockup {
+      width: 100%;
+      display: grid;
+      gap: 9px;
+    }
+
+    .mockup h2 {
+      margin: 0;
+      font-size: 21px;
+      color: oklch(0.97 0.018 94);
+    }
+
+    .mockup p {
+      margin: 0;
+      color: oklch(0.78 0.024 92);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      min-height: 760px;
+      overflow: hidden;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 36%, oklch(1 0.022 96), transparent 26%),
+        linear-gradient(90deg, oklch(0.9 0.042 83), var(--paper-lit) 11%, var(--paper) 50%, var(--paper-lit) 89%, oklch(0.9 0.042 83));
+      border: 1px solid oklch(0.78 0.04 83);
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      container-type: inline-size;
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px solid var(--rule);
+      border-radius: 13px;
+      pointer-events: none;
+    }
+
+    .stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, oklch(0.42 0.03 70 / 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, oklch(0.42 0.03 70 / 0.035) 1px, transparent 1px);
+      background-size: 46px 46px, 46px 46px;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    .page-vignette {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 52%, transparent 42%, oklch(0.62 0.035 74 / 0.18)),
+        linear-gradient(90deg, oklch(0.72 0.04 78 / 0.24), transparent 16%, transparent 84%, oklch(0.72 0.04 78 / 0.2));
+      pointer-events: none;
+    }
+
+    .book-fold {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      bottom: 18px;
+      left: 50%;
+      width: 34px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, oklch(0.58 0.035 76 / 0.18), transparent);
+      pointer-events: none;
+    }
+
+    .party-stack {
+      position: absolute;
+      z-index: 6;
+      top: 26px;
+      left: 28px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .party-face {
+      width: clamp(34px, 4.3cqi, 46px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 2px solid oklch(0.97 0.022 94);
+      background:
+        radial-gradient(circle at 48% 36%, oklch(0.93 0.05 78) 0 28%, transparent 29%),
+        linear-gradient(145deg, oklch(0.64 0.11 78), oklch(0.45 0.08 72));
+      box-shadow: 0 8px 16px oklch(0.18 0.03 70 / 0.18);
+      position: relative;
+    }
+
+    .party-face::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      right: 5px;
+      bottom: -6px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--bloom);
+      border: 1px solid oklch(0.45 0.08 25);
+    }
+
+    .party-face.alt {
+      background:
+        radial-gradient(circle at 48% 36%, oklch(0.9 0.06 230) 0 28%, transparent 29%),
+        linear-gradient(145deg, oklch(0.58 0.1 236), oklch(0.36 0.08 244));
+    }
+
+    .party-face.empty {
+      background: oklch(0.92 0.016 88 / 0.68);
+      border-style: dashed;
+      opacity: 0.72;
+    }
+
+    .party-face.empty::after {
+      background: oklch(0.72 0.03 85);
+      border-color: oklch(0.52 0.03 80);
+    }
+
+    .banner {
+      position: absolute;
+      z-index: 6;
+      top: 24px;
+      right: clamp(84px, 8vw, 132px);
+      width: clamp(320px, 30%, 380px);
+      display: grid;
+      gap: 6px;
+      padding: 12px 14px 13px;
+      border-radius: 12px;
+      background: oklch(0.99 0.028 94 / 0.95);
+      border: 1px solid oklch(0.42 0.035 60 / 0.48);
+      box-shadow: 0 10px 20px oklch(0.2 0.03 70 / 0.15);
+      color: var(--ink);
+    }
+
+    .banner.boss {
+      background: linear-gradient(90deg, oklch(0.28 0.07 304), oklch(0.22 0.055 292));
+      color: oklch(0.96 0.024 95);
+      border-color: oklch(0.68 0.13 298 / 0.6);
+      box-shadow: 0 10px 22px oklch(0.18 0.05 300 / 0.28);
+    }
+
+    .banner-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .kicker {
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: var(--wax-deep);
+    }
+
+    .banner.boss .kicker {
+      color: oklch(0.82 0.11 78);
+    }
+
+    .banner-title {
+      margin-top: 2px;
+      font-size: clamp(20px, 3.4cqi, 28px);
+      line-height: 0.98;
+      font-weight: 900;
+    }
+
+    .banner-metric {
+      display: grid;
+      justify-items: end;
+      gap: 1px;
+      font-weight: 950;
+      color: var(--moon-deep);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .banner.boss .banner-metric {
+      color: oklch(0.96 0.022 94);
+    }
+
+    .banner-metric strong {
+      font-size: clamp(18px, 3.2cqi, 24px);
+      line-height: 1;
+    }
+
+    .event-state .banner-metric strong {
+      font-size: clamp(16px, 2.7cqi, 21px);
+    }
+
+    .banner-metric span {
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+
+    .banner.boss .banner-metric span {
+      color: oklch(0.8 0.045 300);
+    }
+
+    .meter {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid oklch(0.64 0.04 82 / 0.62);
+      background: oklch(0.83 0.032 82);
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      width: 60%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--moon), var(--wax));
+    }
+
+    .banner.boss .meter {
+      border-color: oklch(0.6 0.1 298 / 0.55);
+      background: oklch(0.33 0.06 304);
+    }
+
+    .banner.boss .meter span {
+      width: 72%;
+      background: linear-gradient(90deg, var(--blank-lit), var(--moon));
+    }
+
+    .wax-trail {
+      position: absolute;
+      z-index: 2;
+      left: 21%;
+      top: 43%;
+      width: 41%;
+      height: 7%;
+      border-radius: 999px;
+      transform: rotate(-9deg);
+      background: linear-gradient(90deg, oklch(0.97 0.075 90), var(--wax), oklch(0.96 0.065 106));
+      box-shadow: 0 0 24px oklch(0.83 0.155 78 / 0.48);
+    }
+
+    .wax-trail::after {
+      content: "";
+      position: absolute;
+      inset: 35% 7%;
+      border-radius: inherit;
+      background: oklch(1 0.02 100 / 0.72);
+    }
+
+    .objective-ring {
+      position: absolute;
+      z-index: 3;
+      --ring-color: var(--moon);
+      --ring-progress: 216deg;
+      left: 53%;
+      top: 48%;
+      width: 25%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, oklch(0.76 0.1 235 / 0.16), transparent 66%);
+      border: 4px dashed var(--moon);
+    }
+
+    .objective-ring::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle, oklch(0.98 0.025 96 / 0.5), oklch(0.9 0.04 90 / 0.22) 56%, transparent 58%);
+      border: 1px solid oklch(0.72 0.13 238 / 0.34);
+    }
+
+    .objective-ring::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: conic-gradient(var(--ring-color) 0 var(--ring-progress), transparent var(--ring-progress) 360deg);
+      mask: radial-gradient(circle, transparent 0 63%, #000 64% 100%);
+      opacity: 0.72;
+    }
+
+    .boss-state .objective-ring {
+      --ring-color: oklch(0.64 0.12 298);
+      --ring-progress: 259deg;
+      border-color: oklch(0.64 0.12 298);
+      background:
+        radial-gradient(circle, oklch(0.64 0.12 298 / 0.14), transparent 66%);
+    }
+
+    .imp {
+      position: absolute;
+      z-index: 3;
+      width: 7.3%;
+      aspect-ratio: 1.25;
+      background: oklch(0.32 0.08 24);
+      border: 2px solid oklch(0.18 0.04 24);
+      border-radius: 48% 52% 42% 58%;
+      box-shadow: 0 7px 0 oklch(0.29 0.025 55 / 0.16);
+    }
+
+    .imp::before,
+    .imp::after {
+      content: "";
+      position: absolute;
+      top: -28%;
+      width: 28%;
+      height: 48%;
+      background: inherit;
+      border: 2px solid oklch(0.18 0.04 24);
+      border-bottom: 0;
+      border-radius: 50% 50% 0 0;
+    }
+
+    .imp::before {
+      left: 13%;
+      transform: rotate(-22deg);
+    }
+
+    .imp::after {
+      right: 13%;
+      transform: rotate(22deg);
+    }
+
+    .imp.fast {
+      width: 5.8%;
+      background: oklch(0.43 0.11 28);
+    }
+
+    .imp.one { left: 24%; top: 42%; }
+    .imp.two { left: 38%; top: 56%; }
+    .imp.three { left: 63%; top: 46%; }
+    .imp.four { left: 73%; top: 36%; }
+
+    .mote {
+      position: absolute;
+      z-index: 4;
+      width: 3.3%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--moon);
+      box-shadow: 0 0 15px oklch(0.72 0.13 238 / 0.8);
+    }
+
+    .mote.one { left: 16%; top: 69%; }
+    .mote.two { left: 20%; top: 64%; width: 2.2%; }
+    .mote.three { left: 25%; top: 70%; width: 1.9%; }
+
+    .dog-note {
+      position: absolute;
+      z-index: 7;
+      left: 15%;
+      top: 78%;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid oklch(0.64 0.08 220 / 0.58);
+      background: oklch(0.98 0.03 95 / 0.86);
+      color: oklch(0.39 0.1 220);
+      font-size: clamp(11px, 2.3cqi, 13px);
+      font-weight: 900;
+      box-shadow: 0 5px 12px oklch(0.2 0.03 70 / 0.12);
+    }
+
+    .hp-chip {
+      position: absolute;
+      z-index: 7;
+      left: 34px;
+      bottom: 66px;
+      display: grid;
+      gap: 6px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .hp-bar {
+      width: 190px;
+      height: 14px;
+      border-radius: 999px;
+      background: oklch(0.82 0.035 82);
+      overflow: hidden;
+      border: 1px solid oklch(0.5 0.04 70 / 0.34);
+    }
+
+    .hp-bar span {
+      display: block;
+      width: 86%;
+      height: 100%;
+      background: var(--bloom);
+    }
+
+    .loadout-book {
+      position: absolute;
+      z-index: 8;
+      right: clamp(64px, 7vw, 116px);
+      bottom: 42px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 14px;
+      background: oklch(0.985 0.028 94 / 0.92);
+      border: 1px solid oklch(0.45 0.035 65 / 0.48);
+      box-shadow: 0 10px 20px oklch(0.2 0.03 70 / 0.18);
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(42px, 50px));
+      gap: 6px;
+    }
+
+    .slot-row {
+      display: contents;
+    }
+
+    .slot {
+      width: 50px;
+      aspect-ratio: 1;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 2px;
+      border-radius: 10px;
+      border: 2px solid oklch(0.36 0.035 60 / 0.5);
+      background: var(--slot-paper);
+      color: oklch(0.28 0.05 70);
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .slot small {
+      display: block;
+      font-size: 8px;
+      font-weight: 850;
+      color: oklch(0.39 0.04 70);
+    }
+
+    .slot.weapon {
+      background: oklch(0.9 0.105 85);
+    }
+
+    .slot.item {
+      background: oklch(0.88 0.07 160);
+      color: oklch(0.25 0.06 160);
+    }
+
+    .slot.empty {
+      background: oklch(0.94 0.018 88);
+      color: oklch(0.47 0.025 70);
+      border-style: dashed;
+    }
+
+    .xp-bottom {
+      position: absolute;
+      z-index: 9;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 20px;
+      background: oklch(0.76 0.04 82);
+      border-top: 1px solid oklch(0.5 0.04 70 / 0.52);
+      overflow: hidden;
+    }
+
+    .xp-bottom span {
+      position: relative;
+      display: block;
+      height: 100%;
+      width: 61%;
+      background: linear-gradient(90deg, var(--moon), oklch(0.78 0.14 210), var(--clean));
+      box-shadow: 12px 0 18px oklch(0.72 0.13 238 / 0.5);
+    }
+
+    .xp-bottom::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: oklch(0.22 0.06 238);
+      font-size: 11px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 1px 0 oklch(0.98 0.02 96 / 0.7);
+    }
+
+    .level-badge {
+      position: absolute;
+      z-index: 10;
+      left: 16px;
+      bottom: 8px;
+      min-width: 74px;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid oklch(0.62 0.07 225 / 0.45);
+      background: oklch(0.985 0.026 94 / 0.94);
+      color: var(--moon-deep);
+      box-shadow: 0 6px 14px oklch(0.16 0.03 70 / 0.14);
+      font-weight: 950;
+    }
+
+    .level-badge strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .level-badge span {
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+
+    .pet-badge {
+      position: absolute;
+      z-index: 10;
+      left: 104px;
+      bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 92px;
+      padding: 5px 9px 5px 6px;
+      border-radius: 999px;
+      border: 1px solid oklch(0.62 0.07 225 / 0.45);
+      background: oklch(0.985 0.026 94 / 0.94);
+      color: oklch(0.39 0.1 220);
+      box-shadow: 0 6px 14px oklch(0.16 0.03 70 / 0.14);
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .pet-face {
+      width: 24px;
+      aspect-ratio: 1;
+      border-radius: 50% 50% 46% 46%;
+      background:
+        radial-gradient(circle at 36% 42%, oklch(0.2 0.02 55) 0 5%, transparent 6%),
+        radial-gradient(circle at 63% 42%, oklch(0.2 0.02 55) 0 5%, transparent 6%),
+        radial-gradient(circle at 50% 58%, oklch(0.22 0.03 55) 0 7%, transparent 8%),
+        linear-gradient(145deg, oklch(0.72 0.09 78), oklch(0.5 0.07 70));
+      border: 1px solid oklch(0.38 0.05 70);
+      box-shadow: 0 0 0 2px oklch(0.98 0.025 94);
+      position: relative;
+    }
+
+    .pet-face::before,
+    .pet-face::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      width: 9px;
+      height: 12px;
+      border-radius: 999px 999px 3px 3px;
+      background: oklch(0.43 0.06 70);
+      border: 1px solid oklch(0.29 0.045 60);
+    }
+
+    .pet-face::before {
+      left: 1px;
+      transform: rotate(-26deg);
+    }
+
+    .pet-face::after {
+      right: 1px;
+      transform: rotate(26deg);
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 16px;
+      }
+
+      .prototype-note {
+        grid-template-columns: 1fr;
+      }
+
+      .state-strip {
+        justify-content: flex-start;
+      }
+
+      .stage {
+        aspect-ratio: 4 / 3;
+        min-height: 620px;
+      }
+
+      .banner {
+        width: min(430px, calc(100% - 44px));
+        left: 22px;
+        right: 22px;
+        top: 84px;
+      }
+
+      .party-stack {
+        top: 22px;
+        left: 22px;
+      }
+
+      .loadout-book {
+        left: 22px;
+        right: 22px;
+        bottom: 42px;
+        justify-content: center;
+      }
+
+      .slot-grid {
+        grid-template-columns: repeat(5, minmax(36px, 1fr));
+      }
+
+      .slot {
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="prototype-note" aria-labelledby="prototype-title">
+      <div>
+        <h1 id="prototype-title">Pagebound HUD, Refined C</h1>
+        <p>C-focused pass. Top-left is party space. Active objective or boss owns top-right. Bottom XP grows only horizontally and carries XP percent. Bottom-left badges carry current level and pet fetch feedback. Loadout has 5 weapons and 5 items, no pet slot.</p>
+      </div>
+      <div class="state-strip" aria-label="HUD contract">
+        <span class="state-pill">Top-left party</span>
+        <span class="state-pill">Top-right event or boss</span>
+        <span class="state-pill">5 weapons + 5 items</span>
+        <span class="state-pill">Bottom-only XP</span>
+      </div>
+    </section>
+
+    <section class="mockup-list" aria-label="Refined HUD mockups">
+      <article class="mockup">
+        <h2>A. Event State</h2>
+        <p>Kill-circle objective active. Party stack holds top-left. Page Event banner tracks percent, count, and timer. Weapons and items sit together above the XP rule.</p>
+        <div class="stage event-state" data-live-target="pagebound-refined-event" aria-label="Event-state HUD mockup">
+          <div class="book-fold"></div>
+          <div class="page-vignette"></div>
+          <div class="party-stack" aria-label="Party status">
+            <div class="party-face"></div>
+            <div class="party-face alt"></div>
+            <div class="party-face empty"></div>
+          </div>
+          <aside class="banner" aria-label="Exclusive top-right banner, Page Event state">
+            <div class="banner-top">
+              <div>
+                <div class="kicker">Page Event</div>
+                <div class="banner-title">Fill the Color Well</div>
+              </div>
+              <div class="banner-metric">
+                <strong>60%</strong>
+                <span>9/15, 1:42</span>
+              </div>
+            </div>
+            <div class="meter" aria-label="9 of 15 enemies defeated in circle"><span></span></div>
+          </aside>
+          <div class="wax-trail" aria-hidden="true"></div>
+          <div class="objective-ring" aria-label="Color Well progress 60 percent"></div>
+          <div class="imp one"></div>
+          <div class="imp fast two"></div>
+          <div class="imp three"></div>
+          <div class="imp fast four"></div>
+          <div class="mote one"></div>
+          <div class="mote two"></div>
+          <div class="mote three"></div>
+          <div class="dog-note">Dog fetch +3 XP</div>
+          <aside class="hp-chip" aria-label="Player health">
+            <span>HP 860/1000</span>
+            <span class="hp-bar"><span></span></span>
+          </aside>
+          <nav class="loadout-book" aria-label="Current loadout">
+            <div class="slot-grid">
+              <div class="slot-row" aria-label="Weapon slots">
+                <div class="slot weapon">Comet<small>Lv2</small></div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+              </div>
+              <div class="slot-row" aria-label="Item slots">
+                <div class="slot item">Spark<small>Lv1</small></div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+              </div>
+            </div>
+          </nav>
+          <div class="xp-bottom" data-label="61%" aria-label="XP 61 percent"><span></span></div>
+          <div class="level-badge" aria-label="Current level 3"><strong>3</strong><span>Level</span></div>
+          <div class="pet-badge" aria-label="Dog fetch bonus plus 3 XP"><span class="pet-face"></span><span>+3 XP</span></div>
+        </div>
+      </article>
+
+      <article class="mockup">
+        <h2>B. Boss State</h2>
+        <p>Same layout after event resolves. Top-right banner becomes Crownless Echo. No event tracker remains except world combat state.</p>
+        <div class="stage boss-state" data-live-target="pagebound-refined-boss" aria-label="Boss-state HUD mockup">
+          <div class="book-fold"></div>
+          <div class="page-vignette"></div>
+          <div class="party-stack" aria-label="Party status">
+            <div class="party-face"></div>
+            <div class="party-face alt"></div>
+            <div class="party-face empty"></div>
+          </div>
+          <aside class="banner boss" aria-label="Exclusive top-right banner, boss state">
+            <div class="banner-top">
+              <div>
+                <div class="kicker">Crownless Echo</div>
+                <div class="banner-title">The Scribble King Stirs</div>
+              </div>
+              <div class="banner-metric">
+                <strong>72%</strong>
+                <span>3:30</span>
+              </div>
+            </div>
+            <div class="meter" aria-label="Boss health 72 percent"><span></span></div>
+          </aside>
+          <div class="wax-trail" aria-hidden="true"></div>
+          <div class="objective-ring" aria-label="Crownless Echo pressure 72 percent"></div>
+          <div class="imp one"></div>
+          <div class="imp fast two"></div>
+          <div class="imp three"></div>
+          <div class="mote one"></div>
+          <div class="mote two"></div>
+          <div class="dog-note">Dog fetch +3 XP</div>
+          <aside class="hp-chip" aria-label="Player health">
+            <span>HP 860/1000</span>
+            <span class="hp-bar"><span></span></span>
+          </aside>
+          <nav class="loadout-book" aria-label="Current loadout">
+            <div class="slot-grid">
+              <div class="slot-row" aria-label="Weapon slots">
+                <div class="slot weapon">Comet<small>Lv2</small></div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+              </div>
+              <div class="slot-row" aria-label="Item slots">
+                <div class="slot item">Spark<small>Lv1</small></div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+                <div class="slot empty">Empty</div>
+              </div>
+            </div>
+          </nav>
+          <div class="xp-bottom" data-label="61%" aria-label="XP 61 percent"><span></span></div>
+          <div class="level-badge" aria-label="Current level 3"><strong>3</strong><span>Level</span></div>
+          <div class="pet-badge" aria-label="Dog fetch bonus plus 3 XP"><span class="pet-face"></span><span>+3 XP</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

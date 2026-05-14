@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -23,11 +23,12 @@ Evolutions should feel like the build blooming into something bigger. The player
 4. Passive items are not consumed by evolution.
 5. An evolved weapon replaces the base weapon behavior in the same slot and remains level 10.
 6. A base weapon can evolve only once per run.
-7. If multiple evolution paths are eligible for one weapon, draft pools may offer one or more over time; selecting one locks that weapon.
-8. Evolution cards may appear in level-up drafts, Page Event rewards, elite chests, and boss rewards.
-9. Evolved weapons inherit base weapon material identity plus catalyst identity.
-10. Legendary `Foundational Keepsake` is a wildcard passive: at level 5 it can satisfy any of the 10 MVP catalyst families.
-11. Evolution data comes from Resource Data Schemas.
+7. If multiple evolution paths are eligible for one weapon, future draft pools may offer one or more over time; selecting one locks that weapon.
+8. Evolution card offering is not part of the first polished exemplar package.
+9. Current Page Event rewards and boss/finale rewards do not offer evolution cards.
+10. Evolved weapons inherit base weapon material identity plus catalyst identity.
+11. Legendary `Foundational Keepsake` is a wildcard passive: at level 5 it can satisfy any of the 10 MVP catalyst families.
+12. Evolution data comes from Resource Data Schemas.
 
 ### States and Transitions
 
@@ -46,8 +47,8 @@ Evolutions should feel like the build blooming into something bigger. The player
 | Resource Data Schemas | Upstream | Provides evolution resources, base weapon IDs, catalyst tags, evolved weapon IDs. |
 | Weapons and Auto-Attacks | Downstream | Replaces base weapon runtime with evolved weapon runtime. |
 | Passive Items and Drafts | Upstream | Provides level 5 catalyst tags. |
-| XP, Leveling, and Upgrade Drafts | Downstream | Requests evolution candidates for draft pools. |
-| Page Events and Objectives | Downstream | Can offer evolution cards as stronger reward drafts. |
+| XP, Leveling, and Upgrade Drafts | Peer | Future source for evolution cards after separate approval. |
+| Page Events and Objectives | Peer | Does not offer evolution cards in current draft canon. |
 | In-Run HUD and Draft UI | Downstream | Shows eligibility and evolution previews. |
 
 ## Formulas
@@ -58,7 +59,7 @@ Evolutions should feel like the build blooming into something bigger. The player
 
 `evolution_eligible = weapon_ready and catalyst_ready`
 
-`evolution_choice_weight = base_weight * reward_source_multiplier * build_synergy_multiplier`
+`evolution_choice_weight = future_tuning_weight after evolution source is approved`
 
 Invalid states:
 
@@ -91,8 +92,7 @@ Invalid states:
 | `required_weapon_level` | `10` | fixed | Root GDD rule. |
 | `required_item_level` | `5` | fixed | Root GDD rule. |
 | `max_evolutions_per_weapon_per_run` | `1` | fixed | Root GDD rule. |
-| `evolution_card_base_weight` | `1.0` | `0.0-10.0` | Draft tuning. |
-| `page_event_evolution_weight_multiplier` | `1.5` | `0.0-5.0` | Stronger event rewards. |
+| `evolution_card_base_weight` | TBD | `0.0-10.0` | Future draft tuning after source approval. |
 
 ## Visual/Audio Requirements
 
@@ -113,6 +113,7 @@ Invalid states:
 - Evolved weapon replaces base weapon in same slot.
 - No Pagecraft condition gates evolution.
 - Multiple eligible paths are supported but one selection locks the base weapon.
+- Page Events and boss/finale rewards do not grant evolution cards in current draft canon.
 
 ## Open Questions
 

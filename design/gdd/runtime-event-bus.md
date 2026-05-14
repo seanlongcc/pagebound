@@ -2,12 +2,12 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
 
-`Runtime Event Bus` defines Pagebound's typed runtime signal hub for gameplay events that multiple systems need to observe: damage, pickups, XP, level-ups, drafts, evolutions, Page Events, boss state, player state, pet attacks, and debug metrics. It owns event contracts and dispatch order policy. It does not own gameplay decisions, validation, save persistence, UI layout, or audio playback.
+`Runtime Event Bus` defines Pagebound's typed runtime signal hub for gameplay events that multiple systems need to observe: damage, pickups, XP, level-ups, drafts, evolutions, Page Events, boss state, player state, pet support, and debug metrics. It owns event contracts and dispatch order policy. It does not own gameplay decisions, validation, save persistence, UI layout, or audio playback.
 
 ## Player Fantasy
 
@@ -113,4 +113,3 @@ Invalid states:
 ## Open Questions
 
 - Exact bus placement as autoload or scene-owned service is implementation-owned; MVP may use scene-owned first and promote later if needed.
-

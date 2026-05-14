@@ -170,7 +170,7 @@ Pagebound needs a Godot 3D-runtime foundation for a 2.5D storybook action roguel
 | Pagecraft Materials and Grid | Technical / Design | Needs readable terrain-state changes under high enemy and VFX load | Prototype early with dirty-chunk updates and strict visual readability tests |
 | Camera and 2.5D Lighting | Technical / Art | 2.5D paper diorama must read clearly during crowded combat | Build a lit paper arena prototype before content production |
 | Object Pooling and Performance Debug | Technical | Damage numbers, projectiles, enemies, decals, pets, and VFX can overwhelm frame budget | Build pooling and debug overlays before scaling content |
-| Run Director and Finite Spawning | Design / Technical | Finite-map pacing must avoid empty downtime and unfair crowding | Prototype spawn budgets and test a 25-minute boss timeline |
+| Run Director and Finite Spawning | Design / Technical | Finite-map pacing must avoid empty downtime and unfair crowding | Prototype spawn budgets and test the 30-minute boss target plus compressed first exemplar timing |
 | Co-op Networking | Scope | Co-op can distort solo architecture and expand testing cost | Keep post-MVP; define seams but do not implement before solo vertical slice |
 
 ---

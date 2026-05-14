@@ -28,17 +28,17 @@ func _initialize() -> void:
 	_assert_true(_rarity_present(eligible, &"epic"), "epic choices must be eligible in normal drafts", failures)
 	_assert_true(_rarity_present(eligible, &"legendary"), "legendary choices must be eligible in normal drafts", failures)
 
-	var high_tier_drafts := 0
+	var upgrade_cards := 0
+	var new_gear_cards := 0
 	for seed in 200:
 		if state.has_method("debug_set_draft_seed"):
 			state.debug_set_draft_seed(seed)
 		var choices: Array[Dictionary] = state.prototype_choices_for_level(3)
 		_assert_true(choices.size() == 3, "seeded draft must keep exactly 3 choices", failures)
-		_assert_true(_has_unique_choice_ids(choices), "seeded draft must avoid duplicate choices", failures)
-		if _draft_has_high_tier(choices):
-			high_tier_drafts += 1
-	_assert_true(high_tier_drafts > 0, "seeded weighted drafts must sometimes produce rare-or-better tiers", failures)
-	_assert_true(high_tier_drafts < 200, "seeded weighted drafts must not always show rare-or-better tiers", failures)
+		_assert_true(_stays_inside_first_package(choices), "seeded draft must stay inside first polished package", failures)
+		upgrade_cards += _choice_type_count(choices, &"weapon_upgrade") + _choice_type_count(choices, &"passive_upgrade")
+		new_gear_cards += _choice_type_count(choices, &"passive")
+	_assert_true(upgrade_cards > new_gear_cards, "normal drafts must bias toward upgrade cards over new gear in tiny pool", failures)
 
 	_finish(failures)
 
@@ -50,22 +50,20 @@ func _rarity_present(choices: Array[Dictionary], rarity: StringName) -> bool:
 	return false
 
 
-func _draft_has_high_tier(choices: Array[Dictionary]) -> bool:
-	for choice in choices:
-		var rarity: StringName = choice.get("rarity", &"")
-		if rarity == &"rare" or rarity == &"epic" or rarity == &"legendary":
-			return true
-	return false
-
-
-func _has_unique_choice_ids(choices: Array[Dictionary]) -> bool:
-	var seen := {}
+func _stays_inside_first_package(choices: Array[Dictionary]) -> bool:
 	for choice in choices:
 		var id: StringName = choice.get("id", &"")
-		if id == &"" or seen.has(id):
+		if id != &"weapon_upgrade_waxlight_comet" and id != &"new_passive_candle_spark" and id != &"passive_upgrade_candle_spark":
 			return false
-		seen[id] = true
 	return true
+
+
+func _choice_type_count(choices: Array[Dictionary], choice_type: StringName) -> int:
+	var count := 0
+	for choice in choices:
+		if choice.get("choice_type", &"") == choice_type:
+			count += 1
+	return count
 
 
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:

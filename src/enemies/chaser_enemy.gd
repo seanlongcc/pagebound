@@ -108,7 +108,10 @@ func _apply_placeholder_profile() -> void:
 	var mesh_instance := get_node_or_null("PlaceholderMesh") as MeshInstance3D
 	if mesh_instance == null:
 		return
-	if _behavior_id == &"swarmer":
+	if _behavior_id == &"boss_chaser":
+		mesh_instance.scale = Vector3(2.2, 2.0, 2.2)
+		mesh_instance.material_override = _placeholder_material(Color(0.18, 0.05, 0.24, 1.0))
+	elif _behavior_id == &"swarmer":
 		mesh_instance.scale = Vector3(0.72, 0.72, 0.72)
 		mesh_instance.material_override = _placeholder_material(Color(0.46, 0.09, 0.16, 1.0))
 	else:

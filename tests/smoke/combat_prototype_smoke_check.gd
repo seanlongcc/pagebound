@@ -21,7 +21,7 @@ func _initialize() -> void:
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
 	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
-	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser")
+	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp")
 	var enemy_health: Node = null
 	if enemy != null:
 		enemy_health = enemy.get_node_or_null("HealthComponent")
@@ -29,11 +29,13 @@ func _initialize() -> void:
 	_assert_true(runtime != null and runtime.has_method("debug_xp_total"), "runtime must expose XP reward stub", failures)
 	_assert_true(player != null, "player must exist", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_hit_count"), "weapon manager must exist", failures)
-	_assert_true(enemy != null and enemy.has_method("debug_distance_to_target"), "placeholder enemy must spawn", failures)
+	_assert_true(enemy != null and enemy.has_method("debug_distance_to_target"), "Wax Imp enemy must spawn", failures)
 	_assert_true(enemy_health != null and enemy_health.has_method("is_alive"), "enemy must own HealthComponent", failures)
 
 	var starting_distance := 999.0
 	if enemy != null:
+		if player != null:
+			enemy.global_position = player.global_position + Vector3(5.0, 0.0, 0.0)
 		starting_distance = enemy.debug_distance_to_target()
 
 	for index in 420:

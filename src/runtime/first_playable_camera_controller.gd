@@ -3,7 +3,7 @@ extends RefCounted
 
 const GameplayCameraFollowScript := preload("res://src/camera/gameplay_camera_follow.gd")
 const CAMERA_LOCAL_POSITION := Vector3(0.0, 13.0, 6.4)
-const CAMERA_FOLLOW_HALF_EXTENTS := Vector2(6.0, 4.0)
+const CAMERA_FOLLOW_HALF_EXTENTS := Vector2(28.0, 16.0)
 const CAMERA_FOV_DEGREES := 62.0
 
 

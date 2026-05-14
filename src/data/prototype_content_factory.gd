@@ -27,12 +27,12 @@ const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
 const WEAPON_DREAMSAP_GLOB := &"dreamsap_glob"
 const WEAPON_COLOR_BLOOM := &"color_bloom"
 const PASSIVE_CANDLE_SPARK := &"candle_spark"
-const ENEMY_INKLING_CHASER := &"inkling_chaser"
-const ENEMY_PAPER_SCRAP_SWARMER := &"paper_scrap_swarmer"
+const ENEMY_WAX_IMP := &"wax_imp"
+const ENEMY_FLICKER_IMP := &"flicker_imp"
 const WAXLIGHT_RESOURCE_PATH := "res://data/weapons/prototype_waxlight_comet.tres"
 const STAR_STICKER_RESOURCE_PATH := "res://data/weapons/prototype_star_sticker_swarm.tres"
-const INKLING_RESOURCE_PATH := "res://data/enemies/prototype_inkling_chaser.tres"
-const SWARMER_RESOURCE_PATH := "res://data/enemies/prototype_paper_scrap_swarmer.tres"
+const WAX_IMP_RESOURCE_PATH := "res://data/enemies/prototype_wax_imp.tres"
+const FLICKER_IMP_RESOURCE_PATH := "res://data/enemies/prototype_flicker_imp.tres"
 const CANDLE_SPARK_RESOURCE_PATH := "res://data/passives/prototype_candle_spark.tres"
 const UPGRADE_RESOURCE_PATHS := [
 	"res://data/upgrades/waxlight_damage_plus_1.tres",
@@ -93,16 +93,16 @@ func weapon_for_id(weapon_id: StringName) -> Resource:
 	return null
 
 
-## Creates the placeholder Inkling Chaser enemy data.
-func inkling_chaser_enemy() -> Resource:
-	var resource := _load_resource(INKLING_RESOURCE_PATH)
-	return resource if resource != null else _inkling_chaser_enemy()
+## Creates the documented opening Wax Imp enemy data.
+func wax_imp_enemy() -> Resource:
+	var resource := _load_resource(WAX_IMP_RESOURCE_PATH)
+	return resource if resource != null else _wax_imp_enemy()
 
 
-## Creates the placeholder Paper Scrap Swarmer enemy data.
-func paper_scrap_swarmer_enemy() -> Resource:
-	var resource := _load_resource(SWARMER_RESOURCE_PATH)
-	return resource if resource != null else _paper_scrap_swarmer_enemy()
+## Creates the documented delayed Flicker Imp enemy data.
+func flicker_imp_enemy() -> Resource:
+	var resource := _load_resource(FLICKER_IMP_RESOURCE_PATH)
+	return resource if resource != null else _flicker_imp_enemy()
 
 
 ## Creates or loads the documented Candle Spark passive data.
@@ -111,13 +111,10 @@ func candle_spark_passive() -> Resource:
 	return resource if resource != null else _candle_spark_passive()
 
 
-## Creates all currently playable prototype weapons.
+## Creates weapons in the locked first-polished exemplar package.
 func weapon_pool() -> Array[Resource]:
 	return [
 		waxlight_comet_weapon(),
-		star_sticker_swarm_weapon(),
-		dreamsap_glob_weapon(),
-		color_bloom_weapon(),
 	]
 
 
@@ -131,8 +128,8 @@ func passive_items() -> Array[Resource]:
 ## Creates all currently playable enemy families.
 func all_enemy_families() -> Array[Resource]:
 	return [
-		inkling_chaser_enemy(),
-		paper_scrap_swarmer_enemy(),
+		wax_imp_enemy(),
+		flicker_imp_enemy(),
 	]
 
 
@@ -151,15 +148,15 @@ func upgrade_choices() -> Array[Resource]:
 ## Creates the first-playable director enemy pool.
 func first_playable_enemy_pool() -> Array[Resource]:
 	return [
-		inkling_chaser_enemy(),
-		paper_scrap_swarmer_enemy(),
+		wax_imp_enemy(),
+		flicker_imp_enemy(),
 	]
 
 
 ## Creates the opening enemy pool. Fast/weak family is intentionally delayed.
 func opening_enemy_pool() -> Array[Resource]:
 	return [
-		inkling_chaser_enemy(),
+		wax_imp_enemy(),
 	]
 
 
@@ -251,11 +248,11 @@ func _color_bloom_weapon() -> Resource:
 	return weapon
 
 
-func _inkling_chaser_enemy() -> Resource:
+func _wax_imp_enemy() -> Resource:
 	var enemy = EnemyDataScript.new()
-	enemy.id = ENEMY_INKLING_CHASER
-	enemy.display_name = "Inkling Chaser"
-	enemy.description = "Primitive chaser enemy for first playable validation."
+	enemy.id = ENEMY_WAX_IMP
+	enemy.display_name = "Wax Imp"
+	enemy.description = "Authored opening slow normal enemy. HP equals two starting Waxlight hits."
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"chaser"
 	enemy.max_health = _opening_enemy_health()
@@ -266,11 +263,11 @@ func _inkling_chaser_enemy() -> Resource:
 	return enemy
 
 
-func _paper_scrap_swarmer_enemy() -> Resource:
+func _flicker_imp_enemy() -> Resource:
 	var enemy = EnemyDataScript.new()
-	enemy.id = ENEMY_PAPER_SCRAP_SWARMER
-	enemy.display_name = "Paper Scrap Swarmer"
-	enemy.description = "Primitive fast weak swarmer enemy for first playable validation."
+	enemy.id = ENEMY_FLICKER_IMP
+	enemy.display_name = "Flicker Imp"
+	enemy.description = "Authored delayed fast weak pressure enemy."
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"swarmer"
 	enemy.max_health = 8.0

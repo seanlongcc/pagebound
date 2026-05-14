@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -11,7 +11,7 @@
 
 ## Player Fantasy
 
-Pagebound should celebrate damage. By late game, the page should erupt with readable cascades of numbers, crits, pet hits, boss chunks, and Pagecraft ticks without hiding danger.
+Pagebound should celebrate damage. By late game, the page should erupt with readable cascades of numbers, crits, boss chunks, and Pagecraft ticks without hiding danger. Pet support feedback should read clearly without implying Dog deals damage in the first polished exemplar.
 
 ## Detailed Design
 
@@ -20,7 +20,7 @@ Pagebound should celebrate damage. By late game, the page should erupt with read
 1. Damage numbers are default-on.
 2. Damage numbers consume resolved damage facts from Damage and Status Model.
 3. Damage numbers are pooled.
-4. Normal damage, crits, boss chunks, pet damage, Pagecraft ticks, blocked hits, healing, and status ticks have distinct profiles.
+4. Normal damage, crits, boss chunks, Pagecraft ticks, blocked hits, healing, status ticks, and pet support pips have distinct profiles.
 5. Tick damage can aggregate per enemy per 0.25s when number spam becomes too high.
 6. Offscreen damage numbers can be suppressed or summarized.
 7. Boss/critical numbers have higher priority and larger presentation.
@@ -97,7 +97,7 @@ Invalid states:
 
 - Numbers should use readable type, color, size, and motion profiles.
 - Boss chunks and crits should feel oversized but not obscure telegraphs.
-- Pet damage may use accent/icon styling.
+- Pet support feedback may use accent/icon styling. The first polished exemplar Dog has no damage numbers.
 - Pagecraft tick numbers should aggregate when dense.
 - Audio hooks exist for crits/boss chunks but mix belongs to Audio.
 
@@ -110,7 +110,7 @@ Invalid states:
 ## Acceptance Criteria
 
 - Resolved damage facts spawn pooled damage numbers.
-- Crit, boss, pet, Pagecraft, healing, blocked, and status profiles are supported.
+- Crit, boss, Pagecraft, healing, blocked, status, and pet support profiles are supported.
 - Tick aggregation prevents unreadable spam.
 - Offscreen/low-priority suppression degrades presentation without changing damage.
 - Debug metrics expose pool pressure and suppressed counts.
@@ -119,4 +119,3 @@ Invalid states:
 
 - Final font choice waits for UI/art direction and asset provenance.
 - World-space vs screen-space implementation is performance-tested.
-

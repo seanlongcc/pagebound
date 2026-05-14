@@ -1,28 +1,26 @@
 class_name FirstPlayableRunUi
 extends RefCounted
 
+const SLOT_COUNT := 5
+
 var _hud: Control
-var _hud_label: Label
 
 
-## Ensures the first-playable HUD label exists under the supplied HUD root.
+## Ensures the first-polished HUD control tree exists under the supplied HUD root.
 func ensure_hud(hud: Control) -> void:
 	_hud = hud
 	if _hud == null:
 		return
 	_hud.visible = true
-	_hud_label = _hud.get_node_or_null("FirstPlayableHudLabel") as Label
-	if _hud_label != null:
-		return
-	_hud_label = Label.new()
-	_hud_label.name = "FirstPlayableHudLabel"
-	_hud_label.position = Vector2(16.0, 12.0)
-	_hud_label.custom_minimum_size = Vector2(520.0, 300.0)
-	_hud_label.add_theme_font_size_override("font_size", 16)
-	_hud_label.add_theme_color_override("font_color", Color(0.04, 0.035, 0.03, 1.0))
-	_hud_label.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.86, 0.85))
-	_hud_label.add_theme_constant_override("outline_size", 3)
-	_hud.add_child(_hud_label)
+	_hud.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_remove_old_debug_label()
+	_ensure_party_reserve()
+	_ensure_top_right_banner()
+	_ensure_hp_chip()
+	_ensure_loadout_book()
+	_ensure_bottom_xp_bar()
+	_ensure_level_badge()
+	_ensure_pet_badge()
 
 
 ## Shows or hides the HUD root if it has been configured.
@@ -31,38 +29,16 @@ func set_hud_visible(visible: bool) -> void:
 		_hud.visible = visible
 
 
-## Updates the HUD label from runtime-provided display context.
+## Updates the HUD controls from runtime-provided display context.
 func update_hud(context: Dictionary) -> void:
-	if _hud_label == null:
+	if _hud == null:
 		return
-	_hud_label.text = hud_text(context)
-
-
-## Builds first-playable HUD text from primitive display values.
-func hud_text(context: Dictionary) -> String:
-	return "HP: %d/%d\nLevel: %d\nXP: %d/%d\nTime: %s\nWaxlight damage: %.1f\nWaxlight cooldown: %.2fs\nWaxlight duration: %.1fs\nWax cap: %d\nWax inactive/active: %d/%d\nDirector: %.2f/s %s\nBudget: %d\nSpawned: %d\nEnemies: %d active / Safety %d\n%s\nWeapons: %s\nPassives: %s" % [
-		roundi(float(context.get("player_health", 0.0))),
-		roundi(float(context.get("player_max_health", 0.0))),
-		int(context.get("run_level", 0)),
-		int(context.get("current_level_xp", 0)),
-		int(context.get("xp_threshold", 0)),
-		format_run_time(float(context.get("run_time_seconds", 0.0))),
-		float(context.get("waxlight_damage", 0.0)),
-		float(context.get("waxlight_cooldown_seconds", 0.0)),
-		float(context.get("waxlight_duration_seconds", 0.0)),
-		int(context.get("waxlight_cap", 0)),
-		int(context.get("waxlight_unactivated_count", 0)),
-		int(context.get("waxlight_active_count", 0)),
-		float(context.get("director_spawn_rate", 0.0)),
-		String(context.get("director_band", &"idle")),
-		int(context.get("enemy_budget", 0)),
-		int(context.get("spawned_count", 0)),
-		int(context.get("active_enemy_count", 0)),
-		int(context.get("safety_enemy_cap", 0)),
-		String(context.get("page_event_line", "Event: none")),
-		", ".join(weapon_display_names(context.get("weapon_ids", []))),
-		", ".join(passive_display_names(context.get("passive_ids", []))),
-	]
+	_update_hp(context)
+	_update_banner(context)
+	_update_xp(context)
+	_update_level(context)
+	_update_pet(context)
+	_update_loadout(context)
 
 
 ## Builds the fixed vertical-slice victory summary lines.
@@ -116,3 +92,291 @@ func passive_display_names(passive_ids: Array) -> Array[String]:
 	if names.is_empty():
 		names.append("none")
 	return names
+
+
+func _remove_old_debug_label() -> void:
+	var old_label := _hud.get_node_or_null("FirstPlayableHudLabel")
+	if old_label != null:
+		_hud.remove_child(old_label)
+		old_label.queue_free()
+
+
+func _ensure_party_reserve() -> void:
+	if _hud.get_node_or_null("PartyReserve") != null:
+		return
+	var row := HBoxContainer.new()
+	row.name = "PartyReserve"
+	row.position = Vector2(24.0, 22.0)
+	row.add_theme_constant_override("separation", 8)
+	_hud.add_child(row)
+	for index in 3:
+		var badge := PanelContainer.new()
+		badge.name = "PartySlot%d" % (index + 1)
+		badge.custom_minimum_size = Vector2(42.0, 42.0)
+		badge.add_theme_stylebox_override("panel", _panel_style(Color(0.96, 0.89, 0.66, 0.82), Color(0.25, 0.20, 0.12, 0.75), 2))
+		row.add_child(badge)
+
+
+func _ensure_top_right_banner() -> void:
+	if _hud.get_node_or_null("TopRightBanner") != null:
+		return
+	var banner := PanelContainer.new()
+	banner.name = "TopRightBanner"
+	banner.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	banner.offset_left = -430.0
+	banner.offset_top = 22.0
+	banner.offset_right = -24.0
+	banner.offset_bottom = 132.0
+	banner.add_theme_stylebox_override("panel", _panel_style(Color(0.98, 0.92, 0.76, 0.92), Color(0.24, 0.16, 0.08, 0.9), 2))
+	_hud.add_child(banner)
+	var stack := VBoxContainer.new()
+	stack.name = "BannerStack"
+	stack.add_theme_constant_override("separation", 3)
+	banner.add_child(stack)
+	for name in ["BannerKicker", "BannerTitle", "BannerMetric", "BannerSubline"]:
+		var label := Label.new()
+		label.name = name
+		label.add_theme_color_override("font_color", Color(0.08, 0.05, 0.03, 1.0))
+		stack.add_child(label)
+	(label("BannerTitle")).add_theme_font_size_override("font_size", 22)
+	(label("BannerMetric")).add_theme_font_size_override("font_size", 30)
+	var bar := ProgressBar.new()
+	bar.name = "BannerProgress"
+	bar.min_value = 0.0
+	bar.max_value = 100.0
+	bar.show_percentage = false
+	stack.add_child(bar)
+
+
+func _ensure_hp_chip() -> void:
+	if _hud.get_node_or_null("HPChip") != null:
+		return
+	var chip := PanelContainer.new()
+	chip.name = "HPChip"
+	chip.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	chip.offset_left = 24.0
+	chip.offset_top = -142.0
+	chip.offset_right = 224.0
+	chip.offset_bottom = -86.0
+	chip.add_theme_stylebox_override("panel", _panel_style(Color(0.98, 0.93, 0.80, 0.9), Color(0.26, 0.11, 0.08, 0.9), 2))
+	_hud.add_child(chip)
+	var stack := VBoxContainer.new()
+	chip.add_child(stack)
+	var hp_label := Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.add_theme_font_size_override("font_size", 17)
+	hp_label.add_theme_color_override("font_color", Color(0.08, 0.04, 0.03, 1.0))
+	stack.add_child(hp_label)
+	var hp_bar := ProgressBar.new()
+	hp_bar.name = "HPProgress"
+	hp_bar.min_value = 0.0
+	hp_bar.max_value = 100.0
+	hp_bar.show_percentage = false
+	hp_bar.custom_minimum_size = Vector2(176.0, 16.0)
+	stack.add_child(hp_bar)
+
+
+func _ensure_loadout_book() -> void:
+	if _hud.get_node_or_null("LoadoutBook") != null:
+		return
+	var book := VBoxContainer.new()
+	book.name = "LoadoutBook"
+	book.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	book.offset_left = -560.0
+	book.offset_top = -96.0
+	book.offset_right = -24.0
+	book.offset_bottom = -22.0
+	book.add_theme_constant_override("separation", 5)
+	_hud.add_child(book)
+	_add_slot_row(book, "WeaponSlots")
+	_add_slot_row(book, "ItemSlots")
+
+
+func _ensure_bottom_xp_bar() -> void:
+	if _hud.get_node_or_null("BottomXPBar") != null:
+		return
+	var root := Control.new()
+	root.name = "BottomXPBar"
+	root.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	root.offset_left = 0.0
+	root.offset_top = -20.0
+	root.offset_right = 0.0
+	root.offset_bottom = 0.0
+	_hud.add_child(root)
+	var bar := ProgressBar.new()
+	bar.name = "XPProgress"
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bar.min_value = 0.0
+	bar.max_value = 100.0
+	bar.show_percentage = false
+	root.add_child(bar)
+	var text := Label.new()
+	text.name = "XPPercentLabel"
+	text.set_anchors_preset(Control.PRESET_FULL_RECT)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	text.add_theme_font_size_override("font_size", 14)
+	text.add_theme_color_override("font_color", Color(0.06, 0.04, 0.03, 1.0))
+	root.add_child(text)
+
+
+func _ensure_level_badge() -> void:
+	if _hud.get_node_or_null("LevelBadge") != null:
+		return
+	var badge := Label.new()
+	badge.name = "LevelBadge"
+	badge.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	badge.offset_left = 24.0
+	badge.offset_top = -72.0
+	badge.offset_right = 118.0
+	badge.offset_bottom = -28.0
+	badge.add_theme_font_size_override("font_size", 18)
+	badge.add_theme_color_override("font_color", Color(0.05, 0.035, 0.02, 1.0))
+	_hud.add_child(badge)
+
+
+func _ensure_pet_badge() -> void:
+	if _hud.get_node_or_null("PetBadge") != null:
+		return
+	var badge := Label.new()
+	badge.name = "PetBadge"
+	badge.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	badge.offset_left = 124.0
+	badge.offset_top = -72.0
+	badge.offset_right = 292.0
+	badge.offset_bottom = -28.0
+	badge.add_theme_font_size_override("font_size", 16)
+	badge.add_theme_color_override("font_color", Color(0.05, 0.035, 0.02, 1.0))
+	_hud.add_child(badge)
+
+
+func _add_slot_row(parent: Node, row_name: String) -> void:
+	var row := HBoxContainer.new()
+	row.name = row_name
+	row.add_theme_constant_override("separation", 5)
+	parent.add_child(row)
+	for index in SLOT_COUNT:
+		var slot := Label.new()
+		slot.name = "Slot%d" % (index + 1)
+		slot.custom_minimum_size = Vector2(102.0, 32.0)
+		slot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		slot.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		slot.add_theme_font_size_override("font_size", 12)
+		slot.add_theme_color_override("font_color", Color(0.06, 0.045, 0.03, 1.0))
+		slot.add_theme_stylebox_override("normal", _panel_style(Color(0.98, 0.94, 0.84, 0.92), Color(0.34, 0.22, 0.12, 0.75), 1))
+		row.add_child(slot)
+
+
+func _update_hp(context: Dictionary) -> void:
+	var current := roundi(float(context.get("player_health", 0.0)))
+	var max_value := maxi(1, roundi(float(context.get("player_max_health", 0.0))))
+	(label("HPLabel")).text = "HP %d/%d" % [current, max_value]
+	var bar := _hud.get_node_or_null("HPChip/HPProgress") as ProgressBar
+	if bar != null:
+		bar.value = clampf(float(current) / float(max_value) * 100.0, 0.0, 100.0)
+
+
+func _update_banner(context: Dictionary) -> void:
+	var event_state: Dictionary = context.get("page_event_state", {})
+	var boss_state: Dictionary = context.get("boss_state", {})
+	var banner := _hud.get_node_or_null("TopRightBanner") as Control
+	if banner == null:
+		return
+	var show_event: bool = bool(event_state.get("active", false))
+	var show_boss: bool = not show_event and boss_state.get("id", &"") != &"" and not bool(boss_state.get("defeated", false))
+	banner.visible = show_event or show_boss
+	if show_event:
+		_set_banner("Page Event", "Fill the Color Well", "%d%%" % int(event_state.get("progress_percent", 0)), "%d/%d, %s" % [
+			int(event_state.get("progress", 0)),
+			int(event_state.get("required_progress", 0)),
+			format_run_time(float(event_state.get("time_remaining_seconds", 0.0))),
+		], float(event_state.get("progress_percent", 0)))
+	elif show_boss:
+		var metric := "Queued" if bool(boss_state.get("queued_for_event", false)) else "%d%%" % int(boss_state.get("hp_percent", 0))
+		_set_banner("Crownless Echo", "The Scribble King Stirs", metric, "3:30", float(boss_state.get("hp_percent", 0)))
+
+
+func _set_banner(kicker: String, title: String, metric: String, subline: String, progress: float) -> void:
+	(label("BannerKicker")).text = kicker
+	(label("BannerTitle")).text = title
+	(label("BannerMetric")).text = metric
+	(label("BannerSubline")).text = subline
+	var bar := _hud.get_node_or_null("TopRightBanner/BannerStack/BannerProgress") as ProgressBar
+	if bar != null:
+		bar.value = clampf(progress, 0.0, 100.0)
+
+
+func _update_xp(context: Dictionary) -> void:
+	var current := int(context.get("current_level_xp", 0))
+	var threshold := maxi(1, int(context.get("xp_threshold", 1)))
+	var percent := clampi(roundi(float(current) / float(threshold) * 100.0), 0, 100)
+	var bar := _hud.get_node_or_null("BottomXPBar/XPProgress") as ProgressBar
+	if bar != null:
+		bar.value = percent
+	var text := _hud.get_node_or_null("BottomXPBar/XPPercentLabel") as Label
+	if text != null:
+		text.text = "XP %d%%" % percent
+
+
+func _update_level(context: Dictionary) -> void:
+	(label("LevelBadge")).text = "Level %d" % int(context.get("run_level", 0))
+
+
+func _update_pet(context: Dictionary) -> void:
+	(label("PetBadge")).text = "Dog T%d: %s" % [
+		int(context.get("dog_tier", 1)),
+		String(context.get("dog_feedback_text", "Dog")),
+	]
+
+
+func _update_loadout(context: Dictionary) -> void:
+	_update_slot_row(_hud.get_node_or_null("LoadoutBook/WeaponSlots"), weapon_display_names(context.get("weapon_ids", [])))
+	_update_slot_row(_hud.get_node_or_null("LoadoutBook/ItemSlots"), passive_display_names(context.get("passive_ids", [])))
+
+
+func _update_slot_row(row: Node, names: Array[String]) -> void:
+	if row == null:
+		return
+	var visible_names := names.duplicate()
+	if visible_names.size() == 1 and visible_names[0] == "none":
+		visible_names.clear()
+	for index in SLOT_COUNT:
+		var slot := row.get_node_or_null("Slot%d" % (index + 1)) as Label
+		if slot == null:
+			continue
+		slot.text = visible_names[index] if index < visible_names.size() else "Empty"
+
+
+func label(node_name: String) -> Label:
+	return _find_named(_hud, node_name) as Label
+
+
+func _find_named(node: Node, node_name: String) -> Node:
+	if node == null:
+		return null
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _panel_style(bg_color: Color, border_color: Color, border_width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg_color
+	style.border_color = border_color
+	style.border_width_left = border_width
+	style.border_width_top = border_width
+	style.border_width_right = border_width
+	style.border_width_bottom = border_width
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	style.content_margin_left = 8.0
+	style.content_margin_top = 6.0
+	style.content_margin_right = 8.0
+	style.content_margin_bottom = 6.0
+	return style

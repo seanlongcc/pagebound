@@ -94,7 +94,7 @@ The battlefield is a finite living page. Combat does not happen on a neutral flo
 
 - **Onboarding curve**: Movement, dash, auto-attacks, and first page material must read clearly in the first 30 seconds.
 - **Difficulty scaling**: Enemy density and boss pressure increase while player power ramps dramatically.
-- **Feedback clarity**: Damage numbers, material marks, pet attacks, and page states show progress.
+- **Feedback clarity**: Damage numbers, material marks, pet support feedback, and page states show progress.
 - **Recovery from failure**: Runs should return quickly to character/build selection and preserve meta progress.
 
 ---

@@ -19,7 +19,7 @@ func _initialize() -> void:
 	await physics_frame
 
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
-	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser")
+	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp")
 	var enemy_health: Node = null
 	if enemy != null:
 		enemy_health = enemy.get_node_or_null("HealthComponent")
@@ -172,8 +172,14 @@ func _first_living_enemy(root: Node) -> Node3D:
 func _hud_has_text(hud: Node, text_fragment: String) -> bool:
 	if hud == null:
 		return false
+	if hud is CanvasItem and not (hud as CanvasItem).is_visible_in_tree():
+		return false
+	if hud is Label and (hud as Label).visible and (hud as Label).text.contains(text_fragment):
+		return true
+	if hud is Button and (hud as Button).visible and (hud as Button).text.contains(text_fragment):
+		return true
 	for child in hud.get_children():
-		if child is Label and child.text.contains(text_fragment):
+		if _hud_has_text(child, text_fragment):
 			return true
 	return false
 

@@ -19,34 +19,56 @@ func _initialize() -> void:
 	await physics_frame
 
 	var hud := root.get_node_or_null("UI/HUD")
-	var label := _hud_label(hud)
+	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as Node3D
 	_assert_true(hud != null and hud.visible, "HUD must be visible", failures)
-	_assert_true(label != null, "HUD counter label must exist", failures)
-	var initial_text := ""
-	if label != null:
-		initial_text = label.text
-		_assert_true(initial_text.contains("HP") and initial_text.contains("50/50"), "HUD must show HP clearly", failures)
-		_assert_true(initial_text.contains("XP"), "HUD must show XP", failures)
-		_assert_true(initial_text.contains("Enemies"), "HUD must show enemy count", failures)
-		_assert_true(initial_text.contains("Time"), "HUD must show run time", failures)
+	_assert_true(_find_named(hud, "FirstPlayableHudLabel") == null, "legacy debug HUD label must be removed", failures)
+	var initial_text := _visible_text(hud)
+	_assert_true(initial_text.contains("HP") and initial_text.contains("50/50"), "HUD must show HP clearly", failures)
+	_assert_true(initial_text.contains("XP"), "HUD must show XP", failures)
+	_assert_true(initial_text.contains("Level"), "HUD must show level badge", failures)
+	_assert_true(initial_text.contains("Dog"), "HUD must show Dog pet badge", failures)
+	_assert_true(not initial_text.contains("Enemies") and not initial_text.contains("Time"), "player HUD must not show debug enemy/time counters", failures)
 
-	for index in 120:
-		await physics_frame
+	if runtime != null and runtime.has_method("debug_spawn_xp_pickup") and player != null:
+		runtime.debug_spawn_xp_pickup(player.global_position, 1)
+		for index in 3:
+			await physics_frame
 
-	if label != null:
-		_assert_true(label.text != initial_text, "HUD counters must update during run", failures)
-		_assert_true(label.text.contains("Enemies"), "HUD must keep enemy count after updates", failures)
-		_assert_true(label.text.contains("Time"), "HUD must keep run time after updates", failures)
+	var updated_text := _visible_text(hud)
+	_assert_true(updated_text != initial_text, "HUD counters must update after XP changes", failures)
+	_assert_true(updated_text.contains("XP"), "HUD must keep XP after updates", failures)
 
 	root.queue_free()
 	await process_frame
 	_finish(failures)
 
 
-func _hud_label(hud: Node) -> Label:
-	if hud == null:
+func _find_named(node: Node, node_name: String) -> Node:
+	if node == null:
 		return null
-	return hud.get_node_or_null("FirstPlayableHudLabel") as Label
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _visible_text(node: Node) -> String:
+	if node == null:
+		return ""
+	if node is CanvasItem and not (node as CanvasItem).is_visible_in_tree():
+		return ""
+	var text := ""
+	if node is Label and node.visible:
+		text += (node as Label).text + "\n"
+	if node is Button and node.visible:
+		text += (node as Button).text + "\n"
+	for child in node.get_children():
+		text += _visible_text(child)
+	return text
 
 
 func _load_main(failures: Array[String]) -> Node:

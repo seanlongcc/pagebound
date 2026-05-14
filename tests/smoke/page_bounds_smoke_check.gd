@@ -33,23 +33,24 @@ func _initialize() -> void:
 		player.debug_integrate(Vector2.DOWN, false, 5.0)
 		_assert_true(player.global_position.x > 8.5, "player must move farther than old small page right bound", failures)
 		_assert_true(player.global_position.z > 5.5, "player must move farther than old small page lower bound", failures)
-		_assert_true(player.global_position.x <= 11.1, "player must stay inside larger page right bound", failures)
-		_assert_true(player.global_position.z <= 7.1, "player must stay inside larger page lower bound", failures)
+		_assert_true(player.global_position.x <= 32.1, "player must stay inside widened page right bound", failures)
+		_assert_true(player.global_position.z <= 20.1, "player must stay inside widened page lower bound", failures)
 		player.debug_integrate(Vector2.LEFT, false, 10.0)
 		player.debug_integrate(Vector2.UP, false, 10.0)
 		_assert_true(player.global_position.x < -8.5, "player must move farther than old small page left bound", failures)
 		_assert_true(player.global_position.z < -5.5, "player must move farther than old small page upper bound", failures)
-		_assert_true(player.global_position.x >= -11.1, "player must stay inside larger page left bound", failures)
-		_assert_true(player.global_position.z >= -7.1, "player must stay inside larger page upper bound", failures)
+		_assert_true(player.global_position.x >= -32.1, "player must stay inside widened page left bound", failures)
+		_assert_true(player.global_position.z >= -20.1, "player must stay inside widened page upper bound", failures)
 
 	for index in 240:
 		await physics_frame
 
 	if director != null:
 		_assert_true(director.debug_all_active_enemies_within_bounds(), "director-spawned enemies must stay in finite page bounds", failures)
-	if camera != null and page_ground != null:
-		_assert_true(camera.is_position_in_frustum(Vector3.ZERO), "camera must keep page center readable", failures)
-		_assert_true(camera.is_position_in_frustum(page_ground.global_position), "camera must frame page ground", failures)
+	if camera != null and player != null:
+		_assert_true(camera.is_position_in_frustum(player.global_position + Vector3.UP * 0.5), "camera must keep player readable on widened page", failures)
+	if page_ground != null:
+		_assert_true(page_ground.visible, "widened page ground must remain visible", failures)
 
 	root.queue_free()
 	await process_frame

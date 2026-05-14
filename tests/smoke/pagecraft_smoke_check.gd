@@ -19,9 +19,12 @@ func _initialize() -> void:
 	await physics_frame
 
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
+	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp") as Node3D
 	var manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
 	_assert_true(player != null and player.has_method("debug_integrate"), "player must exist for dash sampling", failures)
 	_assert_true(manager != null and manager.has_method("debug_mark_count"), "Pagecraft manager must exist", failures)
+	if player != null and enemy != null:
+		enemy.global_position = (player as Node3D).global_position + Vector3(5.0, 0.0, 0.0)
 
 	for index in 120:
 		await physics_frame

@@ -74,7 +74,7 @@ func _initialize() -> void:
 	_assert_true(level_up_screen != null and not level_up_screen.visible, "LevelUpScreen must hide after selection", failures)
 	_assert_true(selected_events.size() == 1, "draft choice selected event must emit once", failures)
 	if not selected_events.is_empty():
-		_assert_true(selected_events[0].get("choice_id", &"") == &"new_weapon_star_sticker_swarm", "weapon-pick default focused choice must be Star Sticker Swarm", failures)
+		_assert_true(_is_first_package_choice(selected_events[0].get("choice_id", &"")), "default focused choice must stay inside first polished package", failures)
 
 	root.queue_free()
 	await process_frame
@@ -94,12 +94,17 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> void:
 	var buttons := _choice_buttons(level_up_screen)
 	_assert_true(buttons.size() == 3, "LevelUpScreen must contain exactly 3 choice buttons", failures)
-	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm"), "weapon-pick draft must include documented second weapon", failures)
-	_assert_true(_buttons_contain_text(buttons, "Dreamsap Glob"), "weapon-pick draft must include documented Dreamsap Glob weapon", failures)
-	_assert_true(_buttons_contain_text(buttons, "Color Bloom"), "weapon-pick draft must include documented Color Bloom weapon", failures)
+	_assert_true(_buttons_contain_text(buttons, "Waxlight Comet +1"), "normal draft must include Waxlight Comet +1", failures)
+	_assert_true(_buttons_contain_text(buttons, "Candle Spark"), "normal draft must include Candle Spark while legal", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Star Sticker Swarm"), "first package draft must not include old second weapon", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Dreamsap Glob"), "first package draft must not include old Dreamsap weapon", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Color Bloom"), "first package draft must not include old Color Bloom weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Paper Plane Dart"), "weapon-pick draft must not include non-GDD Paper Plane Dart weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Margin Spark Ring"), "weapon-pick draft must not include non-GDD Margin Spark Ring weapon", failures)
-	_assert_true(_buttons_contain_text(buttons, "New Weapon"), "weapon-pick cards must label the reward category", failures)
+
+
+func _is_first_package_choice(choice_id: StringName) -> bool:
+	return choice_id == &"weapon_upgrade_waxlight_comet" or choice_id == &"new_passive_candle_spark" or choice_id == &"passive_upgrade_candle_spark"
 
 
 func _choice_buttons(root: Node) -> Array[Button]:

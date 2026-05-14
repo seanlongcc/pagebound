@@ -1,6 +1,9 @@
 class_name RunUpgradeState
 extends RefCounted
 
+const DraftChoicePickerScript := preload("res://src/runtime/draft_choice_picker.gd")
+
+const CHOICE_WAXLIGHT_LEVEL := &"weapon_upgrade_waxlight_comet"
 const CHOICE_WAXLIGHT_DAMAGE := &"waxlight_damage_plus_1"
 const CHOICE_WAXLIGHT_DAMAGE_RARE := &"waxlight_damage_plus_4"
 const CHOICE_WAXLIGHT_COOLDOWN := &"waxlight_cooldown_minus_10"
@@ -60,9 +63,9 @@ const CATEGORY_WEIGHTS := {
 	&"stat": 1.0,
 	&"fallback": 0.2,
 }
-const WEAPON_PICK_LEVELS := [2, 6, 10, 14]
 
 var _content_factory
+var _draft_picker = DraftChoicePickerScript.new()
 var _waxlight_damage_bonus := 0.0
 var _waxlight_cooldown_reduction_seconds := 0.0
 var _player_max_health_bonus := 0.0
@@ -101,9 +104,12 @@ func reset() -> void:
 
 ## Returns prototype draft choices for one run level.
 func prototype_choices_for_level(run_level: int) -> Array[Dictionary]:
-	if _is_weapon_pick_level(run_level):
-		return _weapon_pick_choices()
-	return _weighted_unique_choices(debug_eligible_choices_for_level(run_level), DRAFT_CHOICE_COUNT, _draft_seed_for_level(run_level))
+	return _draft_choices(run_level, false)
+
+
+## Returns Page Event reward choices with the first-package new-gear guarantee.
+func page_event_reward_choices(run_level: int = 0) -> Array[Dictionary]:
+	return _draft_choices(run_level, true)
 
 
 ## Returns the default prototype draft choices with effect IDs.
@@ -114,6 +120,11 @@ func prototype_choices() -> Array[Dictionary]:
 ## Applies one selected prototype upgrade and returns effect facts.
 func apply_choice(choice_id: StringName) -> Dictionary:
 	match choice_id:
+		CHOICE_WAXLIGHT_LEVEL:
+			if not _owned_weapon_levels.has(WEAPON_WAXLIGHT_COMET) or _weapon_level(WEAPON_WAXLIGHT_COMET) >= 10:
+				return {}
+			_owned_weapon_levels[WEAPON_WAXLIGHT_COMET] = mini(10, _weapon_level(WEAPON_WAXLIGHT_COMET) + 1)
+			return _weapon_level_event(choice_id, WEAPON_WAXLIGHT_COMET)
 		CHOICE_WAXLIGHT_DAMAGE:
 			_waxlight_damage_bonus += WAXLIGHT_DAMAGE_STEP
 			return _stat_event(choice_id)
@@ -171,9 +182,13 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 		CHOICE_COLOR_BLOOM_RANGE:
 			return _add_weapon_range(choice_id, WEAPON_COLOR_BLOOM, DEFAULT_RANGE_STEP)
 		CHOICE_NEW_CANDLE_SPARK:
+			if not _can_add_passive(PASSIVE_CANDLE_SPARK):
+				return {}
 			_owned_passive_levels[PASSIVE_CANDLE_SPARK] = 1
 			return _passive_event(choice_id, true)
 		CHOICE_CANDLE_SPARK_LEVEL:
+			if not _owned_passive_levels.has(PASSIVE_CANDLE_SPARK) or _passive_level(PASSIVE_CANDLE_SPARK) >= 5:
+				return {}
 			_owned_passive_levels[PASSIVE_CANDLE_SPARK] = mini(5, _passive_level(PASSIVE_CANDLE_SPARK) + 1)
 			return _passive_event(choice_id, false)
 	return {}
@@ -318,12 +333,27 @@ func debug_eligible_choices_for_level(_run_level: int) -> Array[Dictionary]:
 	return choices
 
 
-func _weapon_pick_choices() -> Array[Dictionary]:
-	var choices := _new_weapon_choices()
-	if choices.size() >= DRAFT_CHOICE_COUNT:
-		return _first_unique_choices(choices, DRAFT_CHOICE_COUNT)
-	var filled := _first_unique_choices(choices + _weighted_unique_choices(debug_eligible_choices_for_level(0), DRAFT_CHOICE_COUNT, _draft_seed_for_level(0)), DRAFT_CHOICE_COUNT)
-	return filled
+func _draft_choices(run_level: int, guarantee_new_gear: bool) -> Array[Dictionary]:
+	return _draft_picker.normal_choices(_legal_draft_choice_buckets(), DRAFT_CHOICE_COUNT, _draft_seed_for_level(run_level), guarantee_new_gear)
+
+
+func _legal_draft_choice_buckets() -> Dictionary:
+	var buckets := {
+		&"new_weapon": [],
+		&"new_passive": [],
+		&"weapon_upgrade": [],
+		&"passive_upgrade": [],
+		&"overflow": [],
+	}
+	if _can_add_passive(PASSIVE_CANDLE_SPARK):
+		buckets[&"new_passive"].append(_new_passive_choice())
+	if _owned_weapon_levels.has(WEAPON_WAXLIGHT_COMET) and _weapon_level(WEAPON_WAXLIGHT_COMET) < 10:
+		buckets[&"weapon_upgrade"].append(_waxlight_level_choice())
+	if _owned_passive_levels.has(PASSIVE_CANDLE_SPARK) and _passive_level(PASSIVE_CANDLE_SPARK) < 5:
+		buckets[&"passive_upgrade"].append(_candle_spark_upgrade_choice())
+	if buckets[&"new_weapon"].is_empty() and buckets[&"new_passive"].is_empty() and buckets[&"weapon_upgrade"].is_empty() and buckets[&"passive_upgrade"].is_empty():
+		buckets[&"overflow"] = _fallback_choices()
+	return buckets
 
 
 func _new_weapon_choices() -> Array[Dictionary]:
@@ -366,6 +396,11 @@ func _new_weapon_choice(choice_id: StringName, weapon_id: StringName, rarity: St
 		1.0,
 		1.0
 	)
+
+
+func _waxlight_level_choice() -> Dictionary:
+	var current := _weapon_level(WEAPON_WAXLIGHT_COMET)
+	return _choice(CHOICE_WAXLIGHT_LEVEL, "Waxlight Comet +1", "Level %d -> %d" % [current, mini(10, current + 1)], "Upgrade Waxlight Comet by exactly one level.", &"weapon_upgrade", RARITY_COMMON, WEAPON_WAXLIGHT_COMET, &"", &"weapon_level", 1.0, 1.0)
 
 
 func _waxlight_damage_choice() -> Dictionary:
@@ -575,10 +610,6 @@ func _fallback_choices() -> Array[Dictionary]:
 	]
 
 
-func _is_weapon_pick_level(run_level: int) -> bool:
-	return WEAPON_PICK_LEVELS.has(run_level)
-
-
 func _draft_seed_for_level(run_level: int) -> int:
 	return _draft_seed + run_level * 7919 + _owned_weapon_levels.size() * 397 + _owned_passive_levels.size() * 53
 
@@ -721,6 +752,14 @@ func _health_event(choice_id: StringName, delta: float) -> Dictionary:
 		"choice_id": choice_id,
 		"player_max_health_delta": delta,
 		"player_max_health_bonus": _player_max_health_bonus,
+	}
+
+
+func _weapon_level_event(choice_id: StringName, weapon_id: StringName) -> Dictionary:
+	return {
+		"choice_id": choice_id,
+		"weapon_id": weapon_id,
+		"weapon_level": _weapon_level(weapon_id),
 	}
 
 

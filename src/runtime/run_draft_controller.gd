@@ -81,6 +81,15 @@ func accept_focused_choice() -> void:
 	_select_choice_index(_focused_choice_index)
 
 
+## Opens a Page Event reward draft with event-specific guarantee rules.
+func open_page_event_reward(event: Dictionary) -> void:
+	if _draft_open:
+		return
+	var reward_event := event.duplicate(true)
+	reward_event["draft_source"] = &"page_event"
+	_open_draft(reward_event)
+
+
 ## Focuses a visible choice by index for keyboard/gamepad smoke flow.
 func focus_choice_index(choice_index: int) -> void:
 	if choice_index < 0 or choice_index >= _current_choices.size():
@@ -113,7 +122,7 @@ func _on_run_level_gained(event: Dictionary) -> void:
 
 
 func _open_draft(level_event: Dictionary) -> void:
-	_current_choices = _prototype_choices(int(level_event.get("level", 0)))
+	_current_choices = _prototype_choices(int(level_event.get("level", 0)), level_event.get("draft_source", &"level_up"))
 	_focused_choice_index = 0
 	_selected_choice_id = &""
 	_sync_choice_buttons()
@@ -292,8 +301,12 @@ func _rarity_border_color(rarity: StringName) -> Color:
 	return Color(0.56, 0.56, 0.56, 1.0)
 
 
-func _prototype_choices(run_level: int) -> Array[Dictionary]:
+func _prototype_choices(run_level: int, draft_source: StringName = &"level_up") -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
+	if draft_source == &"page_event" and _choice_provider != null and _choice_provider.has_method("page_event_reward_choices"):
+		for choice in _choice_provider.page_event_reward_choices(run_level):
+			choices.append(choice.duplicate(true))
+		return choices
 	if _choice_provider != null and _choice_provider.has_method("prototype_choices_for_level"):
 		for choice in _choice_provider.prototype_choices_for_level(run_level):
 			choices.append(choice.duplicate(true))

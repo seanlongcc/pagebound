@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Simple Controls, Deep Pagecraft
 
 ## Overview
@@ -25,7 +25,7 @@ Players should never notice Resource Data Schemas as a system. They should feel 
 6. Tags are shared vocabulary. Weapon materials, evolution catalysts, Pagecraft materials, enemy traits, draft pools, pet traits, and chapter themes must reference approved tag IDs.
 7. Weapons must define exactly 10 level entries. Level 1 is base behavior, level 5 is a major breakpoint, and level 10 is capstone/evolution eligibility.
 8. Passive items must define exactly 5 level entries. Level 5 enables catalyst tags for evolution checks.
-9. Pets must define exactly 5 tier entries and at least one attack behavior reference.
+9. Pets must define authored support tiers. The first polished exemplar Dog defines exactly 3 support tiers and no attack behavior reference.
 10. Characters must define starter weapon, dash profile reference, passive trait reference, preferred material tag, stat profile, unlock condition, and 10 mastery entries.
 11. Chapters must define finite map metadata, visual identity references, boss/finale reference, chapter-specific Page Event pool, unique enemies, restoration track reference, and pet opportunity references.
 12. Page Events must define timing eligibility, objective type, duration, success rewards, failure consequence, and reward pools.
@@ -58,7 +58,7 @@ Players should never notice Resource Data Schemas as a system. They should feel 
 | Passive Items and Drafts | Downstream | Consumes passive IDs, 5 level entries, catalyst tags, stat modifier references, and draft metadata. |
 | XP, Leveling, and Upgrade Drafts | Downstream | Consumes draft pool tags, rarity/weight metadata, unlock gates, level caps, and 3-choice draft eligibility metadata. |
 | Evolution System | Downstream | Consumes weapon evolution paths and item catalyst tags. It owns eligibility evaluation and draft presentation. |
-| Pets and Companion Combat | Downstream | Consumes pet tier data, attack behavior references, unlock quest references, Treat costs, and Pagecraft interaction tags. |
+| Pets and Companion Combat | Downstream | Consumes pet tier data, support behavior references, unlock quest references, Treat costs, and Pagecraft interaction tags. |
 | Enemies and AI Movement | Downstream | Consumes enemy stat profiles, movement profile references, enemy tags, reward/drop profiles, and chapter inclusion data. |
 | Run Director and Finite Spawning | Downstream | Consumes chapter enemy pools, spawn budget metadata, boss timing references, and event schedule metadata. |
 | Page Events and Objectives | Downstream | Consumes Page Event objective data, reward pools, failure consequence references, and chapter/event eligibility. |
@@ -137,7 +137,7 @@ Invalid states are blocking schema errors:
 - Any active resource uses a deprecated resource ID without explicit migration metadata.
 - Any weapon has not exactly 10 levels.
 - Any passive item has not exactly 5 levels.
-- Any pet has not exactly 5 tiers.
+- Dog exemplar pet has not exactly 3 support tiers.
 - Any character mastery track has not exactly 10 levels.
 - Any draft card pool produces fewer than 3 valid choices before fallback rules.
 
@@ -149,7 +149,7 @@ Invalid states are blocking schema errors:
 - If active content references deprecated content, validation fails unless the reference is marked migration-only or the deprecated resource explicitly allows new runs.
 - If a weapon has fewer or more than 10 levels, validation fails and the weapon cannot enter draft pools.
 - If a passive item has fewer or more than 5 levels, validation fails and the item cannot enter draft pools or enable evolutions.
-- If a pet has fewer or more than 5 tiers, validation fails and the pet cannot be unlocked, equipped, or upgraded.
+- If Dog has fewer or more than 3 support tiers in the first polished exemplar, validation fails and Dog cannot be equipped or upgraded.
 - If a character references a missing starter weapon, validation fails and the character cannot appear in character select.
 - If a chapter references fewer than 2 unique enemies, validation fails for MVP chapter content.
 - If a Page Event reward pool is empty, validation fails unless the event is explicitly test-only.

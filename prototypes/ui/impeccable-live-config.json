@@ -1,0 +1,6 @@
+{
+  "files": ["prototypes/ui/pagebound-hud-live.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

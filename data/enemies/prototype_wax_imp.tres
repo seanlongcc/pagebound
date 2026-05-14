@@ -4,13 +4,13 @@
 
 [resource]
 script = ExtResource("1_enemy")
-id = &"paper_scrap_swarmer"
-display_name = "Paper Scrap Swarmer"
-description = "Authored delayed fast weak pressure enemy."
+id = &"wax_imp"
+display_name = "Wax Imp"
+description = "Authored opening slow normal enemy. HP equals two starting Waxlight hits."
 tags = Array[StringName]([&"hostile_ink", &"prototype"])
-behavior_id = &"swarmer"
-max_health = 8.0
-move_speed = 3.2
+behavior_id = &"chaser"
+max_health = 10.0
+move_speed = 1.45
 contact_damage = 3.0
 reward_xp = 1
 pagecraft_interaction_tags = Array[StringName]([&"waxlight"])

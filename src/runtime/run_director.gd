@@ -10,7 +10,7 @@ const HealthComponentScript := preload("res://src/combat/health_component.gd")
 const TIME_BANDS := [
 	{"id": &"opening", "start_seconds": 0.0, "target": 8, "spawn_interval": 1.45, "batch_size": 1, "health_multiplier": 1.0},
 	{"id": &"first_pressure", "start_seconds": 60.0, "target": 16, "spawn_interval": 1.10, "batch_size": 1, "health_multiplier": 1.15},
-	{"id": &"ink_surge", "start_seconds": 120.0, "target": 26, "spawn_interval": 0.88, "batch_size": 2, "health_multiplier": 1.3},
+	{"id": &"flicker_surge", "start_seconds": 120.0, "target": 26, "spawn_interval": 0.88, "batch_size": 2, "health_multiplier": 1.3},
 	{"id": &"page_crush", "start_seconds": 240.0, "target": 42, "spawn_interval": 0.70, "batch_size": 2, "health_multiplier": 1.5},
 ]
 
@@ -215,7 +215,7 @@ func _next_enemy_data() -> Resource:
 		enemy_pool = _content_factory.first_playable_enemy_pool()
 	if not enemy_pool.is_empty():
 		return enemy_pool[_spawned_count % enemy_pool.size()]
-	return _content_factory.inkling_chaser_enemy()
+	return _content_factory.wax_imp_enemy()
 
 
 func _apply_time_band(run_time_seconds: float) -> void:
@@ -256,6 +256,6 @@ func _spawn_position(spawn_number: int) -> Vector3:
 
 
 func _enemy_node_name(enemy_data: Resource, spawn_number: int) -> String:
-	if enemy_data.id == &"inkling_chaser" and spawn_number == 1:
-		return "InklingChaser"
+	if enemy_data.id == &"wax_imp" and spawn_number == 1:
+		return "WaxImp"
 	return "%s_%d" % [String(enemy_data.id).to_pascal_case(), spawn_number]

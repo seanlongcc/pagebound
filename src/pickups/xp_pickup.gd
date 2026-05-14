@@ -43,6 +43,14 @@ func is_collectible() -> bool:
 	return visible and not _collected
 
 
+## Collects this pickup from support systems such as Dog assist aura.
+func collect_by_assist(_source_id: StringName = &"assist") -> bool:
+	if _collected or not _collector_can_collect():
+		return false
+	_collect()
+	return true
+
+
 func _collect() -> void:
 	if not _collector_can_collect():
 		return

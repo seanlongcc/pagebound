@@ -51,10 +51,12 @@ func _initialize() -> void:
 		await physics_frame
 		_assert_true(director.debug_active_budget() > first_budget, "second pressure band must raise active budget again", failures)
 		_assert_true(director.debug_spawn_interval_seconds() < first_interval, "second pressure band must lower spawn interval again", failures)
-		_assert_true(director.debug_current_time_band_id() == &"ink_surge", "150s must use ink_surge band", failures)
+		_assert_true(director.debug_current_time_band_id() == &"flicker_surge", "150s must use flicker_surge band", failures)
 
 	_assert_true(director.debug_all_active_enemies_within_bounds(), "time band pressure must keep active enemies inside finite page bounds", failures)
-	_assert_true(_hud_has_text(hud, "Budget") and _hud_has_text(hud, "Spawned"), "HUD must expose active budget and spawned count", failures)
+	var hud_text := _visible_text(hud)
+	_assert_true(hud_text.contains("HP") and hud_text.contains("XP") and hud_text.contains("Level"), "HUD must expose player-facing counters", failures)
+	_assert_true(not hud_text.contains("Budget") and not hud_text.contains("Spawned"), "HUD must not expose director debug counters", failures)
 
 	_finish_after_root(root, failures)
 
@@ -75,13 +77,19 @@ func _load_main(failures: Array[String]) -> Node:
 	return root
 
 
-func _hud_has_text(hud: Node, text_fragment: String) -> bool:
-	if hud == null:
-		return false
-	for child in hud.get_children():
-		if child is Label and child.text.contains(text_fragment):
-			return true
-	return false
+func _visible_text(node: Node) -> String:
+	if node == null:
+		return ""
+	if node is CanvasItem and not (node as CanvasItem).is_visible_in_tree():
+		return ""
+	var text := ""
+	if node is Label and node.visible:
+		text += (node as Label).text + "\n"
+	if node is Button and node.visible:
+		text += (node as Button).text + "\n"
+	for child in node.get_children():
+		text += _visible_text(child)
+	return text
 
 
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:

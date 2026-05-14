@@ -11,6 +11,8 @@ const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.
 const FirstPlayableCameraControllerScript := preload("res://src/runtime/first_playable_camera_controller.gd")
 const FirstPlayablePageEventOrchestratorScript := preload("res://src/runtime/first_playable_page_event_orchestrator.gd")
 const FirstPlayableRunUiScript := preload("res://src/runtime/first_playable_run_ui.gd")
+const DogSupportPetScript := preload("res://src/runtime/dog_support_pet.gd")
+const CrownlessEchoControllerScript := preload("res://src/runtime/crownless_echo_controller.gd")
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
 const RunDraftControllerScript := preload("res://src/runtime/run_draft_controller.gd")
 const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
@@ -19,7 +21,7 @@ const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
-const PAGE_HALF_EXTENTS := Vector2(11.0, 7.0)
+const PAGE_HALF_EXTENTS := Vector2(32.0, 20.0)
 
 @export var enable_first_playable_loop := true
 
@@ -29,6 +31,7 @@ var _content_factory = PrototypeContentFactoryScript.new()
 var _damage_model = DamageModelScript.new()
 var _level_tracker = RunLevelTrackerScript.new()
 var _page_event_orchestrator = FirstPlayablePageEventOrchestratorScript.new()
+var _boss_controller = CrownlessEchoControllerScript.new()
 var _run_ui = FirstPlayableRunUiScript.new()
 var _upgrade_state = RunUpgradeStateScript.new()
 var _event_bus: Node
@@ -38,6 +41,8 @@ var _contact_damage_cooldown_remaining := 0.0
 var _run_started := false
 var _run_ended := false
 var _enemies_defeated := 0
+var _dog_feedback_text := "Dog"
+var _dog_feedback_remaining := 0.0
 
 
 func _ready() -> void:
@@ -52,7 +57,9 @@ func _physics_process(delta: float) -> void:
 	if not _run_started or _run_ended:
 		return
 	_tick_contact_damage(delta)
+	_tick_dog_feedback(delta)
 	_page_event_orchestrator.tick(_run_time_seconds(), delta, _run_director())
+	_boss_controller.tick(_run_time_seconds(), _page_event_orchestrator.is_active())
 	_check_vertical_slice_end()
 	_update_hud()
 
@@ -86,6 +93,8 @@ func _start_run() -> void:
 	_ensure_page_event_orchestrator()
 	_ensure_draft_controller()
 	_spawn_player()
+	_ensure_dog_pet()
+	_ensure_boss_controller()
 	_ensure_run_director()
 	_ensure_weapon_manager()
 	_run_ui.set_hud_visible(true)
@@ -273,14 +282,69 @@ func debug_force_run_time(seconds: float) -> void:
 	if director != null and director.has_method("debug_force_run_time"):
 		director.debug_force_run_time(seconds)
 	_page_event_orchestrator.tick(seconds, 0.0, director)
+	_boss_controller.tick(seconds, _page_event_orchestrator.is_active())
 	_update_hud()
-	if seconds >= 300.0:
-		_show_victory_summary()
 
 
 ## Returns active or resolved Page Event ID for smoke checks.
 func debug_active_page_event_id() -> StringName:
 	return _page_event_orchestrator.active_event_id()
+
+
+## Returns structured Color Well state for smoke/debug checks.
+func debug_page_event_state() -> Dictionary:
+	return _page_event_orchestrator.debug_state()
+
+
+## Adds a debug enemy-death position to the active Color Well objective.
+func debug_add_page_event_kill(death_position: Vector3) -> void:
+	_page_event_orchestrator.add_kill_progress(death_position)
+	_update_hud()
+
+
+## Advances only the active Page Event timer for smoke checks.
+func debug_advance_page_event(delta: float) -> void:
+	_page_event_orchestrator.advance_time(delta)
+	_boss_controller.tick(_run_time_seconds(), _page_event_orchestrator.is_active())
+	_update_hud()
+
+
+## Returns Crownless Echo state for smoke/debug checks.
+func debug_boss_state() -> Dictionary:
+	return _boss_controller.state()
+
+
+## Applies direct debug damage to Crownless Echo.
+func debug_damage_boss(amount: float) -> void:
+	_boss_controller.damage_boss(amount)
+	_update_hud()
+
+
+## Returns Dog assist aura radius for smoke/debug checks.
+func debug_dog_aura_radius() -> float:
+	var dog := _dog_pet()
+	if dog != null and dog.has_method("aura_radius"):
+		return dog.aura_radius()
+	return 0.0
+
+
+## Sets Dog support tier for smoke/debug checks.
+func debug_set_dog_tier(tier: int) -> void:
+	var dog := _dog_pet()
+	if dog != null and dog.has_method("set_tier"):
+		dog.set_tier(tier)
+	_update_hud()
+
+
+## Returns whether Dog accepts a pickup type at its current tier.
+func debug_dog_accepts_pickup_type(pickup_type: StringName) -> bool:
+	var dog := _dog_pet()
+	return dog != null and dog.has_method("accepts_pickup_type") and dog.accepts_pickup_type(pickup_type)
+
+
+## Returns current Dog HUD feedback text.
+func debug_dog_feedback_text() -> String:
+	return _dog_feedback_text
 
 
 func _ensure_runtime_services() -> void:
@@ -335,6 +399,22 @@ func _ensure_weapon_manager() -> void:
 		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager(), _upgrade_state, _content_factory)
 
 
+func _ensure_dog_pet() -> void:
+	var dog := _dog_pet()
+	if dog == null:
+		dog = DogSupportPetScript.new()
+		dog.name = "Dog"
+		_pets_root().add_child(dog)
+	if dog.has_method("configure"):
+		dog.configure(player(), _pickups_root())
+	if dog.has_signal("pickup_assisted") and not dog.pickup_assisted.is_connected(_on_dog_pickup_assisted):
+		dog.pickup_assisted.connect(_on_dog_pickup_assisted)
+
+
+func _ensure_boss_controller() -> void:
+	_boss_controller.configure(_enemies_root(), player(), _damage_model, PAGE_HALF_EXTENTS)
+
+
 func _ensure_run_director() -> void:
 	var director := _run_root().get_node_or_null("RunDirector")
 	if director == null:
@@ -382,7 +462,9 @@ func _ensure_menu_controller() -> void:
 
 
 func _ensure_page_event_orchestrator() -> void:
-	_page_event_orchestrator.ensure(_run_root(), _hud())
+	_page_event_orchestrator.ensure(_run_root(), _hud(), player(), PAGE_HALF_EXTENTS)
+	if not _page_event_orchestrator.event_completed.is_connected(_on_page_event_completed):
+		_page_event_orchestrator.event_completed.connect(_on_page_event_completed)
 
 
 func _connect_player_dash(player_body: Node) -> void:
@@ -415,7 +497,7 @@ func _on_entity_died(event: Dictionary) -> void:
 		return
 	_show_enemy_death(owner)
 	_enemies_defeated += 1
-	_page_event_orchestrator.add_kill_progress()
+	_page_event_orchestrator.add_kill_progress(_event_position(event))
 	var reward := 0
 	if owner != null and "reward_xp" in owner:
 		reward = owner.reward_xp
@@ -429,6 +511,21 @@ func _on_xp_pickup_collected(_pickup: Node, amount: int) -> void:
 	if not _run_started or _run_ended:
 		return
 	_level_tracker.add_xp(amount, &"color_mote")
+	_update_hud()
+
+
+func _on_dog_pickup_assisted(amount: int, pickup_type: StringName, _world_position: Vector3) -> void:
+	if pickup_type == &"color_mote":
+		_dog_feedback_text = "Dog fetch +%d XP" % amount
+	else:
+		_dog_feedback_text = "Dog fetch"
+	_dog_feedback_remaining = 1.0
+	_update_hud()
+
+
+func _on_page_event_completed(event: Dictionary) -> void:
+	if _draft_controller != null and _draft_controller.has_method("open_page_event_reward"):
+		_draft_controller.open_page_event_reward(event)
 	_update_hud()
 
 
@@ -471,6 +568,15 @@ func _tick_contact_damage(delta: float) -> void:
 			return
 
 
+func _tick_dog_feedback(delta: float) -> void:
+	if _dog_feedback_remaining <= 0.0:
+		return
+	_dog_feedback_remaining = maxf(0.0, _dog_feedback_remaining - delta)
+	if _dog_feedback_remaining <= 0.0:
+		_dog_feedback_text = "Dog"
+		_update_hud()
+
+
 func _ensure_minimal_hud() -> void:
 	_run_ui.ensure_hud(_hud())
 	_update_hud()
@@ -501,8 +607,12 @@ func _run_ui_context() -> Dictionary:
 		"active_enemy_count": _active_enemy_count(),
 		"safety_enemy_cap": _safety_enemy_cap(),
 		"page_event_line": _page_event_orchestrator.hud_line(),
+		"page_event_state": _page_event_orchestrator.debug_state(),
+		"boss_state": _boss_controller.state(),
 		"weapon_ids": debug_owned_weapon_ids(),
 		"passive_ids": debug_owned_passive_ids(),
+		"dog_feedback_text": _dog_feedback_text,
+		"dog_tier": _dog_tier(),
 		"xp_total": debug_xp_total(),
 		"enemies_defeated": _enemies_defeated,
 	}
@@ -569,6 +679,7 @@ func _end_run_from_player_death(event: Dictionary) -> void:
 
 func _prepare_clean_run_state() -> void:
 	_clear_children(_players_root())
+	_clear_children(_pets_root())
 	_clear_children(_enemies_root())
 	_clear_children(_pickups_root())
 	_clear_children(_projectiles_root())
@@ -578,6 +689,9 @@ func _prepare_clean_run_state() -> void:
 	_contact_damage_cooldown_remaining = 0.0
 	_level_tracker.reset()
 	_upgrade_state.reset()
+	_boss_controller.reset()
+	_dog_feedback_text = "Dog"
+	_dog_feedback_remaining = 0.0
 	_page_event_orchestrator.reset()
 	var director := _run_director()
 	if director != null and director.has_method("reset"):
@@ -608,10 +722,7 @@ func _return_to_main_menu() -> void:
 
 
 func _check_vertical_slice_end() -> void:
-	if _run_time_seconds() >= 300.0:
-		_page_event_orchestrator.force_start()
-		_update_hud()
-		_show_victory_summary()
+	pass
 
 
 func _show_victory_summary() -> void:
@@ -722,6 +833,14 @@ func _enemies_root() -> Node3D:
 	return _run_root().get_node("Actors/Enemies") as Node3D
 
 
+func _pets_root() -> Node3D:
+	return _run_root().get_node("Actors/Pets") as Node3D
+
+
+func _dog_pet() -> Node:
+	return _pets_root().get_node_or_null("Dog")
+
+
 func _projectiles_root() -> Node3D:
 	return _run_root().get_node("Projectiles") as Node3D
 
@@ -792,3 +911,10 @@ func _run_time_seconds() -> float:
 	if director != null and director.has_method("debug_run_time"):
 		return director.debug_run_time()
 	return 0.0
+
+
+func _dog_tier() -> int:
+	var dog := _dog_pet()
+	if dog != null and "tier" in dog:
+		return int(dog.tier)
+	return 1

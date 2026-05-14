@@ -29,23 +29,23 @@ func _initialize() -> void:
 
 	if director != null and director.has_method("debug_spawned_enemy_ids"):
 		var spawned_ids: Array = director.debug_spawned_enemy_ids()
-		_assert_true(spawned_ids.has(&"inkling_chaser"), "slow sturdy chaser family must spawn", failures)
-		_assert_true(not spawned_ids.has(&"paper_scrap_swarmer"), "fast weak swarmer family must be delayed from opening", failures)
+		_assert_true(spawned_ids.has(&"wax_imp"), "Wax Imp family must spawn in opening", failures)
+		_assert_true(not spawned_ids.has(&"flicker_imp"), "Flicker Imp family must be delayed from opening", failures)
 
 	if director != null and director.has_method("debug_force_run_time"):
 		director.debug_force_run_time(75.0)
 		for pressure_frame in 90:
 			await physics_frame
 	if director != null and director.has_method("debug_spawned_enemy_ids"):
-		_assert_true(director.debug_spawned_enemy_ids().has(&"paper_scrap_swarmer"), "75s pressure band must spawn fast weak swarmer", failures)
+		_assert_true(director.debug_spawned_enemy_ids().has(&"flicker_imp"), "75s pressure band must spawn Flicker Imp", failures)
 
-	var chaser := _first_enemy_with_id(enemies_root, &"inkling_chaser")
-	var swarmer := _first_enemy_with_id(enemies_root, &"paper_scrap_swarmer")
-	_assert_true(chaser != null, "chaser instance must expose family ID", failures)
-	_assert_true(swarmer != null, "swarmer instance must expose family ID", failures)
-	if chaser != null and swarmer != null:
-		_assert_true(swarmer.move_speed > chaser.move_speed, "swarmer must be faster than chaser", failures)
-		_assert_true(_max_health(swarmer) < _max_health(chaser), "swarmer must have less health than chaser", failures)
+	var wax_imp := _first_enemy_with_id(enemies_root, &"wax_imp")
+	var flicker_imp := _first_enemy_with_id(enemies_root, &"flicker_imp")
+	_assert_true(wax_imp != null, "Wax Imp instance must expose family ID", failures)
+	_assert_true(flicker_imp != null, "Flicker Imp instance must expose family ID", failures)
+	if wax_imp != null and flicker_imp != null:
+		_assert_true(flicker_imp.move_speed > wax_imp.move_speed, "Flicker Imp must be faster than Wax Imp", failures)
+		_assert_true(_max_health(flicker_imp) < _max_health(wax_imp), "Flicker Imp must have less health than Wax Imp", failures)
 
 	var target := _first_living_enemy(enemies_root)
 	_assert_true(target != null, "must have a living enemy for lifecycle check", failures)

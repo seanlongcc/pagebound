@@ -3,26 +3,26 @@
 > Status: Draft review document  
 > Owner: Design  
 > Source beads: pagebound-nge, pagebound-xhi
-> Last updated: 2026-05-13
+> Last updated: 2026-05-14
 
 ## Purpose
 
-This document captures the active MVP item/stat model based on the latest item, draft, and endless-mode decisions. It answers current design questions, defines the 23-entry passive item pool, defines 5-tier long-term meta progression tracks, and adds rules to reduce "missed required item" frustration.
+This document captures the active MVP item/stat model based on the latest item and draft decisions. It answers current design questions, defines the 23-entry passive item pool, defines 5-tier long-term meta progression tracks, and keeps items useful without relying on a pity system.
 
 This is the active MVP passive-item and Wonder Box stat-track source for exact roster rows, L1-L5 values, capstone bonuses, catalyst tags, and long-term meta rank values. The root GDD and focused system docs should reference this sheet instead of duplicating those tables.
 
-Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 12, 20, and 37; `design/gdd/passive-items-and-drafts.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/mvp-weapon-candidate-pool.md`.
+Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 12, 20, and 37; `design/gdd/passive-items-and-drafts.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/mvp-weapon-candidate-pool.md`; first polished exemplar grilling session, 2026-05-14.
 
 ## Working Answers
 
 | Question | Working Answer | Recommendation |
 |---|---|---|
-| When do players get items? | Items appear in the same 3-choice reward drafts as weapons: run level-ups, Page Event rewards, elite story chests, boss/finale rewards, and rare treasure pickups. A new item enters at level 1. An owned item upgrade card adds exactly +1 item level, up to level 5. | Allow item cards from the first draft, but weight early drafts toward weapons until the player has 2-3 weapons. Guarantee at least one new item offer by run level 4 or the first Page Event reward, whichever happens first. |
-| Do items level by collecting multiples? | Not by physical duplicate pickups by default. The player levels items by selecting item upgrade cards from drafts. | Keep this consistent with weapon leveling: one selected card equals one level. Rare chest/event rewards may grant "+1 to an owned item" but should still be presented as a draft reward. |
+| When do players get items? | Items appear in 3-choice run level-up drafts and successful Page Event reward drafts. Normal cards roll `90%` upgrade / `10%` new gear; gear splits `50%` new weapon / `50%` new item before legality redirects. Page Event rewards include at least one new gear card if legal unowned gear exists and a slot is open. | Keep the normal draft simple. No fixed item levels and no pity. |
+| Do items level by collecting multiples? | Not by physical duplicate pickups by default. The player levels items by selecting item upgrade cards from drafts. | Keep this consistent with weapon leveling: one selected card equals one level. |
 | Is there a max unique item cap during a run? | Yes. MVP should keep 5 unique passive item slots and item level cap 5. | Keep 5 slots for readability and HUD clarity. Consider a later Wonder Box unlock for a starter item option before adding a 6th passive slot. |
 | How do catalysts relate to items? | Items carry catalyst tags from level 1, but only level 5 items expose full catalyst value for weapon evolution eligibility. Items are not consumed by evolutions. | Keep catalysts broad and tag-based. Do not use strict 1:1 weapon-item recipes. |
-| How does item rarity work? | Each item has an initial find rarity. That rarity affects how often the item appears as a new-item card only. Once owned, its +1 level upgrade cards use normal upgrade-card weights and still grant exactly one item level. | Use the 60/25/9/5/1 rarity weights for initial item finds. Do not make Legendary items miserable to level after they are found. |
-| How do we avoid "I needed one item and never got it"? | Build reliability comes from broad catalyst families, multiple compatible items, synergy-weighted drafts, pity rules, rerolls/banishes, and useful item effects even when no evolution happens. | Treat every item as a real build piece first and an evolution catalyst second. Add compatibility previews and draft pity before adding more raw item slots. |
+| How does item rarity work? | Each item has an initial find rarity for content identity and future tuning. Current approved draft canon does not use rarity to change the `90/10` category split or the `50/50` weapon/item split. | Keep rarity metadata, but do not add rarity weighting until a separate draft-weighting pass approves it. |
+| How do we avoid "I needed one item and never got it"? | Current answer is broad item usefulness plus Page Event new-gear guarantee, not pity. Players can take or skip normal gear offers like a normal draft. | Treat every item as a real build piece first and an evolution catalyst second. |
 
 ## Recommendation
 
@@ -33,13 +33,13 @@ Use this structure for MVP review:
 - Keep 10 catalyst families from the weapon candidate document: `Firelight`, `Moon`, `Star`, `Dream`, `Thread`, `Bloom`, `Water`, `Light`, `Echo`, `Wonder`.
 - Use 23 active passive items.
 - Use initial find rarity split: 8 Common, 6 Uncommon, 5 Rare, 3 Epic, 1 Legendary.
-- Use initial find weights: Common 60, Uncommon 25, Rare 9, Epic 5, Legendary 1.
+- Keep initial find weights as inactive future tuning metadata: Common 60, Uncommon 25, Rare 9, Epic 5, Legendary 1.
 - Give normal passives 2 catalyst tags.
 - Give Legendary `Foundational Keepsake` all 10 catalyst tags at level 5.
-- Treat normal item stat bonuses as global player-owned stat bonuses; catalyst tags drive evolutions and draft synergy, not stat scope.
+- Treat normal item stat bonuses as global player-owned stat bonuses; catalyst tags drive evolutions and future compatibility hints, not stat scope.
 - Keep the broadest raw-count stats - `effect_count`, `active_cap`, and `dash_count` - limited to authored eligible channels.
 - Keep `base_stat_boost` Legendary-only and out of Wonder Box meta progression.
-- Normal strong-run target by the 30:00 boss: 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions.
+- Full-run build targets remain tuning-owned after the `90/10` draft model is implemented.
 
 ## In-Run Item Rules
 
@@ -48,19 +48,18 @@ Use this structure for MVP review:
 Passive item cards can appear from:
 
 - normal run level-up drafts,
-- Page Event reward drafts,
-- elite story chests,
-- boss/finale reward drafts,
-- rare treasure pickups.
+- Page Event reward drafts.
 
 Draft defaults:
 
 - Normal drafts still show exactly 3 choices.
-- Weapon-only drafts occur at run levels 5, 10, 20, and 35. When legal, those drafts show only new-weapon cards.
-- Non-weapon-only normal drafts try to show 1 weapon-side card, 1 item-side card, and 1 flex card.
+- Normal draft cards roll `90%` upgrade and `10%` new gear before legality redirects.
+- New gear rolls split `50%` new weapon and `50%` new passive item before legality redirects.
+- Upgrade rolls split `50%` owned weapon upgrade and `50%` owned item upgrade before legality redirects.
+- Successful Page Event reward drafts include at least one new gear card if legal unowned gear exists and a slot is open.
 - A new passive item can appear if the player owns fewer than 5 passive items.
 - A +1 item level card can appear if the player owns that item below level 5.
-- Initial item find rarity affects new-item cards only.
+- Initial item find rarity is display/future tuning metadata in the current approved draft canon.
 - Owned item upgrade cards grant fixed +1 item level.
 - A level 5 item unlocks its full catalyst value.
 - A level 5 item is never consumed by evolution.
@@ -70,14 +69,10 @@ Draft defaults:
 
 | Run Timing | Item Target |
 |---|---|
-| First 2-3 normal drafts | Weapon-only level drafts handle weapon count; normal drafts should already include item-side choices. |
-| By run level 4 or first Page Event | If the player has no passive item, force at least one legal new item offer. |
-| Around 5:00 | Expected build has 2-3 weapons and 1-2 items. |
-| Around 10:00 | Expected build has the 3-weapon core and is filling item slots. |
-| Around 10:00-12:00 | Focused builds can reasonably reach a first level 5 passive item; casual or unfocused runs may reach this closer to 15:00. |
-| Around 20:00 | Expected build has 4 weapons and several owned items approaching level 5. |
-| Around 30:00 | Normal strong build has 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions. |
-| Endless | Normal upgrades continue after level 50 while available; overflow drafts start only after no normal weapon/item/evolution upgrades remain. |
+| First normal drafts | Items may appear through the normal `10%` new gear lane if legal. |
+| First successful Page Event | Guarantees at least one new gear card if legal unowned gear exists and a slot is open. In the first polished exemplar, this points to `Candle Spark` if still unowned. |
+| Full-run tuning | Exact item count by 5/10/20/30 minutes must be remeasured after the `90/10` model is implemented. |
+| Endless | Normal upgrades continue while available; overflow drafts start only after no normal weapon/item choices remain. |
 
 ### Item Levels
 
@@ -94,7 +89,7 @@ All passive items use 5 levels.
 ### Stat and Terminology Rules
 
 - Normal passive item stat bonuses apply globally to player-owned sources unless a stat explicitly says otherwise.
-- Catalyst tags are evolution and draft-synergy tags. They do not limit normal item stat bonuses.
+- Catalyst tags are evolution and future compatibility-hint tags. They do not limit normal item stat bonuses.
 - Level 5 normally reaches +50% or an equivalent fifth-step value plus a modest capstone. `Foundational Keepsake` is the exception because it affects multiple core stats and carries all catalyst tags.
 - `cadence` means attack/cast rate, not cooldown reduction.
 - Chance bonuses use player-facing `+X% chance` wording. They add directly to the base chance and still respect each effect's cap.
@@ -106,11 +101,11 @@ All passive items use 5 levels.
 - Base player max HP is 1000 for the MVP balance scale.
 - Crit chance is global, additive, and capped at 75%.
 - Base crit multiplier is 2.0x. Crit damage adds to that multiplier; for example, +50% crit damage changes 2.0x to 2.5x. Final crit multiplier is capped at 4.0x.
-- Luck uses raffle math: Common/basic weights stay unchanged, Uncommon-and-higher draft rarity weights multiply by `1 + luck`, then the table is normalized.
+- Luck does not change the current `90/10` upgrade/gear split or the `50/50` weapon/item split.
 
 ## Build Reliability Rules
 
-These rules directly address the Vampire Survivors problem where the player needs a specific passive, misses it, and loses the intended build.
+These rules address missed-item frustration without adding pity.
 
 ### Broad Catalyst Matching
 
@@ -124,24 +119,16 @@ Level 10 Waxlight Comet
 = compatible evolution options can appear
 ```
 
-### Draft Synergy Weighting
+### Draft Reliability
 
-Draft generator should raise the weight of:
+Current draft reliability comes from:
 
-- items whose catalyst tags match owned weapons,
-- item upgrades that would bring a compatible item closer to level 5,
-- new items that cover catalyst families the current build is missing,
-- evolution cards once requirements are met.
+- normal level-up drafts always allowing legal new gear through the `10%` lane,
+- Page Event rewards guaranteeing at least one new gear card when legal,
+- broad catalyst families,
+- useful item effects even when no evolution happens.
 
-### Pity Rules
-
-Use pity rules so build construction does not collapse from bad card luck:
-
-- If the player owns 0 items by run level 4, the next normal draft must include one legal new item.
-- If the player owns a level 7+ weapon and no owned item can support either catalyst family, the next three item-eligible drafts heavily weight compatible new items.
-- If the player owns a level 8+ weapon and a compatible item at level 3 or 4, item upgrade cards for that item gain strong weight.
-- If a level 10 weapon and level 5 compatible item exist, evolution cards gain late-run priority.
-- If all normal choices would be dead or irrelevant, fallback choices can include heal, pickup magnet, currency, temporary Page Takeover attack, or Pagecraft modifier.
+There is no pity system in the current approved model.
 
 ### No Key-Only Items
 
@@ -209,9 +196,9 @@ This table uses 23 active passive items because the requested stat list has 23 r
 | Epic | 3 | 5 |
 | Legendary | 1 | 1 |
 
-- Find rarity applies only when a new item is being offered.
+- Find rarity is inactive future tuning metadata in the current approved draft canon.
 - Once an item is owned, its upgrade cards grant fixed +1 item level.
-- Upgrade-card rarity and luck may affect how often an owned item upgrade appears, but never changes the amount of item levels gained.
+- Upgrade-card rarity and luck do not change the current `90/10` category split or the amount of item levels gained.
 - `Foundational Keepsake` is the only Legendary passive and its all-catalyst value is evolution-enabling only at level 5.
 
 ### Flat-Count Item Guardrail
@@ -236,15 +223,11 @@ Rules:
 - A base weapon can still evolve once per run.
 - New weapon and new item cards stop when their slots are full.
 - Weapon and item upgrade cards stop when all owned entries are capped.
-- Overflow drafts begin only after no normal weapon, item, or evolution upgrades remain.
+- Overflow drafts begin only after no normal weapon or item choices remain.
 
 Overflow drafts can offer:
 
-- small repeatable stat boosts,
-- temporary Page Takeover attacks,
-- heals or shields,
-- Pigment, Treats, or Sticker rewards,
-- endless risk/reward modifiers.
+- small repeatable `+5%` global stat crumbs in the current approved draft canon.
 
 ## Long-Term Meta Progression
 
@@ -257,7 +240,7 @@ Permanent progression lives in the Wonder Box. Each node has 5 tiers. These bonu
 - Crit chance respects the 75% global cap.
 - Crit multiplier respects the 4x final multiplier cap.
 - Wonder Box does not include `base_stat_boost`, `revive`, `effect_count`, `active_cap`, or `dash_count` stat tracks.
-- Wonder Box Luck uses the same raffle math as Lucky Pebble, at half item strength.
+- Wonder Box Luck affects future rarity tuning only until a separate draft-weighting pass approves raffle math.
 - The Wonder Box should not replace in-run build decisions. It should make weak starts less punishing and unlock more build consistency over time.
 
 | Stat Track | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 | Notes |
@@ -300,23 +283,10 @@ Use tag-based build completion instead of item-ID recipes.
 |---|---|
 | Need one exact item | Any level 5 item with a compatible catalyst family can support the weapon. |
 | Needed item feels bad | Every item has a useful level 1 stat effect and level 5 capstone. |
-| Bad draft luck | Add first-item guarantee, catalyst pity, and upgrade weighting for near-complete items. |
+| Bad draft luck | Let normal drafts stay random; use Page Event new-gear guarantee when legal. |
 | Player cannot read build path | Draft cards show compatible owned weapons and evolution hints. |
-| Item slots fill too early | Let Page Event rewards weight compatible item upgrades and avoid offering irrelevant new items. |
-| Wanted build still misses | Add reroll/banish sources through Luck and Wonder Box progression. |
-
-### Optional Future Safety Valve
-
-If build frustration remains after draft weighting, add one rare Page Event reward:
-
-**Catalyst Attunement**
-
-- Appears only from Page Events or treasure rewards, not normal level-ups.
-- Lets the player choose one owned level 5 item.
-- Adds one temporary catalyst family for the current run from a short list of families compatible with owned level 8+ weapons.
-- Does not change the item's normal identity or permanent unlocks.
-
-This should be a fallback safety valve, not the main build path.
+| Item slots fill too early | Player chooses whether to take new gear or upgrades from drafts. |
+| Wanted build still misses | Accept this as normal draft variance unless future testing proves it breaks fun. |
 
 ## Locked Review Decisions
 
@@ -325,5 +295,5 @@ This should be a fallback safety valve, not the main build path.
 - MVP starts runs with 0 passive items.
 - Normal passives have 2 catalyst tags.
 - `Foundational Keepsake` has all 10 catalyst tags at level 5.
-- Item find rarity only controls initial find rate.
+- Item find rarity is inactive future tuning metadata under the current approved draft canon.
 - Owned item upgrade cards grant fixed +1 item level.

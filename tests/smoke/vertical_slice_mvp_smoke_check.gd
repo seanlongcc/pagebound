@@ -46,12 +46,12 @@ func _initialize() -> void:
 
 	if director != null and director.has_method("debug_spawned_enemy_ids"):
 		var opening_ids: Array = director.debug_spawned_enemy_ids()
-		_assert_true(opening_ids.has(&"inkling_chaser"), "opening must spawn normal slow family", failures)
-		_assert_true(not opening_ids.has(&"paper_scrap_swarmer"), "opening must not spawn fast family", failures)
+		_assert_true(opening_ids.has(&"wax_imp"), "opening must spawn Wax Imp family", failures)
+		_assert_true(not opening_ids.has(&"flicker_imp"), "opening must not spawn Flicker Imp family", failures)
 	if director != null and director.has_method("debug_safety_enemy_cap"):
 		_assert_true(director.debug_safety_enemy_cap() >= 80, "safety cap must be high and not early pacing budget", failures)
 
-	var opening_enemy := _first_enemy(root, &"inkling_chaser")
+	var opening_enemy := _first_enemy(root, &"wax_imp")
 	var opening_health := _health(opening_enemy)
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage") and opening_health != null:
 		var wax_damage := float(weapon_manager.debug_weapon_damage(&"waxlight_comet"))
@@ -66,7 +66,7 @@ func _initialize() -> void:
 		director.debug_force_run_time(75.0)
 	await _wait_physics_frames(90)
 	if director != null and director.has_method("debug_spawned_enemy_ids"):
-		_assert_true(director.debug_spawned_enemy_ids().has(&"paper_scrap_swarmer"), "75s pressure band must allow fast family", failures)
+		_assert_true(director.debug_spawned_enemy_ids().has(&"flicker_imp"), "75s pressure band must allow Flicker Imp family", failures)
 	if director != null and director.has_method("debug_force_run_time"):
 		director.debug_force_run_time(180.0)
 	await _wait_physics_frames(12)
@@ -89,12 +89,14 @@ func _initialize() -> void:
 		player.debug_integrate(Vector2.ZERO, false, 0.4)
 		_assert_true(pagecraft.debug_activation_count() > activation_before, "short dash must still activate nearby Waxlight mark", failures)
 
-	_assert_true(_visible_text(hud).contains("Waxlight damage"), "stats HUD must show Waxlight damage", failures)
-	_assert_true(_visible_text(hud).contains("Director"), "stats HUD must show director pressure", failures)
+	var hud_text := _visible_text(hud)
+	_assert_true(hud_text.contains("HP") and hud_text.contains("XP") and hud_text.contains("Level") and hud_text.contains("Dog"), "HUD must show player-facing HP, XP, Level, and Dog surfaces", failures)
+	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Empty"), "HUD must show loadout slots for the first package", failures)
+	_assert_true(not hud_text.contains("Waxlight damage") and not hud_text.contains("Director"), "HUD must not show debug stat text", failures)
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		runtime.debug_apply_upgrade_choice(&"waxlight_damage_plus_1")
 		await physics_frame
-		_assert_true(_visible_text(hud).contains("Waxlight damage"), "stats HUD must update after upgrade", failures)
+		_assert_true(not _visible_text(hud).contains("Waxlight damage"), "direct stat upgrades must stay out of player HUD", failures)
 
 	await _open_draft(runtime, player)
 	_assert_true(runtime != null and runtime.has_method("debug_draft_choice_count") and runtime.debug_draft_choice_count() == 3, "draft must show exactly 3 choices", failures)
@@ -102,30 +104,27 @@ func _initialize() -> void:
 	_assert_equal(buttons.size(), 3, "draft UI must contain exactly 3 choice buttons", failures)
 	_assert_true(_buttons_are_horizontal(buttons), "draft cards must be in one horizontal row", failures)
 	_assert_true(_buttons_contain_text(buttons, "->"), "draft cards must show current -> new values", failures)
-	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm"), "new documented weapon must be eligible", failures)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
-		runtime.debug_focus_draft_choice_id(&"new_weapon_star_sticker_swarm")
-	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
-		runtime.debug_accept_focused_draft_choice()
-	await process_frame
-	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"star_sticker_swarm"), "selecting Star Sticker Swarm must add second weapon", failures)
-
-	var sticker_target := _first_living_enemy(root)
-	if sticker_target != null and weapon_manager != null and weapon_manager.has_method("debug_fire_weapon_at"):
-		var before_hp: float = _health(sticker_target).current_health
-		weapon_manager.debug_fire_weapon_at(&"star_sticker_swarm", sticker_target)
-		await physics_frame
-		_assert_true(_health(sticker_target).current_health < before_hp, "second weapon must damage through DamageModel", failures)
-
-	await _open_draft(runtime, player)
-	_assert_true(_buttons_contain_text(_draft_buttons(root), "Candle Spark"), "documented passive must be eligible", failures)
+	_assert_true(_buttons_contain_text(buttons, "Waxlight Comet +1"), "Waxlight Comet upgrade must be eligible", failures)
+	_assert_true(_buttons_contain_text(buttons, "Candle Spark"), "Candle Spark must be eligible", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Star Sticker Swarm"), "old broad weapon pick must not appear in first package draft", failures)
 	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
 		runtime.debug_focus_draft_choice_id(&"new_passive_candle_spark")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 	await process_frame
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids() == [&"waxlight_comet"], "first package must keep Waxlight as only weapon", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_owned_passive_ids") and runtime.debug_owned_passive_ids().has(&"candle_spark"), "selecting Candle Spark must add passive", failures)
-	_assert_true(_visible_text(hud).contains("Candle Spark"), "stats HUD must show selected passive", failures)
+	_assert_true(_visible_text(hud).contains("Candle Spark"), "HUD must show selected passive item", failures)
+
+	await _open_draft(runtime, player)
+	_assert_true(_buttons_contain_text(_draft_buttons(root), "Waxlight Comet +1"), "owned package weapon must keep upgrading", failures)
+	_assert_true(_buttons_contain_text(_draft_buttons(root), "Candle Spark +1"), "owned package passive must keep upgrading", failures)
+	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
+		runtime.debug_focus_draft_choice_id(&"weapon_upgrade_waxlight_comet")
+	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
+		runtime.debug_accept_focused_draft_choice()
+	await process_frame
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids() == [&"waxlight_comet"], "Waxlight upgrade must not add extra weapon slots", failures)
 
 	if runtime != null and runtime.has_method("debug_kill_player"):
 		runtime.debug_kill_player()
@@ -147,12 +146,8 @@ func _initialize() -> void:
 	await physics_frame
 	_assert_true(runtime != null and runtime.has_method("debug_active_page_event_id") and runtime.debug_active_page_event_id() == &"fill_color_well", "5:00 endpoint must retain documented Page Event state", failures)
 	_assert_true(_visible_text(hud).contains("Fill the Color Well"), "HUD must show Page Event objective text by 5:00", failures)
-	_assert_true(_screen_visible(root, "VictoryScreen"), "5:00 must show vertical-slice summary", failures)
-	var summary_text := _visible_text(root.get_node_or_null("UI/ModalLayer/VictoryScreen"))
-	_assert_true(summary_text.contains("Time Survived"), "summary must show time survived", failures)
-	_assert_true(summary_text.contains("Enemies Defeated"), "summary must show defeated count", failures)
-	_assert_true(summary_text.contains("Weapons"), "summary must show weapons owned", failures)
-	_assert_true(summary_text.contains("Passives"), "summary must show passives owned", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_run_ended") and not runtime.debug_run_ended(), "5:00 must not hard-stop the run", failures)
+	_assert_true(not _screen_visible(root, "VictoryScreen"), "5:00 must not show vertical-slice summary", failures)
 
 	if runtime != null and runtime.has_method("debug_return_to_main_menu"):
 		runtime.debug_return_to_main_menu()

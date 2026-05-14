@@ -10,7 +10,13 @@ func _initialize() -> void:
 	helper.ensure_hud(hud)
 
 	var label := hud.get_node_or_null("FirstPlayableHudLabel") as Label
-	_assert_true(label != null, "HUD helper must create first playable HUD label", failures)
+	_assert_true(hud.get_node_or_null("PartyReserve") != null, "HUD must reserve top-left party space", failures)
+	_assert_true(hud.get_node_or_null("TopRightBanner") != null, "HUD must create exclusive top-right banner", failures)
+	_assert_true(hud.get_node_or_null("BottomXPBar") != null, "HUD must create full-width bottom XP bar", failures)
+	_assert_true(hud.get_node_or_null("LevelBadge") != null, "HUD must create bottom-left level badge", failures)
+	_assert_true(hud.get_node_or_null("PetBadge") != null, "HUD must create Dog pet badge", failures)
+	_assert_true(hud.get_node_or_null("LoadoutBook") != null, "HUD must create loadout slots", failures)
+	_assert_true(hud.get_node_or_null("HPChip") != null, "HUD must create readable HP chip", failures)
 
 	var context := {
 		"player_health": 42.0,
@@ -32,19 +38,51 @@ func _initialize() -> void:
 		"active_enemy_count": 4,
 		"safety_enemy_cap": 16,
 		"page_event_line": "Event: Fill the Color Well (Active) 2/5",
+		"page_event_state": {
+			"id": &"fill_color_well",
+			"active": true,
+			"progress_percent": 75,
+			"progress": 11,
+			"required_progress": 15,
+			"time_remaining_seconds": 42.0,
+			"edge_marker_visible": true,
+		},
+		"boss_state": {
+			"id": &"crownless_echo",
+			"active": true,
+			"queued_for_event": false,
+			"defeated": false,
+			"hp_percent": 72,
+		},
 		"weapon_ids": [&"waxlight_comet", &"star_sticker_swarm"],
 		"passive_ids": [&"candle_spark"],
+		"dog_tier": 1,
+		"dog_feedback_text": "Dog fetch +2 XP",
 		"xp_total": 7,
 		"enemies_defeated": 3,
 	}
 
 	helper.update_hud(context)
-	if label != null:
-		_assert_true(label.text.contains("HP: 42/50"), "HUD text must show rounded HP", failures)
-		_assert_true(label.text.contains("Time: 02:05"), "HUD text must format run time", failures)
-		_assert_true(label.text.contains("Event: Fill the Color Well"), "HUD text must include Page Event line", failures)
-		_assert_true(label.text.contains("Waxlight Comet, Star Sticker Swarm"), "HUD text must include weapon display names", failures)
-		_assert_true(label.text.contains("Candle Spark"), "HUD text must include passive display names", failures)
+	var hud_text := _visible_text(hud)
+	_assert_true(hud_text.contains("HP 42/50"), "HUD must show rounded HP in readable chip", failures)
+	_assert_true(hud_text.contains("Level") and hud_text.contains("2"), "HUD must show run level near bottom-left", failures)
+	_assert_true(hud_text.contains("XP 17%"), "HUD must show XP percentage on bottom bar", failures)
+	_assert_true(hud_text.contains("Fill the Color Well"), "HUD must show active Page Event banner", failures)
+	_assert_true(hud_text.contains("75%"), "event banner must show percent as primary progress", failures)
+	_assert_true(not hud_text.contains("Crownless Echo"), "event banner must be exclusive over boss banner", failures)
+	_assert_true(hud_text.contains("Dog fetch +2 XP"), "HUD must show Dog pet feedback", failures)
+	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Candle Spark"), "HUD must include loadout names", failures)
+	_assert_true(_named_children(hud.get_node_or_null("LoadoutBook/WeaponSlots")).size() == 5, "HUD must show 5 weapon slots", failures)
+	_assert_true(_named_children(hud.get_node_or_null("LoadoutBook/ItemSlots")).size() == 5, "HUD must show 5 item slots", failures)
+	_assert_true(not hud_text.contains("Wpn") and not hud_text.contains("Item Slots"), "HUD must not label rows with text category names", failures)
+	_assert_true(not hud_text.contains("Director") and not hud_text.contains("Waxlight damage"), "HUD must not show debug stat text in player HUD", failures)
+
+	var boss_context := context.duplicate(true)
+	boss_context["page_event_state"] = {"id": &"", "active": false}
+	helper.update_hud(boss_context)
+	hud_text = _visible_text(hud)
+	_assert_true(hud_text.contains("Crownless Echo"), "boss banner must take over when no event is active", failures)
+	_assert_true(hud_text.contains("72%"), "boss banner must show HP percent as primary progress", failures)
 
 	var summary_lines: Array[String] = helper.summary_lines(context)
 	_assert_true(summary_lines.size() == 7, "summary helper must produce fixed victory summary lines", failures)
@@ -61,6 +99,31 @@ func _initialize() -> void:
 
 	hud.queue_free()
 	_finish(failures)
+
+
+func _named_children(node: Node) -> Array[Node]:
+	var result: Array[Node] = []
+	if node == null:
+		return result
+	for child in node.get_children():
+		if child is Control:
+			result.append(child)
+	return result
+
+
+func _visible_text(node: Node) -> String:
+	if node == null:
+		return ""
+	if node is CanvasItem and not (node as CanvasItem).visible:
+		return ""
+	var text := ""
+	if node is Label and node.visible:
+		text += (node as Label).text + "\n"
+	if node is Button and node.visible:
+		text += (node as Button).text + "\n"
+	for child in node.get_children():
+		text += _visible_text(child)
+	return text
 
 
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:

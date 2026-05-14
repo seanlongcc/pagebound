@@ -165,8 +165,14 @@ func _load_main(failures: Array[String]) -> Node:
 func _hud_has_text(hud: Node, text_fragment: String) -> bool:
 	if hud == null:
 		return false
+	if hud is CanvasItem and not (hud as CanvasItem).is_visible_in_tree():
+		return false
+	if hud is Label and (hud as Label).visible and (hud as Label).text.contains(text_fragment):
+		return true
+	if hud is Button and (hud as Button).visible and (hud as Button).text.contains(text_fragment):
+		return true
 	for child in hud.get_children():
-		if child is Label and child.text.contains(text_fragment):
+		if _hud_has_text(child, text_fragment):
 			return true
 	return false
 

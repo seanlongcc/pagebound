@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-13
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
@@ -13,7 +13,7 @@
 
 Items should feel like build-shaping keepsakes, not boring keys. A level 5 item should improve the run on its own and also open exciting evolution paths for compatible level 10 weapons.
 
-Items are not hidden single-weapon upgrades. They shape builds through global stat bonuses, eligible authored stat channels, pickup rules, survivability, pets, Pagecraft behavior, or draft odds. Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive item stat bonuses.
+Items are not hidden single-weapon upgrades. They shape builds through global stat bonuses, eligible authored stat channels, pickup rules, survivability, pets, or Pagecraft behavior. Catalyst tags drive evolution eligibility and future compatibility hints; they do not limit normal passive item stat bonuses.
 
 ## Detailed Design
 
@@ -26,18 +26,18 @@ Items are not hidden single-weapon upgrades. They shape builds through global st
 5. Level 5 passive items expose catalyst tags that can enable compatible weapon evolutions.
 6. Items are not consumed by evolution.
 7. Items must remain useful even when no owned weapon uses their catalyst tags.
-8. Passive item cards can appear in normal level-up drafts, Page Event rewards, elite chests, and boss rewards through draft system rules.
+8. Passive item cards can appear in normal level-up drafts and Page Event reward drafts through current draft system rules.
 9. Item modifiers apply through typed stat/modifier channels, not ad hoc script branches in unrelated systems.
 10. Item data references tags from Resource Data Schemas.
 11. Passive item effects should describe the stat or tag family they affect on draft cards.
-12. Each item has an initial find rarity. That rarity affects only new-item card appearance.
+12. Each item has an initial find rarity for display and future tuning. Current approved draft canon uses the category splits in `XP, Leveling, and Upgrade Drafts` before any rarity weighting pass.
 13. Owned item upgrade cards grant exactly +1 item level regardless of the item's initial find rarity.
 14. Normal passive items have 2 catalyst tags. Legendary `Foundational Keepsake` has all 10 catalyst tags, but only exposes evolution-enabling value at level 5.
 15. MVP item find rarity split is 8 Common, 6 Uncommon, 5 Rare, 3 Epic, and 1 Legendary.
 16. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel.
 17. `effect_count`, `active_cap`, and `dash_count` apply only to authored eligible channels.
 18. Chance bonuses use additive `+X% chance` wording and respect per-effect caps.
-19. Luck affects draft rarity weights only. Common/basic weights stay unchanged, Uncommon-and-higher weights multiply by `1 + luck`, then the draft table is normalized.
+19. Luck affects future draft rarity weights only. It does not change the current `90%` upgrade / `10%` new gear split or the `50/50` weapon/item split.
 20. Base player max HP for current item balance is 1000. Base dash recharge is 2.0s per charge and baseline dash invulnerability is 0.15s.
 
 ### States and Transitions
@@ -72,9 +72,11 @@ Items are not hidden single-weapon upgrades. They shape builds through global st
 
 `item_draft_allowed = item_slot_available or owned_item_below_max_exists`
 
-`item_find_weight = luck_adjusted_rarity_weight * tag_synergy_weight * timing_weight`
+`item_find_weight = 1 among legal items for the current approved draft canon`
 
-`luck_adjusted_rarity_weight = rarity_weight if rarity == Common else rarity_weight * (1.0 + luck)`
+`draft_category_split = 90% upgrade / 10% new gear`
+
+`draft_item_side_split = 50% item when the rolled family is legal`
 
 `item_upgrade_value = +1 item level`
 
@@ -140,7 +142,7 @@ Invalid states:
 
 - Passive item system supports 5 item slots and 23 data-defined MVP passives.
 - Items have exactly 5 levels and useful modifiers.
-- Initial item find rarity affects new-item appearance only.
+- Current draft rules can offer new items and item upgrades through normal level-ups and Page Event rewards.
 - Owned item upgrade cards grant fixed +1 item level.
 - Level 5 items expose catalyst tags without being consumed.
 - Item modifiers flow through typed channels.

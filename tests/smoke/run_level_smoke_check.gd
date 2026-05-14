@@ -56,8 +56,11 @@ func _initialize() -> void:
 	_assert_true(level_events.size() == 1, "level-up event must emit exactly once for first threshold", failures)
 	if not level_events.is_empty():
 		_assert_true(level_events[0].get("level", 0) == 2, "level-up event must report new level 2", failures)
-	_assert_true(_hud_has_text(hud, "Level: 2"), "HUD must show run level", failures)
-	_assert_true(_hud_has_text(hud, "XP: 0/6"), "HUD must show XP progress toward next level", failures)
+	if runtime != null and runtime.has_method("debug_draft_is_open") and runtime.debug_draft_is_open() and runtime.has_method("debug_accept_focused_draft_choice"):
+		runtime.debug_accept_focused_draft_choice()
+		await process_frame
+	_assert_true(_hud_has_text(hud, "Level 2"), "HUD must show run level", failures)
+	_assert_true(_hud_has_text(hud, "XP 0%"), "HUD must show XP progress percent toward next level", failures)
 
 	root.queue_free()
 	await process_frame
@@ -77,8 +80,14 @@ func _load_main(failures: Array[String]) -> Node:
 func _hud_has_text(hud: Node, text_fragment: String) -> bool:
 	if hud == null:
 		return false
+	if hud is CanvasItem and not (hud as CanvasItem).is_visible_in_tree():
+		return false
+	if hud is Label and (hud as Label).visible and (hud as Label).text.contains(text_fragment):
+		return true
+	if hud is Button and (hud as Button).visible and (hud as Button).text.contains(text_fragment):
+		return true
 	for child in hud.get_children():
-		if child is Label and child.text.contains(text_fragment):
+		if _hud_has_text(child, text_fragment):
 			return true
 	return false
 

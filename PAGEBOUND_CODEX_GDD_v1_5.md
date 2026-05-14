@@ -7,9 +7,9 @@
 **Primary Platform:** PC / Steam  
 **Secondary Platform:** Steam Deck after desktop vertical slice  
 **Mode Targets:** Solo first, local/LAN debug co-op second, Steam co-op third  
-**Run Target:** Boss/finale starts at 30:00. A normal strong run should reach run level 50 by the boss start, with 5 Page Events before the finale. Endless continues after standard victory/finale.
+**Run Target:** Boss/finale targets 30:00 and queues if a Page Event is active. A normal strong run should reach run level 50 by the boss start, with 5 Page Events before the finale. Endless continues after standard victory/finale.
 **MVP Content Rule:** MVP includes the complete shared weapon roster and complete 23 passive items, even if some visuals/audio start as placeholders.
-**Progression Rule:** Progression systems use 5-tier or 10-level structures. Weapon levels are 10. Passive item levels are 5. Pet tiers are 5. Character mastery tracks are 10. Permanent upgrades are 5 ranks. Chapter restoration tracks are 5 tiers. Enemy spawn budgets, enemy health curves, and difficulty curves are tuning variables and do not have to be multiples of 5. Upgrade drafts use exactly 3 choices as an intentional readability exception.  
+**Progression Rule:** Progression systems generally use 5-tier or 10-level structures. Weapon levels are 10. Passive item levels are 5. The first polished exemplar Dog uses 3 support tiers; full pet tier count remains pet-system work. Character mastery tracks are 10. Permanent upgrades are 5 ranks. Chapter restoration tracks are 5 tiers. Enemy spawn budgets, enemy health curves, and difficulty curves are tuning variables and do not have to be multiples of 5. Upgrade drafts use exactly 3 choices as an intentional readability exception.
 **Working Title:** Pagebound
 **Revision Note:** v1.5 keeps the v1.4 storybook-fantasy theme, 3-choice drafts, and tag-based evolutions, then restores the useful production detail that was compressed out of v1.1/v1.2. Obsolete school-supply theming, 5-choice drafts, and Pagecraft-gated evolutions remain removed.
 
@@ -33,7 +33,7 @@ The most important locked decisions are:
 - Art supplies are allowed as visual texture, material language, and occasional flavor, but they should not dominate weapons, enemies, maps, or theme.
 - Pagecraft is the core differentiator: player attacks leave marks, marks affect movement/combat, and dash activates or reshapes marks.
 - Every weapon must define a **type**, **material tags**, **page alteration**, **dash interaction**, and **level 1-10 progression**.
-- The game uses **3-choice upgrade drafts** for level-ups, Page Event rewards, elite chests, and boss rewards.
+- The game uses **3-choice upgrade drafts** for level-ups and Page Event rewards.
 - Weapon evolutions are **tag-based**, not 1:1 fixed recipes. A level 10 weapon can evolve if the player owns a level 5 item with a compatible catalyst tag.
 - Evolutions do **not** require extra Pagecraft conditions.
 - Damage numbers are on by default and should become huge, satisfying, and abundant late-game.
@@ -50,7 +50,7 @@ Codex should follow these rules:
 - Do not hard-code weapon logic into the player controller.
 - Do not instantiate one physics body for every persistent page mark.
 - Implement Pagecraft as a chunked simulation/grid plus batched visual overlays, decals, mesh ribbons, and shader-driven masks.
-- Pool projectiles, pickups, VFX, damage numbers, enemies, pet attacks, and decals.
+- Pool projectiles, pickups, VFX, damage numbers, enemies, pet support effects, and decals.
 - Build debug panels early: spawn budget, enemy count, active marks, damage numbers, Pagecraft chunks, quest state, boss phase, and FPS.
 
 ---
@@ -91,7 +91,7 @@ Mid run:
 Late run:
 
 - The player becomes a walking storm of storybook magic.
-- The page is covered in color, waxlight, dream trails, stickers, glowing marks, pet attacks, and combo effects.
+- The page is covered in color, waxlight, dream trails, stickers, glowing marks, pet support effects, and combo effects.
 - Damage numbers become large and frequent.
 - The boss enters at 30:00 and should test a core-complete build rather than finish it.
 - The screen should feel chaotic but not unreadable.
@@ -212,9 +212,9 @@ The player moves and dashes. Weapons auto-fire. Skill comes from positioning, da
 
 Characters and effects are hand-drawn, but the world is physically lit. Real DirectionalLight3D shadows, paper geometry, glossy stickers, wet paint, wax highlights, and page depth sell the tactile fantasy.
 
-### 6. Pets Are Strong, Not Cosmetic
+### 6. Pets Are Strong Support, Not Cosmetic
 
-Pets are a major system. Every pet attacks. Every pet has five powerful tiers. Pets should meaningfully affect combat and build identity.
+Pets are a major system. Pets should provide visible authored support behavior and meaningful build identity. The first polished exemplar Dog is support-only and has no direct damage.
 
 ### 7. Characters Feel Distinct Through Mechanics
 
@@ -222,7 +222,7 @@ Characters share the weapon pool, but each character has a unique starter, dash 
 
 ### 8. Every Major Progression Track Uses 5 or 10 Levels
 
-This creates consistency, easier balancing, and cleaner UI. Players should quickly understand that weapons go to 10, passives go to 5, pets have 5 tiers, characters have 10 mastery levels, and upgrade nodes have 5 ranks.
+This creates consistency, easier balancing, and cleaner UI. Players should quickly understand that weapons go to 10, passives go to 5, characters have 10 mastery levels, and upgrade nodes have 5 ranks. Pet tier count is still system-specific; the first polished exemplar Dog uses 3 support tiers.
 
 ---
 
@@ -287,18 +287,18 @@ Standard victorious runs target approximately 30 minutes, with the boss/finale s
 | 22:30 | Pre-boss pressure wave. |
 | 25:00 | Page Event 5 spawns with 3:00 countdown. |
 | 27:30 | Final pre-boss pressure wave. |
-| 30:00 | Boss/finale starts. Standard Page Events stop. |
-| 35:00 | First post-boss Endless Page Event if endless is active. |
+| 30:00 | Boss/finale starts or queues if a Page Event is active. Standard Page Events stop. |
+| 35:00 | First post-finale Endless Page Event if endless is active and no boss/event is active. |
 | Boss defeated | Victory. Rewards shown. Endless option unlocked if applicable. |
 
 ### Boss Ending Rule
 
 The run does **not** have to end exactly at 30 minutes.
 
-- The boss appears at **30:00**.
+- The boss appears at **30:00** unless a Page Event is active; if so, it queues until that event resolves.
 - A strong normal run should have its core build online before the boss appears.
 - A powerful run may defeat the boss quickly after the 30:00 spawn.
-- If endless is selected or unlocked, Page Events continue every 5 minutes after the boss starts, beginning at 35:00.
+- If endless is selected or unlocked, Page Events continue every 5 minutes after the boss/finale resolves, beginning no earlier than 35:00.
 
 ### Page Event Rule
 
@@ -414,7 +414,7 @@ Use:
 - readable elite threats,
 - frequent small damage ticks,
 - occasional huge burst numbers,
-- strong pet attacks,
+- strong pet support effects,
 - dramatic evolution effects,
 - visible Pagecraft buildup,
 - late-game number scaling.
@@ -723,7 +723,7 @@ Do not instantiate `PagecraftCell` as a Resource per cell in production if that 
 
 This section is the canonical answer for what the player is leveling during a run.
 
-The player has a temporary **Run Level** that resets every run. Enemies, elites, Page Events, destructibles, and boss phases drop XP called **Color Motes**. Collecting Color Motes fills the Run Level bar. When the bar fills, the game pauses or enters slow motion and presents a **3-choice upgrade draft**. The player chooses one card, then combat resumes.
+The player has a temporary **Run Level** that resets every run. Enemies, Page Events, destructibles, and boss/finale drops can produce XP called **Color Motes**. Collecting Color Motes fills the Run Level bar. When the bar fills, the game pauses or enters slow motion and presents a **3-choice upgrade draft**. The player chooses one card, then combat resumes.
 
 The player is not directly leveling their character mastery during combat. Character mastery XP is earned after the run. During combat, the player is building a temporary loadout of weapons and passive items.
 
@@ -742,12 +742,12 @@ During the run, the player can carry:
 |---|---:|---:|
 | Weapons | 5 | 10 |
 | Passive Items | 5 | 5 |
-| Equipped Pets | 1 by default | 5 tiers |
-| Pet Warden Equipped Pets | 5 endgame maximum | 5 tiers each |
+| Equipped Pets | 1 by default | 3 support tiers for first Dog; full roster TBD |
+| Pet Warden Equipped Pets | 5 endgame maximum | TBD |
 
 ### XP and Run Levels
 
-Standard runs use run levels **1-50**, and a normal strong run should reach level 50 by the 30:00 boss/finale start. Endless can continue past 50 while normal upgrades remain available, then switch to overflow drafts once weapon, item, and evolution choices are exhausted.
+Standard runs use run levels **1-50**, and a normal strong run should reach level 50 by the 30:00 boss/finale start. Endless can continue past 50 while normal upgrades remain available, then switch to overflow drafts once weapon and item choices are exhausted.
 
 XP thresholds should remain multiples of 5.
 
@@ -784,7 +784,7 @@ Target pacing is:
 | 15:00 | Third Page Event. Build identity should be clear. |
 | 20:00 | Fourth Page Event. First maxed items/weapons may appear for strong runs. |
 | 25:00 | Fifth Page Event. Build should be near core-complete. |
-| 30:00 | Boss/finale starts. Strong builds should have 5 weapons owned, 2 level 10 weapons, 4 level 5 items, and 1-2 evolutions. |
+| 30:00 | Boss/finale starts or queues if an event is active. Strong-build targets need remeasurement under the `90/10` draft model. |
 
 ### Upgrade Drafts
 
@@ -796,9 +796,6 @@ Upgrade drafts are used for:
 
 - Run level-ups.
 - Page Event rewards.
-- Elite story chests.
-- Boss/finale rewards.
-- Rare treasure pickups.
 
 ### What Can Appear in a 3-Choice Draft
 
@@ -808,26 +805,32 @@ A draft card can be:
 - A **new passive item** if the player has fewer than 5 items.
 - A **+1 level upgrade** to an owned weapon below level 10.
 - A **+1 level upgrade** to an owned item below level 5.
-- An **evolution card** if requirements are met.
-- A rare **heal**, **pickup magnet**, or **temporary super attack** when the player is under pressure or the upgrade pool is constrained.
-- A rare **Pagecraft modifier** from Page Events or treasure rewards, not usually from normal level-ups.
-- An **overflow reward** after level 50 only when no normal weapon, item, or evolution upgrades remain.
+- An **overflow reward** only when no normal weapon or item cards remain legal.
 
 ### Draft Composition Rules
 
-Run levels 5, 10, 20, and 35 are **weapon-only acquisition drafts** when legal new weapons exist. These drafts show only new weapon cards, so the player must choose a new weapon but still chooses which one.
+Normal level-up drafts roll each card independently:
 
-All other normal level-up drafts should use:
+- `90%` upgrade.
+- `10%` new gear.
 
-- 1 weapon-side card when legal,
-- 1 item-side card when legal,
-- 1 flex card drawn from weapon, item, evolution, utility, or fallback pools.
+New gear rolls split:
 
-Page Event reward drafts use build-completion bias: item upgrades, catalyst fixes, eligible evolutions, and high-rarity upgrades are preferred over generic filler.
+- `50%` new weapon.
+- `50%` new passive item.
+
+Upgrade rolls split:
+
+- `50%` owned weapon upgrade.
+- `50%` owned item upgrade.
+
+If a rolled type is illegal, redirect to the other legal type in the same family where possible. If the whole family is illegal, redirect to the other family. There are no fixed weapon-only levels and no pity system.
+
+Page Event reward drafts use the same normal draft rules, with one addition: if legal unowned gear exists and a slot is open, at least one card must be new gear.
 
 ### New Weapon Rules
 
-New weapons are primarily acquired from fixed weapon-only level-up drafts.
+New weapons are acquired from normal level-up drafts and successful Page Event reward drafts.
 
 When the player chooses a new weapon:
 
@@ -835,9 +838,9 @@ When the player chooses a new weapon:
 - It occupies one of the 5 weapon slots.
 - It immediately begins auto-firing according to its behavior.
 - It adds its material tags to the player's build profile.
-- It can later be upgraded through level-up cards, Page Event cards, elite chests, or boss rewards.
+- It can later be upgraded through level-up cards and Page Event reward cards.
 
-Weapon-only drafts occur at run levels 5, 10, 20, and 35 while legal new weapons exist. Normal strong runs should own all 5 weapon slots before the 30:00 boss, but only about 2 weapons are expected to reach level 10 by then.
+Normal strong-run weapon ownership pacing must be remeasured after the `90/10` draft model is implemented.
 
 ### Weapon Upgrade Rules
 
@@ -878,7 +881,7 @@ When the player chooses an item upgrade:
 
 When a weapon reaches level 10 and the player owns at least one level 5 item with a compatible catalyst tag, the weapon becomes **evolution eligible**.
 
-Eligible evolutions can appear in any 3-choice upgrade draft.
+Evolution offering source is not part of the first polished exemplar package and needs separate approval before implementation. Page Events and boss/finale rewards do not grant evolution cards in the current draft canon.
 
 Rules:
 
@@ -889,43 +892,31 @@ Rules:
 - The item is not consumed.
 - An evolved weapon replaces the base weapon and remains level 10.
 - A base weapon can only evolve once per run.
-- If multiple evolution paths are eligible for the same weapon, the draft may show one or more paths over time, but selecting one locks that weapon's evolution for the run.
+- If multiple evolution paths are eligible for the same weapon, a future approved evolution source may show one or more paths over time, but selecting one locks that weapon's evolution for the run.
 
 Example:
 
 - The player has **Waxlight Comet level 10**.
 - The player has **Candle Spark level 5**, which has the catalyst tags `Firelight` and `Waxlight`.
 - Waxlight Comet has compatible evolution paths for `Firelight` and `Royal`.
-- The next draft can offer **Evolve Waxlight Comet: Solar Wax Dragon** using the `Firelight` path.
+- A future approved evolution source could offer **Evolve Waxlight Comet: Solar Wax Dragon** using the `Firelight` path.
 
 ### Page Event Reward Drafts
 
-Page Events spawn at 5:00, 10:00, 15:00, 20:00, and 25:00. Each has a 3-minute countdown. In endless, Page Events continue every 5 minutes after the boss starts, beginning at 35:00.
+Page Events spawn at 5:00, 10:00, 15:00, 20:00, and 25:00 in the full-run schedule. Each has a 3-minute countdown. In endless, Page Events continue every 5 minutes after the boss/finale resolves, beginning no earlier than 35:00.
 
-Completing a Page Event grants a 3-choice reward draft. Page Event drafts should be stronger than normal level-up drafts and use build-completion bias. They may include:
+Completing a Page Event grants a 3-choice reward draft using the normal draft rules. If legal unowned gear exists and a slot is open, at least one card must be new gear. Current Page Event reward drafts may include:
 
 - +1 weapon level.
 - +1 item level.
-- Catalyst-compatible item help.
 - A new weapon.
 - A new item.
-- An eligible evolution.
-- A pet quest reward.
-- Pigment or Treats.
-- A temporary Page Takeover attack.
-- A map repair or safe-zone effect.
 
 ### Elite and Boss Rewards
 
-Elite enemies can drop story chests. Story chests use the same 3-choice draft format but have higher odds for:
+Elite/chest reward drafts and boss/finale reward drafts are not part of the current approved draft model.
 
-- weapon upgrades,
-- item upgrades,
-- healing,
-- rare temporary attacks,
-- evolution offers if eligible.
-
-The boss spawns at 30:00. A strong normal run should reach level 50 by the boss start. If the player continues into endless after standard victory/finale, normal upgrades continue while available; once no weapon, item, or evolution upgrades remain, drafts switch to overflow rewards.
+The boss/finale target remains 30:00 for a full normal run. If a Page Event is active when boss/finale time arrives, the boss waits until the event resolves. If the player continues into endless after standard victory/finale, normal upgrades continue while available; once no weapon or item choices remain, drafts switch to small repeatable overflow stat crumbs.
 
 ### Example Run Build Flow
 
@@ -934,12 +925,12 @@ A typical successful run might look like this:
 | Time | Example Progression |
 |---:|---|
 | 0:00 | Waxlight Knight starts with Waxlight Comet Lv. 1 and Dog pet. |
-| 5:00 | First Page Event spawns and run level 5 weapon-only draft has added a second weapon. |
-| 10:00 | Second Page Event spawns and run level 10 weapon-only draft has added a third weapon. |
+| 5:00 | First Page Event spawns. Build state depends on normal `90/10` gear rolls and event reward success. |
+| 10:00 | Second Page Event spawns. Build state continues through normal drafts and event gear guarantees. |
 | 15:00 | Waxlight Comet approaches high level. Candle Spark or another item approaches level 5. |
-| 20:00 | Fourth Page Event spawns and run level 20 weapon-only draft has added a fourth weapon. |
-| 25:00 | Fifth Page Event spawns. First evolution should be possible or close. |
-| 30:00 | Boss appears. Player has 5 weapons owned, 2 level 10 weapons, about 4 level 5 items, 1-2 evolutions, huge damage numbers, and dense Pagecraft coverage. |
+| 20:00 | Fourth Page Event spawns. Weapon/item ownership pacing is tuning-owned under the `90/10` model. |
+| 25:00 | Fifth Page Event spawns. Build should be near its tuned core. |
+| 30:00 | Boss appears or queues if an event is active. Strong-build item/weapon/evolution counts need remeasurement under the `90/10` draft model. |
 | 32:00+ | Strong build kills the boss, or the run continues into endless rules if selected. |
 
 ## 10. Damage Numbers
@@ -960,7 +951,7 @@ The numbers should be:
 
 ### Damage Number Fantasy
 
-By late game, the player should see cascades of numbers popping across the battlefield. Huge crits, combo bursts, boss chunks, pet strikes, and Pagecraft detonations should produce exaggerated feedback.
+By late game, the player should see cascades of numbers popping across the battlefield. Huge crits, combo bursts, boss chunks, pet support pips, and Pagecraft detonations should produce exaggerated feedback.
 
 ### Number Categories
 
@@ -970,7 +961,7 @@ By late game, the player should see cascades of numbers popping across the battl
 | Tick Damage | Compact numbers that can aggregate. |
 | Critical Damage | Bigger, sharper pop, stronger motion. |
 | Combo Damage | Slightly larger, may include small label such as `BLOOM!` or `CHAIN!`. |
-| Pet Damage | Paw/star accent or small pet icon. |
+| Pet Support | Paw/star accent or small pet icon. First Dog has no direct damage number. |
 | Boss Damage | Larger and more persistent. |
 | Overkill / Execute | Huge number or special burst. |
 | Healing | Green/soft upward number. |
@@ -1097,7 +1088,7 @@ Every item should be a magical keepsake, toy, natural object, storybook relic, o
 
 Items are not 1:1 keys for specific weapons. Items have **catalyst tags**. At item level 5, those tags can enable any level 10 weapon with a matching compatible evolution path.
 
-Items are build-shaping stat, behavior, pickup, survivability, draft, pet, or Pagecraft modifiers. They must not be hidden single-weapon upgrades. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel. Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive item stat bonuses.
+Items are build-shaping stat, behavior, pickup, survivability, pet, or Pagecraft modifiers. They must not be hidden single-weapon upgrades. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel. Catalyst tags drive evolution eligibility and future compatibility hints; they do not limit normal passive item stat bonuses.
 
 ### Passive Item Pool
 
@@ -1106,11 +1097,11 @@ The exact 23-item passive roster, L1-L5 values, capstone bonuses, catalyst tags,
 Root-GDD item invariants:
 
 - The MVP passive pool has 23 active items.
-- Each item has an initial find rarity; once owned, upgrade cards grant exactly +1 item level.
+- Each item has an initial find rarity for content identity and future tuning; once owned, upgrade cards grant exactly +1 item level.
 - Normal passive items have 2 catalyst tags.
 - `Foundational Keepsake` is Legendary and has all 10 MVP catalyst families at level 5.
 - Normal passive stat bonuses apply globally to player-owned sources unless an item explicitly names an eligible authored channel.
-- Catalyst tags drive evolution eligibility and draft synergy; they do not limit normal passive stat bonuses.
+- Catalyst tags drive evolution eligibility and future compatibility hints; they do not limit normal passive stat bonuses.
 
 Do not duplicate the item row table in this root document. Update `design/gdd/mvp-item-candidate-pool.md` first, then adjust this section only when a stable rule changes.
 
@@ -1124,7 +1115,7 @@ Do not duplicate the item row table in this root document. Update `design/gdd/mv
 | Epic | 3 | 5 |
 | Legendary | 1 | 1 |
 
-- Find rarity affects initial item finds only.
+- Find rarity is inactive future tuning metadata under the current approved `90/10` draft canon.
 - Owned item upgrade cards grant fixed +1 item level.
 - Normal passive items have 2 catalyst tags.
 - `Foundational Keepsake` is Legendary and has all 10 MVP catalyst families at level 5.
@@ -1181,7 +1172,7 @@ A weapon can evolve when:
 1. The weapon is **level 10**.
 2. The player owns at least one passive item at **level 5**.
 3. That level 5 item has a catalyst tag compatible with one of the weapon's evolution paths.
-4. An evolution card appears in a 3-choice upgrade draft.
+4. A future approved evolution source offers an evolution card.
 
 No other condition is required.
 
@@ -1209,9 +1200,8 @@ Example:
 
 When multiple evolutions are eligible:
 
-- The draft generator may show one evolution card and two normal upgrade cards.
-- Rare chests may show up to two evolution cards.
-- Normal level-up drafts should avoid showing three evolution cards at once unless the player has almost no remaining upgrade pool.
+- Future approved evolution offering rules decide which path appears.
+- Page Events and boss/finale rewards do not offer evolution cards in the current draft canon.
 - Once a weapon evolves, it cannot choose its other evolution path in the same run.
 
 ### Evolved Weapon Rules
@@ -1623,15 +1613,15 @@ Non-Warden characters equip 1 active pet by default, with meta upgrades possibly
 | Level | Reward |
 |---:|---|
 | 1 | Unlock Pet Warden with Rainbow Thread and Command Dash; can equip 2 active pets. |
-| 2 | Pet attack damage +5%. |
+| 2 | Pet support effect +5%. |
 | 3 | Unlock alternate starter choice: Button Beetle. |
-| 4 | Command Dash causes all active pets to perform a weak bonus attack, cooldown 10s. |
+| 4 | Command Dash triggers a weak bonus pet support effect, cooldown 10s. |
 | 5 | Can equip 3 active pets; unlock exclusive evolution: **Companion Constellation**. |
-| 6 | Pre-run trait choice: pet attack speed, pet damage, or pet Pagecraft activation. |
-| 7 | Pet attacks create small Storythread links between enemies. |
-| 8 | Completing a Page Event refreshes Command Dash and gives pets +10% attack speed for 10s. |
-| 9 | Unlock second exclusive evolution: **Doodle Stampede**, combining Button Beetle, Toy Bell, and pet attacks. |
-| 10 | Max mastery: can equip 5 active pets; Command Dash triggers a full pet formation attack every 25s; bonus cosmetic: companion crown cloak. |
+| 6 | Pre-run trait choice: pet support cadence, pet support power, or pet Pagecraft activation. |
+| 7 | Pet support effects can create small Storythread links between enemies. |
+| 8 | Completing a Page Event refreshes Command Dash and gives pets +10% support cadence for 10s. |
+| 9 | Unlock second exclusive evolution: **Doodle Stampede**, combining Button Beetle, Toy Bell, and pet support effects. |
+| 10 | Max mastery: can equip 5 active pets; Command Dash triggers a full pet formation support effect every 25s; bonus cosmetic: companion crown cloak. |
 
 ---
 
@@ -1639,13 +1629,13 @@ Non-Warden characters equip 1 active pet by default, with meta upgrades possibly
 
 ### Pet Philosophy
 
-Pets are strong. They are not minor stat sticks.
+Pets are visible support companions. They are not hidden stat sticks.
 
 Every pet:
 
-- attacks enemies,
+- helps the player through an authored support behavior,
 - has a distinct behavior,
-- has 5 tiers,
+- has a tier count defined by the pet system,
 - has a quest unlock path,
 - can be purchased with Treats as a fallback,
 - interacts with Pagecraft,
@@ -1672,15 +1662,15 @@ Quest unlocks are always preferred and should feel much more efficient.
 
 ### Pet Upgrade Costs
 
-Each pet has 5 tiers.
+Full-roster pet economy remains pending. The first polished exemplar Dog uses 3 support tiers and no direct damage.
 
 | Tier | Cost | Rule |
 |---:|---:|---|
 | 1 | 0 | unlocked pet starts here |
 | 2 | 10 Treats | basic improvement |
 | 3 | 25 Treats | secondary effect |
-| 4 | 50 Treats | strong combat improvement |
-| 5 | 100 Treats | signature capstone |
+| 4 | 50 Treats | future full-roster tier |
+| 5 | 100 Treats | future full-roster tier |
 
 All costs are multiples of 5.
 
@@ -1688,19 +1678,19 @@ All costs are multiples of 5.
 
 MVP should include at least 5 pets. Full target includes 10.
 
+Only Dog is implementation-ready for the first polished exemplar. Other pet rows below are future placeholders and must be rewritten against the support-pet rule before implementation.
+
 #### 15.1 Dog
 
-**Role:** pickup fetcher, biter, beginner-friendly support.  
-**Unlock Quest:** Complete **Rescue the Loyal Pup** Page Event in Waxlight Castle.  
-**Direct Cost:** 50 Treats.
+**Role:** support-only pickup assist, beginner-friendly support.
+**Unlock Quest:** Equipped by default for the first polished exemplar; future unlock quest TBD.
+**Direct Cost:** TBD for future pet economy.
 
 | Tier | Behavior |
 |---:|---|
-| 1 | Dog bites nearby enemies every 2s and fetches XP within a small radius. |
-| 2 | Bite damage +25%; fetch radius +25%. |
-| 3 | Dog can fetch health hearts and Page Event objects. |
-| 4 | Dog bite knocks enemies into Pagecraft marks. |
-| 5 | Dog performs **Heroic Fetch** every 25s, dragging a valuable pickup or biting an elite for heavy damage. |
+| 1 | Dog aura collects Color Motes inside its assist radius. |
+| 2 | Dog aura can also collect health pickups. |
+| 3 | Dog assist radius increases. |
 
 #### 15.2 Cat
 
@@ -2083,10 +2073,10 @@ Use elites and map enemies for actual threat. Use basic enemies as satisfying ho
 ### Page Event Rules
 
 - Spawn at 5:00, 10:00, 15:00, 20:00, 25:00.
-- In endless, continue every 5 minutes after the boss starts, beginning at 35:00.
+- In endless, continue every 5 minutes after the boss/finale resolves, beginning no earlier than 35:00.
 - Each has a visible 3-minute countdown.
-- Completing events gives strong rewards.
-- Failing events creates a hazard, enemy wave, corruption spread, or reduced reward.
+- Completing events gives a 3-choice reward draft.
+- Failing events gives no reward in the first polished exemplar; later consequences require event-specific approval.
 - Events should be completable in solo without perfect movement.
 - Events should encourage the player to move around the finite map.
 
@@ -2094,17 +2084,10 @@ Use elites and map enemies for actual threat. Use basic enemies as satisfying ho
 
 Page Events can reward:
 
-- Pigment,
-- Treats,
 - weapon upgrade,
 - passive item upgrade,
-- eligible evolution card,
-- pet quest progress,
-- pet unlock,
-- Pagecraft modifier,
-- temporary super attack,
-- map feature repair,
-- Sticker Album entry.
+- new weapon,
+- new passive item.
 
 ### Event List
 
@@ -2122,11 +2105,11 @@ Timer:
 
 Reward:
 
-- Paperfold upgrade choice or Pigment.
+- 3-choice Page Event reward draft with matching Paperfold flavor.
 
 Failure:
 
-- Tear remains as a spawn point for 5 minutes.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Rescue the Lost Star
 
@@ -2138,11 +2121,11 @@ Objective:
 
 Reward:
 
-- Star Sticker upgrade or pet quest progress.
+- 3-choice Page Event reward draft with matching Star Sticker flavor.
 
 Failure:
 
-- Star becomes a Hollow Star elite.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Fill the Color Well
 
@@ -2154,11 +2137,11 @@ Objective:
 
 Reward:
 
-- Color-based upgrade, weapon/item upgrade, or eligible evolution card.
+- Weapon/item upgrade or new gear reward draft.
 
 Failure:
 
-- The well spills Blankness.
+- First exemplar style: no reward.
 
 #### Defend the Paper Crown
 
@@ -2170,11 +2153,11 @@ Objective:
 
 Reward:
 
-- Crown Spark/Tiny Crown reward, Pigment, or character mastery bonus.
+- 3-choice Page Event reward draft with matching Crown flavor.
 
 Failure:
 
-- Crownless Knight elite wave.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Wake the Pop-Up Bridge
 
@@ -2186,11 +2169,11 @@ Objective:
 
 Reward:
 
-- Opens shortcut and grants Paperfold reward.
+- 3-choice Page Event reward draft with matching Paperfold flavor.
 
 Failure:
 
-- Bridge becomes a folded hazard.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Guide the Fireflies
 
@@ -2202,11 +2185,11 @@ Objective:
 
 Reward:
 
-- Firefly Jar, Lantern Wisp, or Fox quest progress.
+- 3-choice Page Event reward draft with matching Firefly flavor.
 
 Failure:
 
-- Darkness zone grows temporarily.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Calm the Storm Cloud
 
@@ -2218,11 +2201,11 @@ Objective:
 
 Reward:
 
-- Water/Moonlight reward.
+- 3-choice Page Event reward draft with matching Water/Moonlight flavor.
 
 Failure:
 
-- Weeping Cloud elite spawns.
+- First exemplar style: no reward. Future consequence can be authored later.
 
 #### Gather the Lost Companions
 
@@ -2234,11 +2217,11 @@ Objective:
 
 Reward:
 
-- Pet Warden unlock progress.
+- 3-choice Page Event reward draft if this event enters current draft scope; pet unlock progress needs separate approval.
 
 Failure:
 
-- No permanent penalty, but event chain must be attempted again.
+- First exemplar style: no reward. Future chain retry rules need separate approval.
 
 ---
 
@@ -2246,9 +2229,9 @@ Failure:
 
 ### Boss Spawn Rule
 
-At 30:00, the boss/finale starts.
+At 30:00, the boss/finale starts if no Page Event is active. If a Page Event is active, boss/finale queues until the event succeeds or fails.
 
-Page Events stop spawning. Normal waves continue but become boss-support waves.
+Page Events stop spawning before boss/finale. Schedules should be authored so event and boss overlap is impossible. Normal waves continue but become boss-support waves.
 
 ### Boss Fight Requirements
 
@@ -2274,11 +2257,11 @@ Boss health should support:
 
 ### Post-30:00 Pressure
 
-After the boss starts at 30:00:
+After the boss starts or queues at 30:00:
 
 - boss attack frequency can increase over time,
 - support wave density can increase over time,
-- endless Page Events can continue if endless is active,
+- endless Page Events can continue only after boss/finale resolves and no boss/event is active,
 - player can still win.
 
 This preserves the 30-minute target without forcing a hard fail at exactly 30:00.
@@ -2471,7 +2454,7 @@ Functions:
 - upgrade pet tiers,
 - inspect pet quests,
 - buy pets with Treats as fallback,
-- see pet attacks,
+- see pet support effects,
 - assign cosmetics.
 
 Pet Warden unlock requirements are visible here once the player has at least 3 pets.
@@ -3076,7 +3059,7 @@ Replicate:
 - player positions,
 - dash events,
 - weapon cast events,
-- pet attack events,
+- pet support events,
 - enemy spawn/death events,
 - pickup collection,
 - Pagecraft material events, not every cell every frame,
@@ -3390,7 +3373,7 @@ By the first Page Event at 5:00, the player should have experienced:
 - At least one Pagecraft dash interaction.
 - One elite/miniburst enemy.
 - XP collection and pickup magnet behavior.
-- Pet attack behavior if a pet is equipped.
+- Pet pickup-assist behavior if Dog is equipped.
 - Visible transformation of at least one local area of the page.
 
 Target build state at 5:00:
@@ -3438,7 +3421,7 @@ The player should have:
 - At least one high-level weapon.
 - One or more level 5 items in strong runs.
 - At least one evolution close to appearing.
-- Multiple pets attacks or pet-enhanced interactions if invested.
+- Pet-enhanced interactions if invested.
 - Pagecraft marks covering important lanes.
 - Large damage numbers appearing regularly.
 
@@ -3446,7 +3429,7 @@ The game should feel crowded. It should not feel weak.
 
 ### 34.5 Boss Window: 30:00+
 
-At 30:00, the boss/finale starts.
+At 30:00, the boss/finale starts or queues if a Page Event is active.
 
 Design intent:
 
@@ -3472,7 +3455,7 @@ Required displayed stats:
 - Highest single damage number.
 - Total damage dealt.
 - Favorite weapon by damage.
-- Favorite pet by damage or utility.
+- Favorite pet by utility.
 - Pigment earned.
 - Treats earned.
 - Character mastery XP gained.
@@ -3619,7 +3602,7 @@ Player.tscn
 | Area multiplier | 1.0 | Affects weapon area |
 | Duration multiplier | 1.0 | Affects Pagecraft duration |
 | Amount multiplier | 1.0 | Affects projectiles/summons |
-| Pet power | 1.0 | Affects pet damage/frequency |
+| Pet power | 1.0 | Affects pet support power/frequency |
 | Luck | 0 | Draft rarity modifier only |
 
 ### 36.6 Player States
@@ -3700,10 +3683,7 @@ Every normal upgrade draft shows exactly **3 choices**.
 This applies to:
 
 - run level-ups,
-- Page Event rewards,
-- elite story chests,
-- boss rewards,
-- rare treasure pickups.
+- Page Event rewards.
 
 Three choices is an explicit exception to the 5/10 structure because five choices slows down a fast run.
 
@@ -3715,13 +3695,7 @@ A draft card can be:
 - new passive item if fewer than 5 items are owned,
 - +1 level to an owned weapon below level 10,
 - +1 level to an owned item below level 5,
-- evolution card if requirements are met,
-- rare heal,
-- rare pickup magnet,
-- temporary Page Takeover attack,
-- Pagecraft modifier from events/chests,
-- character-specific run upgrade,
-- pet-synergy upgrade.
+- overflow `+5%` stat crumb only when no normal weapon/item card remains legal.
 
 ### 37.5 Slot Rules
 
@@ -3729,36 +3703,32 @@ A draft card can be:
 |---|---:|---:|
 | Weapons | 5 | 10 |
 | Passive Items | 5 | 5 |
-| Equipped Pets | 1 normally | 5 tiers |
+| Equipped Pets | 1 normally | 3 support tiers for first Dog; full roster TBD |
 | Equipped Pets for endgame pet class | more than 1 | gated by class mastery |
 
 ### 37.6 Draft Weighting
 
 The draft generator should weight toward useful build construction.
 
-Weapon-only acquisition drafts:
+Normal level-up drafts:
 
-- Run levels 5, 10, 20, and 35 show only legal new-weapon cards.
-- If no legal new weapon cards exist, the draft falls back to normal composition.
-
-Normal non-weapon-only drafts:
-
-- Show 1 weapon-side card when legal.
-- Show 1 item-side card when legal.
-- Show 1 flex card from weapon, item, evolution, utility, or fallback pools.
+- Roll each card as `90%` upgrade or `10%` new gear.
+- New gear splits `50%` weapon and `50%` item before legality redirects.
+- Upgrades split `50%` weapon and `50%` item before legality redirects.
+- There are no fixed weapon-only draft levels.
+- There is no pity system.
 
 Page Event reward drafts:
 
-- Use build-completion bias.
-- Prefer item upgrades, catalyst fixes, eligible evolutions, and high-rarity upgrades.
+- Use the same normal draft rules.
+- Guarantee at least one new gear card if legal unowned gear exists and a slot is open.
 
 Late and endless:
 
-- Prioritize evolution cards if requirements are met.
 - Offer capstone upgrades and big-effect choices.
 - Avoid dead cards for maxed equipment.
 - After level 50, continue normal upgrades while available.
-- Once no normal weapon, item, or evolution upgrades remain, switch to overflow drafts.
+- Once no normal weapon or item choices remain, switch to overflow drafts.
 
 ### 37.7 Evolution Eligibility Rule
 
@@ -3777,7 +3747,8 @@ The catalyst item is **not consumed**.
 
 ### 37.8 Evolution Draft Rules
 
-- Evolution cards may appear in level-up drafts, Page Event rewards, elite chests, and boss rewards.
+- Evolution card offering source is future-approved work, not part of the first polished exemplar package.
+- Page Events and boss/finale rewards do not grant evolution cards in the current draft canon.
 - If multiple evolution paths are eligible, the draft may show one path at a time based on weighting.
 - If a weapon has evolved, it should keep its slot and replace the base behavior.
 - Evolved weapons still use the weapon's original material identity plus the evolution catalyst identity.
@@ -3802,8 +3773,8 @@ The catalyst item is **not consumed**.
 | 22:30 | Pre-event pressure wave. |
 | 25:00 | Page Event 5 spawns, 3-minute countdown. |
 | 29:30 | Boss warning. |
-| 30:00 | Boss/finale starts. Standard Page Events stop. |
-| 35:00 | First Endless Page Event if endless is active. |
+| 30:00 | Boss/finale starts or queues if a Page Event is active. Standard Page Events stop. |
+| 35:00 | First Endless Page Event if endless is active and no boss/event is active. |
 
 ### 38.2 Spawn Philosophy
 
@@ -3882,39 +3853,30 @@ extends Resource
 
 1. Director selects an eligible event for the next 5-minute slot.
 2. Ten-second warning appears.
-3. Event anchor appears on the map with edge-of-screen guidance.
+3. Event anchor appears at a random valid location completely outside current player vision, with edge-of-screen guidance.
 4. Countdown starts at 180 seconds.
 5. Objective logic starts.
 6. Event-specific enemies or hazards spawn.
 7. Progress UI displays.
 8. Success or failure resolves.
-9. Reward draft, chest, or immediate reward appears on success.
-10. Failure creates a hazard, enemy burst, or missed unlock.
+9. Reward draft appears on success.
+10. Failure gives no reward in the first polished exemplar.
 11. Sticker Album, pet quest, mastery, and meta progress update.
 
 ### 39.3 Event Reward Types
 
 Page Events can reward:
 
-- immediate Pigment,
-- Treat chance,
 - new weapon draft,
 - item draft,
 - +1 weapon level,
-- +1 item level,
-- evolution card if eligible,
-- temporary Page Takeover attack,
-- Pagecraft modifier,
-- pet rescue progress,
-- character mastery XP,
-- map change,
-- Sticker Album entry.
+- +1 item level.
 
 ### 39.4 Event Failure Rules
 
-Failure should hurt, but not instantly end the run.
+For the first polished exemplar, failure gives no reward and the run continues. Future Page Events may add authored failure consequences after separate approval.
 
-Failure examples:
+Future failure examples:
 
 - Blankness spreads from the failed zone.
 - An elite enemy spawns.
@@ -4003,7 +3965,7 @@ extends Resource
 
 ### 40.4 Boss Fight Rules
 
-- Boss appears at 30:00.
+- Boss appears at 30:00 unless a Page Event is active; if so, boss queues until that event resolves.
 - Boss entrance should clear or push normal spawn clutter briefly.
 - Boss must have strong silhouette and visible shadow.
 - Boss attacks should be telegraphed on top of Pagecraft marks.
@@ -4106,7 +4068,7 @@ Direct purchase costs remain expensive enough to encourage quests, but not so ex
 | 1 | 0 | Pet unlocked. |
 | 2 | 10 | Basic improvement. |
 | 3 | 25 | Secondary behavior. |
-| 4 | 50 | Strong combat improvement. |
+| 4 | 50 | Strong support improvement. |
 | 5 | 100 | Signature capstone. |
 
 ### 42.4 Pet Quest Examples
@@ -4124,18 +4086,16 @@ Direct purchase costs remain expensive enough to encourage quests, but not so ex
 | Owl | Defeat a boss after completing all Page Events in a run. |
 | Tiny Dragon | Endgame quest requiring multiple rescued pets. |
 
-### 42.5 Pet Combat Rule
+### 42.5 Pet Support Rule
 
-Every pet must attack.
+Every pet must provide visible support. Direct damage is not required and is not used by the first polished exemplar Dog.
 
-Pet attacks can be:
+Pet support effects can be:
 
-- bite/pounce/charge,
-- projectile,
 - aura pulse,
-- pickup-triggered burst,
+- pickup assist,
 - command burst,
-- Pagecraft-triggered attack,
+- Pagecraft-triggered support,
 - boss-targeting special.
 
 No pet may be purely cosmetic or purely a stat stick.
@@ -4168,19 +4128,21 @@ Required screens:
 
 Required HUD elements:
 
-- Player HP.
+- Player HP, large enough to read while fighting.
 - Run timer.
-- XP bar.
-- Run level.
+- Full-width bottom XP bar with percentage on the bar.
+- Run level at bottom-left.
 - Dash charges/recharge.
 - Weapon slots, levels, and evolved state.
 - Item slots and levels.
-- Pet icon, tier, and special/attack feedback.
-- Current Page Event timer and objective.
-- Boss HP bar when active.
-- Edge markers for objectives, boss, elites, and offscreen co-op allies.
+- Pet icon near the level badge, mirroring world feedback.
+- Current Page Event banner in the top-right exclusive objective slot.
+- Boss HP banner in the same top-right exclusive slot when active.
+- Edge markers for objectives, boss, and offscreen co-op allies.
 - Damage numbers in world space.
 - Pigment/Treat pickups as reward feedback.
+
+Top-left HUD space is reserved for party/multiplayer ally portraits and ally state. The weapon/item toolbar shows 5 weapon slots and 5 passive item slots. Pets do not occupy toolbar slots.
 
 ### 43.3 Level-Up Draft UI
 
@@ -4188,7 +4150,7 @@ Each draft card must show:
 
 - name,
 - icon,
-- category: weapon/item/evolution/modifier/heal,
+- category: weapon/item/upgrade/overflow,
 - current level and next level,
 - material/catalyst tags,
 - concise effect text,
@@ -4610,7 +4572,7 @@ Replicate:
 - Page Event progress,
 - boss phase/attack selection,
 - level-up draft choices,
-- pet attack events.
+- pet support events.
 
 Do not replicate every individual damage number. Clients can generate numbers from replicated damage events.
 
@@ -4664,7 +4626,7 @@ Always pool:
 - projectiles,
 - pickups,
 - damage numbers,
-- pet attacks,
+- pet support effects,
 - VFX bursts,
 - decals/mark visuals,
 - page event indicators,
@@ -4730,7 +4692,7 @@ Tune the game along these axes:
 - Pagecraft duration,
 - mark density,
 - item scaling,
-- pet damage/frequency,
+- pet support power/frequency,
 - evolution availability,
 - boss HP and phase pressure.
 
@@ -4803,8 +4765,8 @@ The first chapter should naturally introduce:
 | First mark | Attacks alter the page. |
 | First dash prompt | Dash through a mark to activate it. |
 | 5:00 event | Page Events have timers and rewards. |
-| First pet cue | Pets attack automatically. |
-| Boss warning | Boss appears at 30:00. |
+| First pet cue | Pets help automatically. |
+| Boss warning | Boss appears or queues at 30:00. |
 | Victory | Spend Pigment/Treats in hub. |
 
 ### 51.3 Hint Style
@@ -5330,7 +5292,7 @@ Pagebound is a magical storybook power fantasy.
 
 The player is a tiny doodle hero on a real, physically lit page. Living scribbles, blankness, torn-page monsters, and corrupted story creatures flood the world. The player fights back with glowing waxlight comets, sticker stars, moonbeams, paper thorns, dream sap, color blooms, ribbons, pets, and huge cascading damage numbers.
 
-The page is finite, physical, and alive. Every attack leaves marks. Every dash can reshape those marks. Every pet attacks. Every run builds toward a 25-minute boss finale, where a strong build can end the story early by overwhelming the boss with color, companions, and chaos.
+The page is finite, physical, and alive. Every attack leaves marks. Every dash can reshape those marks. Pets provide visible support. Every full run builds toward a 30-minute boss/finale target, where a strong build can end the story by overwhelming the boss with color, companions, and chaos.
 
 The game should feel cute, magical, tactile, readable, and absurdly powerful.
 

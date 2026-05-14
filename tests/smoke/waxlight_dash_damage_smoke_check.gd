@@ -22,6 +22,7 @@ func _initialize() -> void:
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
 	var manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
 	var enemies_root := root.get_node_or_null("RunRoot/Actors/Enemies")
+	var opening_enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp") as Node3D
 	var damage_manager := root.get_node_or_null("RunRoot/DamageNumbers/DamageNumberManager")
 
 	_assert_true(player != null and player.has_method("debug_integrate"), "player must exist for dash activation", failures)
@@ -29,6 +30,8 @@ func _initialize() -> void:
 	_assert_true(manager != null and manager.has_method("debug_activation_damage_count"), "Pagecraft manager must expose activation damage count", failures)
 	_assert_true(enemies_root != null, "enemies root must exist", failures)
 	_assert_true(damage_manager != null and damage_manager.has_method("debug_presented_count"), "damage number manager must exist", failures)
+	if player != null and opening_enemy != null:
+		opening_enemy.global_position = (player as Node3D).global_position + Vector3(5.0, 0.0, 0.0)
 
 	for index in 180:
 		await physics_frame

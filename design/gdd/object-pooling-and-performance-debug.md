@@ -2,12 +2,12 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-11
+> **Last Updated**: 2026-05-14
 > **Implements Pillar**: Power Fantasy First
 
 ## Overview
 
-`Object Pooling and Performance Debug` defines reusable runtime pools and developer metrics for high-volume Pagebound objects: projectiles, pickups, VFX, damage numbers, enemies, pet attacks, decals, and boss telegraphs. It owns pooling policy, caps, reuse lifecycle, and debug visibility. It does not own combat rules, enemy AI, Pagecraft simulation, or visual design.
+`Object Pooling and Performance Debug` defines reusable runtime pools and developer metrics for high-volume Pagebound objects: projectiles, pickups, VFX, damage numbers, enemies, pet support effects, decals, and boss telegraphs. It owns pooling policy, caps, reuse lifecycle, and debug visibility. It does not own combat rules, enemy AI, Pagecraft simulation, or visual design.
 
 ## Player Fantasy
 
@@ -49,7 +49,7 @@ The player should see joyful chaos without stutter. Projectiles, pets, damage nu
 | Enemies and AI Movement | Consumer | Requests enemy instances from enemy pools. |
 | Damage Numbers and Combat Feedback | Consumer | Requests pooled number visuals. |
 | Pagecraft Materials and Grid | Consumer | Requests decals/ribbons/overlay visuals. |
-| Pets and Companion Combat | Consumer | Requests pet attack effects. |
+| Pets and Companion Combat | Consumer | Requests pet support effects. |
 
 ## Formulas
 
@@ -106,7 +106,7 @@ Invalid states:
 
 ## Acceptance Criteria
 
-- Pool design covers projectiles, pickups, VFX, damage numbers, enemies, pet attacks, decals, and boss telegraphs.
+- Pool design covers projectiles, pickups, VFX, damage numbers, enemies, pet support effects, decals, and boss telegraphs.
 - Every pooled object has clear activate/deactivate/reset lifecycle.
 - Pool exhaustion rules prioritize gameplay over optional presentation.
 - Debug overlay has defined metrics and low update frequency.
@@ -116,4 +116,3 @@ Invalid states:
 
 - Exact pool API names belong to implementation.
 - Final caps remain profiling-driven after first playable stress tests.
-

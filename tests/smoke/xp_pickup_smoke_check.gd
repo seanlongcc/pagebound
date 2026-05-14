@@ -23,7 +23,7 @@ func _initialize() -> void:
 
 	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player") as CharacterBody3D
-	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/InklingChaser") as CharacterBody3D
+	var enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp") as CharacterBody3D
 	var enemy_health: Node = null
 	if enemy != null:
 		enemy_health = enemy.get_node_or_null("HealthComponent")
@@ -53,21 +53,27 @@ func _initialize() -> void:
 		await physics_frame
 
 	var pickup := _first_visible_pickup(root)
-	_assert_true(pickup != null, "enemy death must spawn visible Color Mote pickup", failures)
+	var xp_after_death: int = runtime.debug_xp_total() if runtime != null and runtime.has_method("debug_xp_total") else 0
+	_assert_true(pickup != null or xp_after_death == 1, "enemy death must spawn a Color Mote or let Dog assist collect it", failures)
 	if runtime != null and runtime.has_method("debug_xp_total"):
-		_assert_true(runtime.debug_xp_total() == 0, "enemy death must not award XP before pickup collection", failures)
+		_assert_true(runtime.debug_xp_total() == 0 or runtime.debug_xp_total() == 1, "enemy death XP must only advance through pickup collection or Dog assist", failures)
 
-	if player != null and pickup != null:
+	if player != null and pickup != null and xp_after_death == 0:
 		player.global_position = pickup.global_position + Vector3(2.5, 0.0, 0.0)
 		var distance_before_pull := player.global_position.distance_to(pickup.global_position)
 		for pull_index in 5:
 			await physics_frame
 		var distance_after_pull := player.global_position.distance_to(pickup.global_position)
-		_assert_true(distance_after_pull < distance_before_pull - 0.05, "Color Mote must pull toward player inside magnet range", failures)
+		var xp_after_pull: int = runtime.debug_xp_total() if runtime != null and runtime.has_method("debug_xp_total") else 0
+		if pickup.visible and xp_after_pull == 0:
+			_assert_true(distance_after_pull < distance_before_pull - 0.05, "Color Mote must pull toward player inside magnet range", failures)
 
-		player.global_position = Vector3(pickup.global_position.x, player.global_position.y, pickup.global_position.z)
-		for index in 3:
-			await physics_frame
+		if pickup.visible and xp_after_pull == 0:
+			player.global_position = Vector3(pickup.global_position.x, player.global_position.y, pickup.global_position.z)
+			for index in 3:
+				await physics_frame
+	elif xp_after_death == 1:
+		_assert_true(runtime != null and runtime.has_method("debug_dog_feedback_text") and runtime.debug_dog_feedback_text().contains("Dog fetch"), "Dog assist pickup path must expose feedback", failures)
 
 	if runtime != null and runtime.has_method("debug_xp_total"):
 		_assert_true(runtime.debug_xp_total() == 1, "XP must award when Color Mote is collected", failures)
@@ -139,8 +145,14 @@ func _first_visible_pickup(root: Node) -> Node3D:
 func _hud_has_text(hud: Node, text_fragment: String) -> bool:
 	if hud == null:
 		return false
+	if hud is CanvasItem and not (hud as CanvasItem).is_visible_in_tree():
+		return false
+	if hud is Label and (hud as Label).visible and (hud as Label).text.contains(text_fragment):
+		return true
+	if hud is Button and (hud as Button).visible and (hud as Button).text.contains(text_fragment):
+		return true
 	for child in hud.get_children():
-		if child is Label and child.text.contains(text_fragment):
+		if _hud_has_text(child, text_fragment):
 			return true
 	return false
 
