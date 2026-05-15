@@ -20,12 +20,16 @@ func _initialize() -> void:
 	await physics_frame
 
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
+	var runtime := root.get_node_or_null("RunRoot/FirstPlayableRuntime")
+	var weapon_manager := root.get_node_or_null("RunRoot/Projectiles/WeaponManager")
 	var manager := root.get_node_or_null("RunRoot/Pagecraft/PagecraftManager")
 	var enemies_root := root.get_node_or_null("RunRoot/Actors/Enemies")
 	var opening_enemy := root.get_node_or_null("RunRoot/Actors/Enemies/WaxImp") as Node3D
 	var damage_manager := root.get_node_or_null("RunRoot/DamageNumbers/DamageNumberManager")
 
 	_assert_true(player != null and player.has_method("debug_integrate"), "player must exist for dash activation", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_apply_upgrade_choice"), "runtime must expose upgrade helper", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_fire_weapon_at"), "weapon manager must expose selected fire helper", failures)
 	_assert_true(manager != null and manager.has_method("debug_first_mark_position"), "Pagecraft manager must expose mark position", failures)
 	_assert_true(manager != null and manager.has_method("debug_activation_damage_count"), "Pagecraft manager must expose activation damage count", failures)
 	_assert_true(enemies_root != null, "enemies root must exist", failures)
@@ -33,31 +37,51 @@ func _initialize() -> void:
 	if player != null and opening_enemy != null:
 		opening_enemy.global_position = (player as Node3D).global_position + Vector3(5.0, 0.0, 0.0)
 
-	for index in 180:
-		await physics_frame
-
-	if manager == null or player == null or enemies_root == null:
+	if runtime == null or weapon_manager == null or manager == null or player == null or enemies_root == null:
 		_finish_after_root(root, failures)
 		return
+	weapon_manager.set_physics_process(false)
 
-	var mark_position: Vector3 = manager.debug_first_mark_position()
-	_assert_true(mark_position != Vector3.ZERO, "weapon must deposit a Waxlight mark before dash activation", failures)
+	runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
+	await physics_frame
+	manager.debug_clear_marks()
+	var mark_seed := _spawn_victim(enemies_root, "WaxlightMarkSeed", (player as Node3D).global_position + Vector3.RIGHT * 1.2, 200.0)
+	weapon_manager.debug_fire_weapon_at(&"waxlight_comet", mark_seed)
+	await process_frame
+	await physics_frame
+	_assert_true(manager.debug_mark_count() == 0, "L1-L4 Waxlight hit must not deposit a persistent mark", failures)
 
-	var victim := CharacterBody3D.new()
-	victim.name = "WaxlightDashDamageVictim"
-	enemies_root.add_child(victim)
-	victim.global_position = mark_position + Vector3(0.2, 0.0, 0.0)
-	var victim_health := HealthComponentScript.new()
-	victim_health.name = "HealthComponent"
-	victim.add_child(victim_health)
-	victim_health.configure(&"waxlight_dash_damage_victim", 200.0, &"enemy")
+	var locked_victim := _spawn_victim(enemies_root, "WaxlightLockedDashVictim", (player as Node3D).global_position + Vector3.RIGHT * 0.2, 200.0)
+	var locked_health := locked_victim.get_node("HealthComponent")
 
 	var damage_numbers_before := 0
 	if damage_manager != null:
 		damage_manager.number_lifetime_seconds = 3.0
 		damage_numbers_before = damage_manager.debug_presented_count()
 
+	player.global_position = Vector3.ZERO - Vector3.RIGHT * 0.8
+	player.debug_integrate(Vector2.RIGHT, true, 0.01)
+	player.debug_integrate(Vector2.ZERO, false, 0.25)
+	await process_frame
+	await physics_frame
+
+	_assert_true(locked_health.current_health == locked_health.max_health, "L1-L4 Waxlight dash must not activate nonexistent marks before dash payoff unlock", failures)
+	_assert_true(manager.debug_activation_damage_count() == 0, "locked Waxlight dash must not record activation damage", failures)
+
+	for _upgrade in 4:
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+		await physics_frame
+	manager.debug_clear_marks()
+	var l5_seed := _spawn_victim(enemies_root, "WaxlightL5MarkSeed", (player as Node3D).global_position + Vector3.RIGHT * 1.2, 200.0)
+	weapon_manager.debug_fire_weapon_at(&"waxlight_comet", l5_seed)
+	await process_frame
+	await physics_frame
+	var mark_position: Vector3 = manager.debug_first_mark_position()
+	var victim := _spawn_victim(enemies_root, "WaxlightDashDamageVictim", mark_position + Vector3(0.2, 0.0, 0.0), 200.0)
+	var victim_health := victim.get_node("HealthComponent")
 	player.global_position = mark_position - Vector3.RIGHT * 0.8
+	if player.has_method("debug_force_dash_ready"):
+		player.debug_force_dash_ready()
 	player.debug_integrate(Vector2.RIGHT, true, 0.01)
 	player.debug_integrate(Vector2.ZERO, false, 0.25)
 	await process_frame
@@ -67,8 +91,28 @@ func _initialize() -> void:
 	if manager.has_method("debug_activation_damage_count"):
 		_assert_true(manager.debug_activation_damage_count() > 0, "Pagecraft activation must record DamageModel routed damage", failures)
 	if damage_manager != null:
-		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before and _has_visible_number_text(root, "100"), "dash activation damage must show active damage number", failures)
+		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before, "dash activation damage must show active damage number", failures)
 	_assert_true(_has_waxlight_pulse(root), "dash activation must leave primitive Waxlight pulse visual", failures)
+
+	for _upgrade in 5:
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+		await physics_frame
+	manager.debug_clear_marks()
+	manager.debug_deposit_test_mark(Vector3.ZERO)
+	manager.debug_deposit_test_mark(Vector3(1.3, 0.0, 0.0))
+	manager.debug_deposit_test_mark(Vector3(4.5, 0.0, 0.0))
+	var connected_a := _spawn_victim(enemies_root, "WaxlightConnectedA", Vector3.ZERO, 200.0)
+	var connected_b := _spawn_victim(enemies_root, "WaxlightConnectedB", Vector3(1.3, 0.0, 0.0), 200.0)
+	var disconnected := _spawn_victim(enemies_root, "WaxlightDisconnected", Vector3(4.5, 0.0, 0.0), 200.0)
+	var connected_a_health := connected_a.get_node("HealthComponent")
+	var connected_b_health := connected_b.get_node("HealthComponent")
+	var disconnected_health := disconnected.get_node("HealthComponent")
+	manager.activate_path(Vector3(-0.2, 0.0, 0.0), Vector3(0.2, 0.0, 0.0))
+	await process_frame
+	await physics_frame
+	_assert_true(connected_a_health.current_health < connected_a_health.max_health, "L10 Waxlight connected burst must damage crossed mark enemy", failures)
+	_assert_true(connected_b_health.current_health < connected_b_health.max_health, "L10 Waxlight connected burst must damage touching mark enemy", failures)
+	_assert_true(disconnected_health.current_health == disconnected_health.max_health, "L10 Waxlight connected burst must not activate disconnected marks", failures)
 
 	_finish_after_root(root, failures)
 
@@ -107,6 +151,18 @@ func _has_visible_number_text(root: Node, expected_text: String) -> bool:
 		if child is Label3D and child.visible and child.text == expected_text:
 			return true
 	return false
+
+
+func _spawn_victim(enemies_root: Node, node_name: String, position: Vector3, max_health: float) -> CharacterBody3D:
+	var victim := CharacterBody3D.new()
+	victim.name = node_name
+	enemies_root.add_child(victim)
+	victim.global_position = position
+	var victim_health := HealthComponentScript.new()
+	victim_health.name = "HealthComponent"
+	victim.add_child(victim_health)
+	victim_health.configure(StringName(node_name.to_snake_case()), max_health, &"enemy")
+	return victim
 
 
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:

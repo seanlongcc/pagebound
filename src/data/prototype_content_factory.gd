@@ -157,8 +157,8 @@ func passive_for_id(passive_id: StringName) -> Resource:
 ## Creates weapons in the locked first-polished exemplar package.
 func weapon_pool() -> Array[Resource]:
 	return [
-		waxlight_comet_weapon(),
 		star_sticker_swarm_weapon(),
+		waxlight_comet_weapon(),
 	]
 
 
@@ -241,7 +241,7 @@ func _waxlight_comet_weapon() -> Resource:
 	var weapon = WeaponDataScript.new()
 	weapon.id = WEAPON_WAXLIGHT_COMET
 	weapon.display_name = "Waxlight Comet"
-	weapon.description = "Prototype auto-attack that strikes the nearest enemy and leaves a waxlight mark."
+	weapon.description = "Early AoE/Pagecraft weapon that marks clustered enemies for later dash bursts."
 	weapon.tags = _string_name_array([TAG_PROTOTYPE])
 	weapon.weapon_type_id = &"direct_nearest"
 	weapon.attack_behavior_id = &"nearest_direct_hit"
@@ -249,10 +249,10 @@ func _waxlight_comet_weapon() -> Resource:
 	weapon.catalyst_tags = _string_name_array([TAG_FIRELIGHT, TAG_LIGHT])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_WAXLIGHT
 	weapon.dash_interaction_id = &"waxlight_dash_pulse"
-	weapon.base_damage = 100.0
-	weapon.base_cooldown_seconds = 1.15
+	weapon.base_damage = 45.0
+	weapon.base_cooldown_seconds = 0.95
 	weapon.base_mark_radius_meters = 0.98
-	weapon.base_range_meters = 12.0
+	weapon.base_range_meters = 6.5
 	return weapon
 
 
@@ -260,7 +260,7 @@ func _star_sticker_swarm_weapon() -> Resource:
 	var weapon = WeaponDataScript.new()
 	weapon.id = WEAPON_STAR_STICKER_SWARM
 	weapon.display_name = "Star Sticker Swarm"
-	weapon.description = "Documented orbit/attach weapon prototype. Sticker nodes strike nearby enemies and pop as primitive stars."
+	weapon.description = "Starter baseline weapon. Orbit stars hit reliably, then grow into persistent ricochet nodes."
 	weapon.tags = _string_name_array([TAG_PROTOTYPE])
 	weapon.weapon_type_id = &"orbit_attach"
 	weapon.attack_behavior_id = &"star_sticker_burst"
@@ -268,10 +268,10 @@ func _star_sticker_swarm_weapon() -> Resource:
 	weapon.catalyst_tags = _string_name_array([TAG_STAR, TAG_MOON])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_STAR_STICKER
 	weapon.dash_interaction_id = &"sticker_dash_launch"
-	weapon.base_damage = 80.0
-	weapon.base_cooldown_seconds = 2.0
+	weapon.base_damage = 100.0
+	weapon.base_cooldown_seconds = 0.9
 	weapon.base_mark_radius_meters = 0.6
-	weapon.base_range_meters = 10.5
+	weapon.base_range_meters = 8.0
 	return weapon
 
 
@@ -317,10 +317,10 @@ func _wax_imp_enemy() -> Resource:
 	var enemy = EnemyDataScript.new()
 	enemy.id = ENEMY_WAX_IMP
 	enemy.display_name = "Wax Imp"
-	enemy.description = "Authored opening slow normal enemy. HP equals two starting Waxlight hits."
+	enemy.description = "Authored opening slow normal enemy. Tuned to die to one baseline Star Sticker hit."
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"chaser"
-	enemy.max_health = _opening_enemy_health()
+	enemy.max_health = 70.0
 	enemy.move_speed = 1.45
 	enemy.contact_damage = 60.0
 	enemy.reward_xp = 5
@@ -335,7 +335,7 @@ func _flicker_imp_enemy() -> Resource:
 	enemy.description = "Authored delayed fast weak pressure enemy."
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"swarmer"
-	enemy.max_health = 160.0
+	enemy.max_health = 45.0
 	enemy.move_speed = 3.2
 	enemy.contact_damage = 60.0
 	enemy.reward_xp = 5
@@ -373,10 +373,7 @@ func _load_or_make_passive(path: String, passive_id: StringName, display_name: S
 
 
 func _opening_enemy_health() -> float:
-	var waxlight = waxlight_comet_weapon()
-	if waxlight != null:
-		return float(waxlight.base_damage) * 2.0
-	return 10.0
+	return 70.0
 
 
 func _fallback_upgrade_choices() -> Array[Resource]:

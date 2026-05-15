@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_assert_true(director != null and director.has_method("debug_spawned_count"), "director must expose spawned count", failures)
 	_assert_true(director != null and director.has_method("debug_spawn_rate_per_second"), "director must expose pressure spawn rate", failures)
 	_assert_true(director != null and director.has_method("debug_target_kills_per_second"), "director must expose target kill-rate curve", failures)
+	_assert_true(director != null and director.has_method("debug_health_multiplier"), "director must expose enemy health multiplier", failures)
 
 	if director == null:
 		_finish_after_root(root, failures)
@@ -74,6 +75,7 @@ func _initialize() -> void:
 		_assert_true(director.debug_base_spawn_interval_seconds() < first_interval, "second pressure band must lower spawn interval again", failures)
 		_assert_true(director.debug_active_budget() >= 172 and director.debug_active_budget() <= 174, "15:00 wave minimum alive must be about 173", failures)
 		_assert_float_equal(director.debug_base_spawn_interval_seconds(), 0.60, 0.02, "15:00 spawn interval must follow smooth wave curve", failures)
+		_assert_float_equal(director.debug_health_multiplier(), 1.0 + (7.0 * pow(0.5, 1.6)), 0.01, "15:00 enemy HP multiplier must follow eased 1x -> 8x curve", failures)
 		_assert_true(director.debug_current_time_band_id() == &"tank_wave", "15:00 must use tank_wave band", failures)
 
 		director.debug_force_run_time(1800.0)
@@ -82,6 +84,7 @@ func _initialize() -> void:
 		_assert_float_equal(director.debug_base_spawn_interval_seconds(), 0.20, 0.01, "30:00 spawn interval must hit 0.20s", failures)
 		if director.has_method("debug_target_kills_per_second"):
 			_assert_float_equal(director.debug_target_kills_per_second(), 10.0, 0.01, "30:00 kill-rate target must hit 10 kills/sec", failures)
+		_assert_float_equal(director.debug_health_multiplier(), 8.0, 0.01, "30:00 enemy HP multiplier must end at 8x", failures)
 		_assert_true(director.debug_current_time_band_id() == &"elite_wave", "30:00 must use elite_wave band", failures)
 
 	_assert_true(director.debug_all_active_enemies_within_bounds(), "time band pressure must keep active enemies inside finite page bounds", failures)

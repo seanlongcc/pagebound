@@ -69,6 +69,12 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 
 `target_kills_per_second = lerp(1.0, 10.0, wave_progress)`
 
+`enemy_hp_progress = clamp(run_time_seconds / 1800.0, 0.0, 1.0)`
+
+`enemy_health_multiplier = 1.0 + (7.0 * pow(enemy_hp_progress, 1.6))`
+
+`scaled_enemy_health = round(base_enemy_health * enemy_health_multiplier)`
+
 `spawn_count = min_alive - active_enemy_count` when below minimum. During the first 1:00 opening grace, above-minimum pressure spawn count is `0`. After 1:00, pressure spawns use accumulated `target_kills_per_second * effective_spawn_interval` credit so fractional early rates do not round into a horde wall.
 
 `spawn_allowed = active_enemy_count < 350 and pool_available`
@@ -119,7 +125,9 @@ Invalid states:
 | `min_alive_curve` | `25 -> 320` | tuning | Smoothstep over 30 minutes after opening grace; director refills below this count. |
 | `spawn_interval_curve` | `1.00s -> 0.20s` | tuning | Smoothstep over 30 minutes before event-pressure overrides. |
 | `target_kills_per_second` | `1.0 -> 10.0` | tuning | Smoothstep over 30 minutes; pressure spawns match this rate after opening grace. |
-| `enemy_health_multiplier` | `1.0 -> 10.0` | tuning | Linear over 30 minutes for the current prototype enemy profiles. |
+| `opening_wax_imp_health` | `70` | tuning | Starter baseline Star Sticker Swarm deals 100 damage, so opening Wax Imp is one direct hit. |
+| `opening_flicker_imp_health` | `45` | tuning | Fast fragile enemy, one direct Star Sticker hit and one Waxlight AoE hit. |
+| `enemy_health_multiplier` | `1.0 -> 8.0` | tuning | Eased over 30 minutes with `1 + 7 * pow(t, 1.6)` for first playable balance. |
 | `pre_boss_wave_time_seconds` | `1650` | `1500-1790` | Root GDD uses 27:30. |
 
 ## Visual/Audio Requirements

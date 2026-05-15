@@ -43,7 +43,7 @@ func _initialize() -> void:
 	state.configure(factory)
 	var first_choices := state.prototype_choices_for_level(2)
 	_assert_true(first_choices.size() == 3, "expanded draft must still show exactly 3 choices", failures)
-	_assert_true(_choices_include_new_batch(first_choices), "expanded draft should be able to offer Star Sticker or requested passives", failures)
+	_assert_true(_choices_include_new_batch(first_choices), "expanded draft should be able to offer Waxlight or requested passives", failures)
 	for choice in first_choices:
 		var tags: Array = choice.get("tags", [])
 		_assert_true(String(choice.get("title", "")) != "Waxlight Comet +1", "weapon upgrade card title must not be generic", failures)
@@ -57,7 +57,7 @@ func _initialize() -> void:
 
 func _choices_include_new_batch(choices: Array[Dictionary]) -> bool:
 	for choice in choices:
-		if choice.get("weapon_id", &"") == &"star_sticker_swarm":
+		if choice.get("weapon_id", &"") == &"waxlight_comet":
 			return true
 		if [&"candle_spark", &"cloud_seed", &"dream_thread", &"ribbon_spool", &"moon_button"].has(choice.get("passive_id", &"")):
 			return true

@@ -25,7 +25,11 @@ func _initialize() -> void:
 	if state.has_method("debug_eligible_choices_for_level"):
 		eligible = state.debug_eligible_choices_for_level(3)
 	_assert_true(_rarity_present(eligible, &"common"), "common choices must be eligible in normal drafts", failures)
-	_assert_true(_rarity_present(eligible, &"rare"), "rare choices must be eligible in normal drafts", failures)
+	for _upgrade in 5:
+		state.apply_choice(&"weapon_upgrade_star_sticker_swarm")
+	if state.has_method("debug_eligible_choices_for_level"):
+		eligible = state.debug_eligible_choices_for_level(3)
+	_assert_true(_rarity_present(eligible, &"rare"), "rare choices must become eligible as Star Sticker progresses", failures)
 
 	var upgrade_cards := 0
 	var new_gear_cards := 0
@@ -52,7 +56,7 @@ func _rarity_present(choices: Array[Dictionary], rarity: StringName) -> bool:
 func _uses_allowed_expanded_pool(choices: Array[Dictionary]) -> bool:
 	for choice in choices:
 		var id: StringName = choice.get("id", &"")
-		if id == &"weapon_upgrade_waxlight_comet" or id == &"new_weapon_star_sticker_swarm":
+		if id == &"weapon_upgrade_star_sticker_swarm" or id == &"new_weapon_waxlight_comet":
 			continue
 		if String(id).begins_with("new_passive_") or String(id).begins_with("passive_upgrade_"):
 			continue

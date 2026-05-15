@@ -60,7 +60,8 @@ func _run_size_case(viewport_size: Vector2i, failures: Array[String]) -> void:
 				_assert_rarity_border(button, viewport_size, failures)
 				if button.has_meta("rarity_border_color"):
 					border_colors.append(button.get_meta("rarity_border_color"))
-			_assert_true(_has_multiple_border_colors(border_colors), "%s draft rarity borders must differ across rarity levels" % [viewport_size], failures)
+			if _has_multiple_rarity_labels(buttons):
+				_assert_true(_has_multiple_border_colors(border_colors), "%s draft rarity borders must differ across rarity levels" % [viewport_size], failures)
 			_assert_true(_cards_are_ordered(buttons), "%s draft cards must be centered in one row" % [viewport_size], failures)
 
 	if hud_label != null and hud_label.is_visible_in_tree():
@@ -123,6 +124,16 @@ func _has_multiple_border_colors(colors: Array[Color]) -> bool:
 		if color != first:
 			return true
 	return false
+
+
+func _has_multiple_rarity_labels(buttons: Array[Button]) -> bool:
+	var seen := {}
+	for button in buttons:
+		var text := _visible_text(button)
+		for rarity in ["Common", "Uncommon", "Rare", "Epic", "Legendary"]:
+			if text.contains(rarity):
+				seen[rarity] = true
+	return seen.size() > 1
 
 
 func _draft_buttons(root: Node) -> Array[Button]:

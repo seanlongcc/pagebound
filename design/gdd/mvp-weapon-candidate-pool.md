@@ -1,15 +1,15 @@
 # MVP Weapon Candidate Pool
 
-> Status: Draft candidate archive  
-> Owner: Design  
-> Source beads: pagebound-5ip, pagebound-j92  
-> Last updated: 2026-05-12
+> Status: Draft candidate archive
+> Owner: Design
+> Source beads: pagebound-5ip, pagebound-j92
+> Last updated: 2026-05-15
 
 ## Purpose
 
 This document owns the active MVP weapon candidate details after the upgrade-model revision. The root GDD references this sheet for roster rows, weapon milestones, upgrade pools, catalyst assignments, and base numeric weapon tuning.
 
-Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/gdd/weapons-and-auto-attacks.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/passive-items-and-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/pagecraft-materials-and-grid.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/resource-data-schemas.md`.
+Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/gdd/weapons-and-auto-attacks.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/passive-items-and-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/pagecraft-materials-and-grid.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/resource-data-schemas.md`; `CONTEXT.md`; grill-me balance session, 2026-05-15.
 
 ## Active Pool Summary
 
@@ -20,6 +20,8 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/g
 - Non-milestone weapon levels grant one selected card from that weapon's upgrade pool.
 - L5 and L10 grant their fixed feature plus one selected upgrade card.
 - Final roster selection should preserve at least 5 close-range or melee-style weapons and at least 5 distinct DoT weapons.
+- Current first-playable balance treats Star Sticker Swarm as the starter baseline weapon and Waxlight Comet as an early AoE/Pagecraft weapon.
+- Evolution names and one-line fantasies are placeholders for current scope; exact evolution mechanics are deferred.
 
 ## Catalyst Families
 
@@ -44,11 +46,13 @@ Weapon levels still run from 1 to 10, but level is upgrade-count progress only. 
 
 - L1: base weapon behavior only.
 - L2-L4: one card from the weapon's upgrade pool.
-- L5: fixed feature plus one card from the weapon's upgrade pool.
+- L5: dash payoff unlock plus fixed feature and one card from the weapon's upgrade pool.
 - L6-L9: one card from the weapon's upgrade pool.
 - L10: capstone feature plus one card from the weapon's upgrade pool.
 
 Weapon resources expose one editable base stat set: base damage, base cooldown, base mark/effect radius, and base targeting/placement range. Runtime stats start from those values and change only through selected upgrade cards, passive items, evolutions, or explicit authored effects.
+
+Dash payoff is locked behind L5 for current MVP weapon tuning. L1 teaches the core weapon without dash-specific behavior; L5 adds weapon-specific dash interaction; L10 expands the weapon's mature identity.
 
 Base cadence bands:
 
@@ -88,75 +92,71 @@ Dash and Pagecraft upgrades use scope plus normal stat. Example: `Scope: dash pa
 
 ## 1. Waxlight Comet
 
-Status: Strong Candidate  
-Role: Reliable starter lane-painter  
-Weapon type: Homing projectile and trail  
-Base cadence band: Medium  
-Catalyst tags: Firelight, Light  
-Gameplay purpose: Gives new runs a readable auto-fire weapon that paints wax roads through enemy flow.  
-Pagecraft verb: Seals glowing Waxlight trails and impact splats onto the page.  
-Dash payoff: Dashing across a wax trail ignites a straight slash along the trail.  
-Range intent: Medium homing range; trail length grows before target range does.
+Status: First-playable tuned
+Role: Early AoE/Pagecraft mark weapon
+Weapon type: Homing comet, AoE mark, dash activation
+Base tuning: 45 damage / 0.95s cooldown / 6.5m target range
+Base cadence band: Fast
+Catalyst tags: Firelight, Light
+Gameplay purpose: Gives the player a simple AoE weapon first, then adds visible Waxlight marks and dash rewards at L5.
+Pagecraft verb: From L5 onward, places glowing Waxlight AoE marks on enemy impact.
+Dash payoff: Unlocks at L5. Dashing through an unactivated Waxlight mark triggers one instant AoE burst.
+Range intent: Shorter homing range than Star Sticker Swarm. Range upgrades scale target range and L10 connected-mark reach; size upgrades scale mark radius.
 
 | Level | Fixed Milestone |
 |---:|---|
-| L1 | Fires 1 glowing comet toward the nearest enemy position; comet leaves a Waxlight trail. |
-| L5 | Impact forks into Waxlight sparks that travel along nearby enemy flow; also grants one random upgrade card. |
-| L10 | Capstone: large comets can carve a wide Waxlight highway across the visible page; also grants one random upgrade card. |
+| L1 | Fires 1 glowing comet at a nearby enemy. The comet deals full AoE damage to every target inside the impact radius and shows an attack visual, but leaves no persistent Waxlight mark. |
+| L5 | Dash payoff unlock: dashing through an unactivated Waxlight mark triggers that mark as a one-time instant AoE burst; also grants one selected upgrade card. |
+| L10 | Capstone: touching or overlapping unactivated Waxlight marks form connected groups. Dashing through one mark activates every currently unactivated mark in that connected group; also grants one selected upgrade card. |
 
 | Upgrade | Scope | Stat | Notes |
 |---|---|---|---|
-| Comet Hit | base projectile | damage | Scales direct comet hit. |
-| Impact Splat | impact mark | size | Scales splat footprint. |
-| Wax Trail | Pagecraft trail | duration | Trails remain longer. |
-| Trail Width | Pagecraft trail | size | Trails are wider and easier to dash across. |
-| Trail Burn | Pagecraft trail | damage | Scales crossing damage. |
-| Spark Release | impact proc | proc_chance | Chance to release extra sparks; cap 100%. |
-| Spark Count | impact proc | effect_count | Adds more sparks. |
-| Spark Reach | impact proc | range | Sparks can travel farther from impact. |
-| Wax Slow | layered trail | control_strength | Layered trails slow harder. |
-| Dash Ignition | dash payoff | damage | Scales dash-triggered trail slash. |
+| Comet Burst | base AoE | damage | Scales comet impact and mark burst damage. Impact AoE secondary targets take full damage, not reduced splash damage. |
+| Wax Radius | Waxlight mark | size | Marks and bursts cover more space. |
+| Wax Duration | Waxlight mark | duration | Unactivated marks remain longer before expiring. |
+| Wax Capacity | Waxlight mark | active_cap | Allows more unactivated Waxlight marks at once. |
+| Dash Ignition | dash payoff | damage | Scales L5/L10 dash-triggered mark bursts. |
+| Waxlight Reach | weapon range | range | Scales target range and any unlocked connected-mark reach. |
+| Slow Wax | Waxlight mark | control_strength | Enemies in unactivated marks are slowed more strongly if slow behavior is enabled. |
 
 ## 2. Star Sticker Swarm
 
-Status: Needs Review  
-Role: Ricochet-anchor network  
-Weapon type: Orbit, attach, ricochet  
-Base cadence band: Medium  
-Catalyst tags: Star, Moon  
-Gameplay purpose: Builds clustered damage through placed glossy star anchors instead of raw projectile count.  
-Pagecraft verb: Sticks raised star nodes to enemies and page cells.  
-Dash payoff: Dashing near star nodes launches them as bank-shot projectiles.  
-Range intent: Short orbit range at first; ricochet reach expands with levels.
+Status: First-playable tuned
+Role: Starter baseline weapon
+Weapon type: Orbit shot, Star node, ricochet
+Base tuning: 100 damage / 0.9s cooldown / 8.0m target range
+Base cadence band: Fast
+Catalyst tags: Star, Moon
+Gameplay purpose: Defines first-playable opening kill-rate and grows from reliable direct hits into a Star node ricochet network.
+Pagecraft verb: Places persistent Star nodes after L5; nodes are ricochet points, not timed mines.
+Dash payoff: Unlocks at L5. Dashing fires a cooldown-free Star Swarm volley using normal targeting and current max orbit star count. Dash volleys do not create Star nodes, but can ricochet through existing nodes at L5+.
+Range intent: Reliable starter targeting at L1. Range upgrades scale target range and L5+ Star node ricochet range.
 
 | Level | Fixed Milestone |
 |---:|---|
-| L1 | Creates orbiting stars that strike nearby enemies and may leave small star nodes. |
-| L5 | Star nodes ricochet damage to nearby star nodes; also grants one random upgrade card. |
-| L10 | Capstone: star-node constellations can rain extra ricochets around the player; also grants one random upgrade card. |
+| L1 | Fires current max orbit star count at nearby enemies. Shots deal direct damage only and do not create Star nodes or ricochet. |
+| L5 | Star node and dash payoff unlock. Normal Star hits place a persistent Star node at the first enemy hit position, replacing the oldest node if the cap is full. Star shots can ricochet once through an existing Star node to one enemy for 50% weapon damage. Dash volleys do not create nodes but can use existing nodes for ricochet; also grants one selected upgrade card. |
+| L10 | Capstone: whenever a Star node is used for ricochet, that node fires 1 extra star at a nearby enemy for 50% weapon damage. Extra stars do not create nodes; also grants one selected upgrade card. |
 
 | Upgrade | Scope | Stat | Notes |
 |---|---|---|---|
 | Star Strike | orbit star | damage | Scales star contact hit. |
-| Orbit Reach | orbit star | range | Stars reach farther from player. |
-| Star Node | Pagecraft node | duration | Nodes remain longer. |
-| Node Pop | Pagecraft node | size | Node pop footprint increases. |
-| Ricochet Hit | node ricochet | damage | Scales ricochet hit. |
-| Ricochet Reach | node ricochet | range | Ricochets can find farther nodes. |
+| Star Reach | weapon range | range | Scales target range and any unlocked node ricochet range. |
+| Star Node Cap | Star node | active_cap | Base Star node cap is 5; this adds more persistent nodes. |
+| Ricochet Hit | node ricochet | damage | Scales L5 ricochet and L10 node-fired star damage. |
 | Extra Stars | orbit star | effect_count | Adds orbiting stars. |
-| Node Spawn | star hit proc | proc_chance | Chance to leave node; cap 75%. |
-| Dash Launch | dash payoff | damage | Scales launched node damage. |
+| Dash Volley | dash payoff | damage | Scales cooldown-free dash volley damage. |
 
 ## 3. Dreamsap Glob
 
-Status: Strong Candidate  
-Role: Snare and pack compression  
-Weapon type: Puddle and area control  
-Base cadence band: Slow  
-Catalyst tags: Dream, Water  
-Gameplay purpose: Slows enemy flow, compresses crowds, and gives other weapons time to work.  
-Pagecraft verb: Pools sticky Dreamsap that merges into larger snare patches.  
-Dash payoff: Dashing through sap stretches it into a sticky line between dash start and end.  
+Status: Strong Candidate
+Role: Snare and pack compression
+Weapon type: Puddle and area control
+Base cadence band: Slow
+Catalyst tags: Dream, Water
+Gameplay purpose: Slows enemy flow, compresses crowds, and gives other weapons time to work.
+Pagecraft verb: Pools sticky Dreamsap that merges into larger snare patches.
+Dash payoff: Dashing through sap stretches it into a sticky line between dash start and end.
 Range intent: Short-to-medium placement range near dense enemy flow.
 
 | Level | Fixed Milestone |
@@ -179,14 +179,14 @@ Range intent: Short-to-medium placement range near dense enemy flow.
 
 ## 4. Color Bloom
 
-Status: Needs Review  
-Role: Kill-chain propagation  
-Weapon type: Burst and growing zone  
-Base cadence band: Medium  
-Catalyst tags: Bloom, Wonder  
-Gameplay purpose: Rewards dense fights by spreading bloom zones when enemies fall inside them.  
-Pagecraft verb: Seeds color blooms that pollinate nearby page cells and marks.  
-Dash payoff: Dashing through a bloom splashes pollen outward to start smaller blooms.  
+Status: Needs Review
+Role: Kill-chain propagation
+Weapon type: Burst and growing zone
+Base cadence band: Medium
+Catalyst tags: Bloom, Wonder
+Gameplay purpose: Rewards dense fights by spreading bloom zones when enemies fall inside them.
+Pagecraft verb: Seeds color blooms that pollinate nearby page cells and marks.
+Dash payoff: Dashing through a bloom splashes pollen outward to start smaller blooms.
 Range intent: Medium placement range around dense enemy positions.
 
 | Level | Fixed Milestone |
@@ -209,14 +209,14 @@ Range intent: Medium placement range around dense enemy positions.
 
 ## 5. Moonbeam
 
-Status: Strong Candidate  
-Role: Precision line and lens beam  
-Weapon type: Piercing line and beam  
-Base cadence band: Medium  
-Catalyst tags: Moon, Light  
-Gameplay purpose: Gives builds a deliberate long-line damage pattern that rewards positioning.  
-Pagecraft verb: Draws lunar sight-lines and lens streaks onto the page.  
-Dash payoff: Dashing across a moon-line fires a reflected beam along the line.  
+Status: Strong Candidate
+Role: Precision line and lens beam
+Weapon type: Piercing line and beam
+Base cadence band: Medium
+Catalyst tags: Moon, Light
+Gameplay purpose: Gives builds a deliberate long-line damage pattern that rewards positioning.
+Pagecraft verb: Draws lunar sight-lines and lens streaks onto the page.
+Dash payoff: Dashing across a moon-line fires a reflected beam along the line.
 Range intent: Long linear range; narrow width until late upgrades.
 
 | Level | Fixed Milestone |
@@ -239,14 +239,14 @@ Range intent: Long linear range; narrow width until late upgrades.
 
 ## 6. Briar Fold
 
-Status: Strong Candidate  
-Role: Offensive line trap hybrid  
-Weapon type: Armed trap line and terrain burst  
-Base cadence band: Medium  
-Catalyst tags: Bloom, Thread  
-Gameplay purpose: Prepares folded-briar traps that impale enemies when crossed.  
-Pagecraft verb: Folds thorny briar seams into the page.  
-Dash payoff: Dashing along a seam primes it instantly and increases its next eruption.  
+Status: Strong Candidate
+Role: Offensive line trap hybrid
+Weapon type: Armed trap line and terrain burst
+Base cadence band: Medium
+Catalyst tags: Bloom, Thread
+Gameplay purpose: Prepares folded-briar traps that impale enemies when crossed.
+Pagecraft verb: Folds thorny briar seams into the page.
+Dash payoff: Dashing along a seam primes it instantly and increases its next eruption.
 Range intent: Medium placement range; seam length grows with range upgrades.
 
 | Level | Fixed Milestone |
@@ -269,14 +269,14 @@ Range intent: Medium placement range; seam length grows with range upgrades.
 
 ## 7. Dawn Halo
 
-Status: Strong Candidate  
-Role: Constant cleansing ring  
-Weapon type: Player ring and cleanse ticks  
-Base cadence band: Fast  
-Catalyst tags: Light, Echo  
-Gameplay purpose: Creates a steady close safety ring that cleanses hostile space while ticking damage.  
-Pagecraft verb: Draws a clean halo ring around the player and leaves short-lived clean traces.  
-Dash payoff: Dashing through the ring sends a clean pulse outward from the dash path.  
+Status: Strong Candidate
+Role: Constant cleansing ring
+Weapon type: Player ring and cleanse ticks
+Base cadence band: Fast
+Catalyst tags: Light, Echo
+Gameplay purpose: Creates a steady close safety ring that cleanses hostile space while ticking damage.
+Pagecraft verb: Draws a clean halo ring around the player and leaves short-lived clean traces.
+Dash payoff: Dashing through the ring sends a clean pulse outward from the dash path.
 Range intent: Self-centered ring; size upgrades widen the ring footprint.
 
 | Level | Fixed Milestone |
@@ -298,14 +298,14 @@ Range intent: Self-centered ring; size upgrades widen the ring footprint.
 
 ## 8. Moonwash Breaker
 
-Status: Strong Candidate  
-Role: Out-and-back wave cleave  
-Weapon type: Directional wave and return hit  
-Base cadence band: Medium  
-Catalyst tags: Water, Moon  
-Gameplay purpose: Delivers a readable forward wave that returns as a backwash, rewarding directional movement.  
-Pagecraft verb: Paints moonlit wash streaks along the outgoing and returning path.  
-Dash payoff: Dashing through a wash streak causes the returning wave to widen.  
+Status: Strong Candidate
+Role: Out-and-back wave cleave
+Weapon type: Directional wave and return hit
+Base cadence band: Medium
+Catalyst tags: Water, Moon
+Gameplay purpose: Delivers a readable forward wave that returns as a backwash, rewarding directional movement.
+Pagecraft verb: Paints moonlit wash streaks along the outgoing and returning path.
+Dash payoff: Dashing through a wash streak causes the returning wave to widen.
 Range intent: Medium directional range; return path is the main scaling surface.
 
 | Level | Fixed Milestone |
@@ -327,14 +327,14 @@ Range intent: Medium directional range; return path is the main scaling surface.
 
 ## 9. Rainbow Thread
 
-Status: Strong Candidate  
-Role: Tether network and dash rails  
-Weapon type: Chain, tether, rail  
-Base cadence band: Medium  
-Catalyst tags: Thread, Dream  
-Gameplay purpose: Shares damage across linked enemies and turns links into movement routes.  
-Pagecraft verb: Connects enemies and page nodes with glowing thread lines.  
-Dash payoff: Dashing along a thread line accelerates the player and triggers shared damage.  
+Status: Strong Candidate
+Role: Tether network and dash rails
+Weapon type: Chain, tether, rail
+Base cadence band: Medium
+Catalyst tags: Thread, Dream
+Gameplay purpose: Shares damage across linked enemies and turns links into movement routes.
+Pagecraft verb: Connects enemies and page nodes with glowing thread lines.
+Dash payoff: Dashing along a thread line accelerates the player and triggers shared damage.
 Range intent: Medium link reach; effect_count controls link quantity.
 
 | Level | Fixed Milestone |
@@ -356,14 +356,14 @@ Range intent: Medium link reach; effect_count controls link quantity.
 
 ## 10. Pocket Parade
 
-Status: Needs Review  
-Role: Swarm coverage summon  
-Weapon type: Creature-like swarm and charge command  
-Base cadence band: Slow  
-Catalyst tags: Wonder, Star  
-Gameplay purpose: Provides decentralized coverage through many small temporary helpers.  
-Pagecraft verb: Leaves dotted stitch paths where the parade travels.  
-Dash payoff: Dashing commands nearby parade helpers to charge along the dash vector.  
+Status: Needs Review
+Role: Swarm coverage summon
+Weapon type: Creature-like swarm and charge command
+Base cadence band: Slow
+Catalyst tags: Wonder, Star
+Gameplay purpose: Provides decentralized coverage through many small temporary helpers.
+Pagecraft verb: Leaves dotted stitch paths where the parade travels.
+Dash payoff: Dashing commands nearby parade helpers to charge along the dash vector.
 Range intent: Short personal zone with helpers spreading outward as count grows.
 
 | Level | Fixed Milestone |
@@ -386,14 +386,14 @@ Range intent: Short personal zone with helpers spreading outward as count grows.
 
 ## 11. Lumen Reliquary
 
-Status: Strong Candidate  
-Role: Stand-placed light beacon  
-Weapon type: Placed beacon and pulse DoT  
-Base cadence band: Slow  
-Catalyst tags: Light, Firelight  
-Gameplay purpose: Rewards movement decisions by leaving luminous damage beacons where the player stood.  
-Pagecraft verb: Places reliquary light circles that pulse from fixed positions.  
-Dash payoff: Dashing through a reliquary links it to the next reliquary with a light beam.  
+Status: Strong Candidate
+Role: Stand-placed light beacon
+Weapon type: Placed beacon and pulse DoT
+Base cadence band: Slow
+Catalyst tags: Light, Firelight
+Gameplay purpose: Rewards movement decisions by leaving luminous damage beacons where the player stood.
+Pagecraft verb: Places reliquary light circles that pulse from fixed positions.
+Dash payoff: Dashing through a reliquary links it to the next reliquary with a light beam.
 Range intent: Placement occurs at or near player position; pulse radius scales.
 
 | Level | Fixed Milestone |
@@ -415,14 +415,14 @@ Range intent: Placement occurs at or near player position; pulse radius scales.
 
 ## 12. Starseed Vigil
 
-Status: Strong Candidate  
-Role: Projectile-spawned temporary turrets  
-Weapon type: Projectile into limited-life sentry  
-Base cadence band: Medium  
-Catalyst tags: Bloom, Star  
-Gameplay purpose: Converts impact points into temporary sentries that shape local space.  
-Pagecraft verb: Plants luminous starseed circles that open into watcher blooms.  
-Dash payoff: Dashing over a starseed bloom causes it to fire a final stronger volley.  
+Status: Strong Candidate
+Role: Projectile-spawned temporary turrets
+Weapon type: Projectile into limited-life sentry
+Base cadence band: Medium
+Catalyst tags: Bloom, Star
+Gameplay purpose: Converts impact points into temporary sentries that shape local space.
+Pagecraft verb: Plants luminous starseed circles that open into watcher blooms.
+Dash payoff: Dashing over a starseed bloom causes it to fire a final stronger volley.
 Range intent: Medium projectile range; sentry fire range grows with range upgrades.
 
 | Level | Fixed Milestone |
@@ -445,14 +445,14 @@ Range intent: Medium projectile range; sentry fire range grows with range upgrad
 
 ## 13. Resonant Hymn
 
-Status: Strong Candidate  
-Role: Close-range echo pulse DoT  
-Weapon type: Player-centered pulse and resonance spread  
-Base cadence band: Fast  
-Catalyst tags: Echo, Water  
-Gameplay purpose: Gives close builds a rhythmic damage field that spreads resonance as it upgrades.  
-Pagecraft verb: Draws expanding resonance rings from the player.  
-Dash payoff: Harmonic Wake: dashing while a pulse is active stretches the ring along the dash path and replays it at dash end.  
+Status: Strong Candidate
+Role: Close-range echo pulse DoT
+Weapon type: Player-centered pulse and resonance spread
+Base cadence band: Fast
+Catalyst tags: Echo, Water
+Gameplay purpose: Gives close builds a rhythmic damage field that spreads resonance as it upgrades.
+Pagecraft verb: Draws expanding resonance rings from the player.
+Dash payoff: Harmonic Wake: dashing while a pulse is active stretches the ring along the dash path and replays it at dash end.
 Range intent: Short self-centered radius; cadence and spread scale before raw range.
 
 | Level | Fixed Milestone |
@@ -474,14 +474,14 @@ Range intent: Short self-centered radius; cadence and spread scale before raw ra
 
 ## 14. Emberwrit Wyrm
 
-Status: Strong Candidate  
-Role: Burn-stroke DoT and ignition  
-Weapon type: Summoned breath stroke and burning line  
-Base cadence band: Medium  
-Catalyst tags: Firelight, Bloom  
-Gameplay purpose: Provides a fire DoT weapon that writes burning strokes rather than puddles or auras.  
-Pagecraft verb: Draws ember script and breath strokes onto the page.  
-Dash payoff: Dashing through an ember stroke reignites it and forks flame along the dash path.  
+Status: Strong Candidate
+Role: Burn-stroke DoT and ignition
+Weapon type: Summoned breath stroke and burning line
+Base cadence band: Medium
+Catalyst tags: Firelight, Bloom
+Gameplay purpose: Provides a fire DoT weapon that writes burning strokes rather than puddles or auras.
+Pagecraft verb: Draws ember script and breath strokes onto the page.
+Dash payoff: Dashing through an ember stroke reignites it and forks flame along the dash path.
 Range intent: Medium breath range; stroke length and burn duration scale.
 
 | Level | Fixed Milestone |
@@ -503,14 +503,14 @@ Range intent: Medium breath range; stroke length and burn duration scale.
 
 ## 15. Mooncourt Ring
 
-Status: Needs Review  
-Role: Delayed circular ritual trap  
-Weapon type: Trap circle and delayed burst  
-Base cadence band: Slow  
-Catalyst tags: Moon, Dream  
-Gameplay purpose: Preserves a moon-circle trap concept with a clear delayed detonation identity.  
-Pagecraft verb: Places mooncourt rings that arm and detonate.  
-Dash payoff: Dashing through a ring collapses it early into a larger burst.  
+Status: Needs Review
+Role: Delayed circular ritual trap
+Weapon type: Trap circle and delayed burst
+Base cadence band: Slow
+Catalyst tags: Moon, Dream
+Gameplay purpose: Preserves a moon-circle trap concept with a clear delayed detonation identity.
+Pagecraft verb: Places mooncourt rings that arm and detonate.
+Dash payoff: Dashing through a ring collapses it early into a larger burst.
 Range intent: Medium placement range around dense enemy flow.
 
 | Level | Fixed Milestone |
@@ -533,14 +533,14 @@ Range intent: Medium placement range around dense enemy flow.
 
 ## 16. Astral Marblefall
 
-Status: Needs Review  
-Role: Heavy delayed impact and rolling hazard  
-Weapon type: Falling impact and roll  
-Base cadence band: Slow  
-Catalyst tags: Wonder, Star  
-Gameplay purpose: Adds a chunky delayed hit that turns into a rolling page hazard.  
-Pagecraft verb: Creates crater rings and rolling marble lanes.  
-Dash payoff: Dashing through a crater ring releases shards or redirects a rolling marble.  
+Status: Needs Review
+Role: Heavy delayed impact and rolling hazard
+Weapon type: Falling impact and roll
+Base cadence band: Slow
+Catalyst tags: Wonder, Star
+Gameplay purpose: Adds a chunky delayed hit that turns into a rolling page hazard.
+Pagecraft verb: Creates crater rings and rolling marble lanes.
+Dash payoff: Dashing through a crater ring releases shards or redirects a rolling marble.
 Range intent: Medium placement range using enemy density; roll reach scales.
 
 | Level | Fixed Milestone |
@@ -562,14 +562,14 @@ Range intent: Medium placement range using enemy density; roll reach scales.
 
 ## 17. Dreamwake Armada
 
-Status: Needs Review  
-Role: Dynamic wake-band sweep  
-Weapon type: Fleet construct and wake stripe  
-Base cadence band: Heavy Construct  
-Catalyst tags: Water, Wonder  
-Gameplay purpose: Sends spectral ships across the page in current movement direction, leaving temporary wake bands.  
-Pagecraft verb: Paints dreamwake stripes behind spectral ships.  
-Dash payoff: Dashing through a wake launches a flagship surge along dash direction.  
+Status: Needs Review
+Role: Dynamic wake-band sweep
+Weapon type: Fleet construct and wake stripe
+Base cadence band: Heavy Construct
+Catalyst tags: Water, Wonder
+Gameplay purpose: Sends spectral ships across the page in current movement direction, leaving temporary wake bands.
+Pagecraft verb: Paints dreamwake stripes behind spectral ships.
+Dash payoff: Dashing through a wake launches a flagship surge along dash direction.
 Range intent: Long page-crossing travel, with wake width as main scaling.
 
 | Level | Fixed Milestone |
@@ -591,14 +591,14 @@ Range intent: Long page-crossing travel, with wake width as main scaling.
 
 ## 18. Vesper Thread
 
-Status: Strong Candidate  
-Role: Weave-through projectile  
-Weapon type: Serpentine piercing projectile  
-Base cadence band: Medium  
-Catalyst tags: Thread, Star  
-Gameplay purpose: Satisfies the weave-through-enemies role with a distinct stitch path.  
-Pagecraft verb: Leaves luminous stitch lines after weaving through enemy flow.  
-Dash payoff: Dashing across a stitch line tightens it into a snap pulse.  
+Status: Strong Candidate
+Role: Weave-through projectile
+Weapon type: Serpentine piercing projectile
+Base cadence band: Medium
+Catalyst tags: Thread, Star
+Gameplay purpose: Satisfies the weave-through-enemies role with a distinct stitch path.
+Pagecraft verb: Leaves luminous stitch lines after weaving through enemy flow.
+Dash payoff: Dashing across a stitch line tightens it into a snap pulse.
 Range intent: Medium-to-long serpentine path; effect_count controls number of weave points.
 
 | Level | Fixed Milestone |
@@ -620,14 +620,14 @@ Range intent: Medium-to-long serpentine path; effect_count controls number of we
 
 ## 19. Afterglow
 
-Status: Strong Candidate  
-Role: Player walking trail DoT  
-Weapon type: Movement trail and kiting hazard  
-Base cadence band: Fast  
-Catalyst tags: Light, Firelight  
-Gameplay purpose: Turns the player's movement path into a lingering damage route.  
-Pagecraft verb: Paints fading afterglow along the player's footsteps.  
-Dash payoff: Dashing braids the recent trail into a brighter burst line behind the player.  
+Status: Strong Candidate
+Role: Player walking trail DoT
+Weapon type: Movement trail and kiting hazard
+Base cadence band: Fast
+Catalyst tags: Light, Firelight
+Gameplay purpose: Turns the player's movement path into a lingering damage route.
+Pagecraft verb: Paints fading afterglow along the player's footsteps.
+Dash payoff: Dashing braids the recent trail into a brighter burst line behind the player.
 Range intent: Trail reach comes from player movement; duration and width scale.
 
 | Level | Fixed Milestone |
@@ -649,14 +649,14 @@ Range intent: Trail reach comes from player movement; duration and width scale.
 
 ## 20. Umbral Crescent
 
-Status: Strong Candidate  
-Role: Close melee crescent slashes  
-Weapon type: Close-range arc and full-circle dash slash  
-Base cadence band: Fast  
-Catalyst tags: Moon, Thread  
-Gameplay purpose: Gives close builds a direct melee-feeling weapon without hand-aiming.  
-Pagecraft verb: Etches shadow crescent cuts into the page.  
-Dash payoff: Dashing after a sweep turns the next arc into an extended, stronger full circular slash.  
+Status: Strong Candidate
+Role: Close melee crescent slashes
+Weapon type: Close-range arc and full-circle dash slash
+Base cadence band: Fast
+Catalyst tags: Moon, Thread
+Gameplay purpose: Gives close builds a direct melee-feeling weapon without hand-aiming.
+Pagecraft verb: Etches shadow crescent cuts into the page.
+Dash payoff: Dashing after a sweep turns the next arc into an extended, stronger full circular slash.
 Range intent: Short close range; capstone reaches medium with full-circle bursts.
 
 | Level | Fixed Milestone |
@@ -678,14 +678,14 @@ Range intent: Short close range; capstone reaches medium with full-circle bursts
 
 ## 21. Solar Mantle
 
-Status: Strong Candidate  
-Role: Fixed-radius close aura DoT  
-Weapon type: Persistent aura and dash flare  
-Base cadence band: Fast  
-Catalyst tags: Firelight, Light  
-Gameplay purpose: Gives close-range builds steady DoT around the player.  
-Pagecraft verb: Draws a warm solar corona ring around the player.  
-Dash payoff: Dashing briefly expands the mantle into a huge solar flare radius.  
+Status: Strong Candidate
+Role: Fixed-radius close aura DoT
+Weapon type: Persistent aura and dash flare
+Base cadence band: Fast
+Catalyst tags: Firelight, Light
+Gameplay purpose: Gives close-range builds steady DoT around the player.
+Pagecraft verb: Draws a warm solar corona ring around the player.
+Dash payoff: Dashing briefly expands the mantle into a huge solar flare radius.
 Range intent: Fixed close radius with short flare bursts; size upgrades widen it.
 
 | Level | Fixed Milestone |
@@ -707,14 +707,14 @@ Range intent: Fixed close radius with short flare bursts; size upgrades widen it
 
 ## 22. Dream Veil
 
-Status: Strong Candidate  
-Role: Drifting dream-mist DoT  
-Weapon type: Haze patches and slow DoT  
-Base cadence band: Medium  
-Catalyst tags: Dream, Bloom  
-Gameplay purpose: Provides a soft DoT field that drifts near player path and slowly weakens enemy flow.  
-Pagecraft verb: Releases dream haze patches onto the page.  
-Dash payoff: Dashing tears active haze into a wide crescent mist trail.  
+Status: Strong Candidate
+Role: Drifting dream-mist DoT
+Weapon type: Haze patches and slow DoT
+Base cadence band: Medium
+Catalyst tags: Dream, Bloom
+Gameplay purpose: Provides a soft DoT field that drifts near player path and slowly weakens enemy flow.
+Pagecraft verb: Releases dream haze patches onto the page.
+Dash payoff: Dashing tears active haze into a wide crescent mist trail.
 Range intent: Short-to-medium drifting patches; duration and patch count scale.
 
 | Level | Fixed Milestone |
@@ -737,14 +737,14 @@ Range intent: Short-to-medium drifting patches; duration and patch count scale.
 
 ## 23. Starglass Shower
 
-Status: Needs Review  
-Role: Scattered prismatic coverage  
-Weapon type: Random shard rain and refracting splinters  
-Base cadence band: Medium  
-Catalyst tags: Star, Echo  
-Gameplay purpose: Adds broad screen coverage through small readable prismatic hits.  
-Pagecraft verb: Leaves starglass splinters where shards land.  
-Dash payoff: Dashing gathers nearby splinters into a short rainbow burst around the player.  
+Status: Needs Review
+Role: Scattered prismatic coverage
+Weapon type: Random shard rain and refracting splinters
+Base cadence band: Medium
+Catalyst tags: Star, Echo
+Gameplay purpose: Adds broad screen coverage through small readable prismatic hits.
+Pagecraft verb: Leaves starglass splinters where shards land.
+Dash payoff: Dashing gathers nearby splinters into a short rainbow burst around the player.
 Range intent: Wide visible-page scatter; density improves more than damage.
 
 | Level | Fixed Milestone |
@@ -766,14 +766,14 @@ Range intent: Wide visible-page scatter; density improves more than damage.
 
 ## 24. Mirror Waltz
 
-Status: Strong Candidate  
-Role: Delayed movement-path replay  
-Weapon type: Recorded path afterimage  
-Base cadence band: Slow  
-Catalyst tags: Dream, Echo  
-Gameplay purpose: Rewards movement routing by replaying the player's recent path as delayed damage.  
-Pagecraft verb: Leaves mirror traces along replayed movement.  
-Dash payoff: If the recorded path includes a dash, that segment replays wider and brighter.  
+Status: Strong Candidate
+Role: Delayed movement-path replay
+Weapon type: Recorded path afterimage
+Base cadence band: Slow
+Catalyst tags: Dream, Echo
+Gameplay purpose: Rewards movement routing by replaying the player's recent path as delayed damage.
+Pagecraft verb: Leaves mirror traces along replayed movement.
+Dash payoff: If the recorded path includes a dash, that segment replays wider and brighter.
 Range intent: Reach comes from player movement in the recorded time window.
 
 | Level | Fixed Milestone |
@@ -795,14 +795,14 @@ Range intent: Reach comes from player movement in the recorded time window.
 
 ## 25. Wishwell Vortex
 
-Status: Strong Candidate  
-Role: Tug wells and global detonation  
-Weapon type: Placed pull zone and charged detonation  
-Base cadence band: Slow  
-Catalyst tags: Wonder, Water  
-Gameplay purpose: Groups enemies through active wells, then lets dash timing detonate the entire well network.  
-Pagecraft verb: Places shimmering wishwells and faint wish rings.  
-Dash payoff: Dashing through any faint wish ring detonates all active wells, scaling with enemies touched by all wells collectively.  
+Status: Strong Candidate
+Role: Tug wells and global detonation
+Weapon type: Placed pull zone and charged detonation
+Base cadence band: Slow
+Catalyst tags: Wonder, Water
+Gameplay purpose: Groups enemies through active wells, then lets dash timing detonate the entire well network.
+Pagecraft verb: Places shimmering wishwells and faint wish rings.
+Dash payoff: Dashing through any faint wish ring detonates all active wells, scaling with enemies touched by all wells collectively.
 Range intent: Medium placement range; active well count and pull radius scale.
 
 | Level | Fixed Milestone |
@@ -824,14 +824,14 @@ Range intent: Medium placement range; active well count and pull radius scale.
 
 ## 26. Skykite Chorus
 
-Status: Needs Review  
-Role: Overhead kite-construct dives  
-Weapon type: Construct dive and diagonal sweep  
-Base cadence band: Slow  
-Catalyst tags: Wonder, Thread  
-Gameplay purpose: Adds readable overhead constructs that dive across the page in synchronized sweeps.  
-Pagecraft verb: Leaves kite-tail streaks where dives pass.  
-Dash payoff: Dashing tugs all active kites to dive along the dash direction.  
+Status: Needs Review
+Role: Overhead kite-construct dives
+Weapon type: Construct dive and diagonal sweep
+Base cadence band: Slow
+Catalyst tags: Wonder, Thread
+Gameplay purpose: Adds readable overhead constructs that dive across the page in synchronized sweeps.
+Pagecraft verb: Leaves kite-tail streaks where dives pass.
+Dash payoff: Dashing tugs all active kites to dive along the dash direction.
 Range intent: Wide diagonal page coverage; kite count and dive width scale.
 
 | Level | Fixed Milestone |
@@ -853,14 +853,14 @@ Range intent: Wide diagonal page coverage; kite count and dive width scale.
 
 ## 27. Cloudcastle
 
-Status: Strong Candidate  
-Role: Drifting rain castle construct  
-Weapon type: Big-object summon and area rain  
-Base cadence band: Heavy Construct  
-Catalyst tags: Bloom, Echo  
-Gameplay purpose: Summons a readable drifting object that rains below it and can fire cannons through dash payoff.  
-Pagecraft verb: Drops cloud-shadow rain patches beneath the castle.  
-Dash payoff: Dashing gusts active Cloudcastles forward and makes cannons fire from all sides.  
+Status: Strong Candidate
+Role: Drifting rain castle construct
+Weapon type: Big-object summon and area rain
+Base cadence band: Heavy Construct
+Catalyst tags: Bloom, Echo
+Gameplay purpose: Summons a readable drifting object that rains below it and can fire cannons through dash payoff.
+Pagecraft verb: Drops cloud-shadow rain patches beneath the castle.
+Dash payoff: Dashing gusts active Cloudcastles forward and makes cannons fire from all sides.
 Range intent: Medium drift around combat flow; rain footprint and cannon count scale.
 
 | Level | Fixed Milestone |
@@ -882,14 +882,14 @@ Range intent: Medium drift around combat flow; rain footprint and cannon count s
 
 ## 28. Dream Gates
 
-Status: Strong Candidate  
-Role: Paired gate construct and teleport detonation  
-Weapon type: Placed gates and connecting beam  
-Base cadence band: Heavy Construct  
-Catalyst tags: Dream, Thread  
-Gameplay purpose: Places gates that damage locally, connect by beam, and create a dramatic dash-triggered enemy relocation burst.  
-Pagecraft verb: Places dream door glyphs on the page.  
-Dash payoff: Dashing through a gate teleports enemies touched by living gates to the oldest living gate, then all gates explode.  
+Status: Strong Candidate
+Role: Paired gate construct and teleport detonation
+Weapon type: Placed gates and connecting beam
+Base cadence band: Heavy Construct
+Catalyst tags: Dream, Thread
+Gameplay purpose: Places gates that damage locally, connect by beam, and create a dramatic dash-triggered enemy relocation burst.
+Pagecraft verb: Places dream door glyphs on the page.
+Dash payoff: Dashing through a gate teleports enemies touched by living gates to the oldest living gate, then all gates explode.
 Range intent: Medium placement range; gate count and beam length scale.
 
 | Level | Fixed Milestone |
@@ -911,14 +911,14 @@ Range intent: Medium placement range; gate count and beam length scale.
 
 ## 29. Bell Tower of Stars
 
-Status: Needs Review  
-Role: Big-object ringing tower  
-Weapon type: Dropped tower and shockwave rings  
-Base cadence band: Heavy Construct  
-Catalyst tags: Echo, Moon  
-Gameplay purpose: Summons a readable object that tolls expanding damage rings from its location.  
-Pagecraft verb: Leaves bell-circle ripples around each tower.  
-Dash payoff: Dashing through one tower tolls all living towers at once, creating overlapping rings.  
+Status: Needs Review
+Role: Big-object ringing tower
+Weapon type: Dropped tower and shockwave rings
+Base cadence band: Heavy Construct
+Catalyst tags: Echo, Moon
+Gameplay purpose: Summons a readable object that tolls expanding damage rings from its location.
+Pagecraft verb: Leaves bell-circle ripples around each tower.
+Dash payoff: Dashing through one tower tolls all living towers at once, creating overlapping rings.
 Range intent: Medium placement range; ring radius and tower count scale.
 
 | Level | Fixed Milestone |
@@ -940,14 +940,14 @@ Range intent: Medium placement range; ring radius and tower count scale.
 
 ## 30. Starrail Express
 
-Status: Needs Review  
-Role: Big-object rail sweep  
-Weapon type: Page-crossing express and fading rail  
-Base cadence band: Heavy Construct  
-Catalyst tags: Water, Firelight  
-Gameplay purpose: Sends a clear page-crossing construct through one broad path.  
-Pagecraft verb: Lays fading star rails along the express route.  
-Dash payoff: Dashing across a fading rail detonates all fading rails immediately.  
+Status: Needs Review
+Role: Big-object rail sweep
+Weapon type: Page-crossing express and fading rail
+Base cadence band: Heavy Construct
+Catalyst tags: Water, Firelight
+Gameplay purpose: Sends a clear page-crossing construct through one broad path.
+Pagecraft verb: Lays fading star rails along the express route.
+Dash payoff: Dashing across a fading rail detonates all fading rails immediately.
 Range intent: Long page-crossing range; rail width and train count scale.
 
 | Level | Fixed Milestone |

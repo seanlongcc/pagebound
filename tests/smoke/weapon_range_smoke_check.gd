@@ -25,13 +25,14 @@ func _initialize() -> void:
 		_assert_true(is_equal_approx(upgrade_state.weapon_range_meters(&"waxlight_comet", base_range), base_range), "base weapon range must be unchanged before range upgrade", failures)
 
 	var before_damage := upgrade_state.weapon_damage(&"waxlight_comet", 5.0)
-	var before_cooldown := upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 1.15)
+	var before_cooldown := upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.95)
+	upgrade_state.apply_choice(&"new_weapon_waxlight_comet")
 	var range_event: Dictionary = upgrade_state.apply_choice(&"waxlight_range_plus")
 	_assert_true(not range_event.is_empty(), "Waxlight range upgrade card must apply", failures)
 	if upgrade_state.has_method("weapon_range_meters"):
 		_assert_true(is_equal_approx(upgrade_state.weapon_range_meters(&"waxlight_comet", base_range), base_range + 1.5), "Waxlight range upgrade must add exactly 1.5m", failures)
 	_assert_true(is_equal_approx(upgrade_state.weapon_damage(&"waxlight_comet", 5.0), before_damage), "range upgrade must not change weapon damage", failures)
-	_assert_true(is_equal_approx(upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 1.15), before_cooldown), "range upgrade must not change weapon cooldown", failures)
+	_assert_true(is_equal_approx(upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.95), before_cooldown), "range upgrade must not change weapon cooldown", failures)
 
 	var owner := Node3D.new()
 	owner.name = "RangeOwner"
@@ -49,19 +50,20 @@ func _initialize() -> void:
 
 	var runtime_state = RunUpgradeStateScript.new()
 	runtime_state.configure(factory)
+	runtime_state.apply_choice(&"new_weapon_waxlight_comet")
 	manager.configure(owner, enemies_root, damage_model, waxlight, null, runtime_state, factory)
 	_assert_true(manager.has_method("debug_weapon_range_meters"), "weapon manager must expose per-weapon range debug", failures)
 	if manager.has_method("debug_weapon_range_meters"):
 		base_range = manager.debug_weapon_range_meters(&"waxlight_comet")
 
-	var far_enemy := _spawn_victim(enemies_root, "FarRangeVictim", owner.position + Vector3.RIGHT * (base_range + 1.0), 20.0)
+	var far_enemy := _spawn_victim(enemies_root, "FarRangeVictim", owner.position + Vector3.RIGHT * (base_range + 1.0), 200.0)
 	for far_frame in 90:
 		await physics_frame
 	_assert_true(manager.debug_weapon_hit_count(&"waxlight_comet") == 0, "Waxlight must not hit enemies beyond its max range", failures)
 
 	far_enemy.queue_free()
 	await process_frame
-	var close_enemy := _spawn_victim(enemies_root, "CloseRangeVictim", owner.position + Vector3.RIGHT * maxf(0.5, base_range - 0.5), 20.0)
+	var close_enemy := _spawn_victim(enemies_root, "CloseRangeVictim", owner.position + Vector3.RIGHT * maxf(0.5, base_range - 0.5), 200.0)
 	for close_frame in 90:
 		await physics_frame
 	_assert_true(manager.debug_weapon_hit_count(&"waxlight_comet") > 0, "Waxlight must hit enemies inside its max range", failures)

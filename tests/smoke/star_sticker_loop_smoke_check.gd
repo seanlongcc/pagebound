@@ -27,8 +27,10 @@ func _initialize() -> void:
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_fire_weapon_at"), "weapon manager must expose selected fire helper", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_orbit_count"), "weapon manager must expose Star orbit count", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_available_count"), "weapon manager must expose available orbit stars", failures)
-	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_page_sticker_count"), "weapon manager must expose page-stuck sticker count", failures)
-	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_pop_damage_count"), "weapon manager must expose Star pop damage count", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_node_count"), "weapon manager must expose persistent Star node count", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_ricochet_damage_count"), "weapon manager must expose Star ricochet damage count", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_star_node_extra_star_count"), "weapon manager must expose L10 node-fired Star count", failures)
+	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_trigger_star_dash_volley"), "weapon manager must expose Star dash volley helper", failures)
 
 	if (
 		runtime == null
@@ -38,47 +40,73 @@ func _initialize() -> void:
 		or not weapon_manager.has_method("debug_fire_weapon_at")
 		or not weapon_manager.has_method("debug_star_orbit_count")
 		or not weapon_manager.has_method("debug_star_available_count")
-		or not weapon_manager.has_method("debug_star_page_sticker_count")
-		or not weapon_manager.has_method("debug_star_pop_damage_count")
+		or not weapon_manager.has_method("debug_star_node_count")
+		or not weapon_manager.has_method("debug_star_ricochet_damage_count")
+		or not weapon_manager.has_method("debug_star_node_extra_star_count")
+		or not weapon_manager.has_method("debug_trigger_star_dash_volley")
 	):
 		_finish_after_root(root, failures)
 		return
 
-	runtime.debug_apply_upgrade_choice(&"new_weapon_star_sticker_swarm")
 	await physics_frame
-	_assert_true(weapon_manager.debug_star_orbit_count() >= 1, "acquiring Star Sticker must create visible orbit star", failures)
+	_assert_true(weapon_manager.debug_star_orbit_count() >= 1, "starter Star Sticker must create visible orbit star", failures)
 	_assert_true(weapon_manager.debug_star_available_count() == weapon_manager.debug_star_orbit_count(), "orbit star must start available", failures)
 	_assert_true(_visible_named_count(root, "StarStickerOrbit") >= 1, "orbit star visual must be visible", failures)
 
-	var primary := _spawn_victim(enemies_root, "StarStickerPrimaryVictim", Vector3(1.5, 0.0, 0.0), 200.0)
-	var pop_victim := _spawn_victim(enemies_root, "StarStickerPopVictim", Vector3(1.75, 0.0, 0.0), 200.0)
+	var primary := _spawn_victim(enemies_root, "StarStickerPrimaryVictim", Vector3(1.5, 0.0, 0.0), 2000.0)
+	var ricochet_victim := _spawn_victim(enemies_root, "StarStickerRicochetVictim", Vector3(1.95, 0.0, 0.0), 2000.0)
+	var l10_victim := _spawn_victim(enemies_root, "StarStickerL10Victim", Vector3(2.35, 0.0, 0.0), 2000.0)
 	var primary_health := primary.get_node("HealthComponent")
-	var pop_health := pop_victim.get_node("HealthComponent")
+	var ricochet_health := ricochet_victim.get_node("HealthComponent")
+	var l10_health := l10_victim.get_node("HealthComponent")
 	var number_count_before := 0
 	if damage_numbers != null and damage_numbers.has_method("debug_presented_count"):
 		number_count_before = damage_numbers.debug_presented_count()
 	var primary_before := float(primary_health.current_health)
-	var pop_before := float(pop_health.current_health)
+	var ricochet_before := float(ricochet_health.current_health)
 
 	weapon_manager.debug_fire_weapon_at(&"star_sticker_swarm", primary)
 	await process_frame
 	await physics_frame
 
 	_assert_true(float(primary_health.current_health) < primary_before, "Star Sticker fire must apply immediate hit damage through DamageModel", failures)
-	_assert_true(weapon_manager.debug_star_page_sticker_count() >= 1, "Star Sticker hit must create page-stuck sticker", failures)
-	_assert_true(weapon_manager.debug_star_available_count() < weapon_manager.debug_star_orbit_count(), "fired star must leave orbit until pop/reform", failures)
-	_assert_true(_visible_named_count(root, "StarStickerPageSticker") >= 1, "page-stuck sticker visual must be visible", failures)
+	_assert_true(weapon_manager.debug_star_node_count() == 0, "L1 Star Sticker hit must not create Star nodes", failures)
+	_assert_true(weapon_manager.debug_star_available_count() == weapon_manager.debug_star_orbit_count(), "fired star must remain available because nodes no longer hold orbit stars", failures)
+	_assert_true(float(ricochet_health.current_health) == ricochet_before, "L1 Star Sticker must not ricochet", failures)
 	if damage_numbers != null and damage_numbers.has_method("debug_presented_count"):
 		_assert_true(damage_numbers.debug_presented_count() > number_count_before, "Star Sticker hit must spawn a damage number", failures)
 
-	for _frame in 118:
+	for _upgrade in 4:
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
 		await physics_frame
 
-	_assert_true(weapon_manager.debug_star_pop_damage_count() > 0, "page-stuck Star Sticker must pop for AoE damage", failures)
-	_assert_true(float(pop_health.current_health) < pop_before, "Star Sticker pop must damage nearby enemies through DamageModel", failures)
-	_assert_true(weapon_manager.debug_star_page_sticker_count() == 0, "page-stuck sticker must clean itself up after pop", failures)
-	_assert_true(weapon_manager.debug_star_available_count() == weapon_manager.debug_star_orbit_count(), "star must reform into orbit after pop", failures)
-	_assert_true(_visible_named_count(root, "StarStickerPageSticker") == 0, "page-stuck sticker visual must not persist indefinitely", failures)
+	ricochet_before = float(ricochet_health.current_health)
+	weapon_manager.debug_fire_weapon_at(&"star_sticker_swarm", primary)
+	await process_frame
+	await physics_frame
+	_assert_true(weapon_manager.debug_star_node_count() >= 1, "L5 Star Sticker hit must create a persistent Star node", failures)
+	_assert_true(float(ricochet_health.current_health) < ricochet_before, "L5 Star node must ricochet to one nearby enemy", failures)
+	_assert_true(weapon_manager.debug_star_ricochet_damage_count() > 0, "L5 Star ricochet must record DamageModel routed damage", failures)
+	_assert_true(_visible_named_count(root, "StarStickerNode") >= 1, "persistent Star node visual must be visible", failures)
+
+	var node_count_before_dash: int = weapon_manager.debug_star_node_count()
+	var primary_before_dash := float(primary_health.current_health)
+	weapon_manager.debug_trigger_star_dash_volley()
+	await process_frame
+	await physics_frame
+	_assert_true(float(primary_health.current_health) < primary_before_dash, "L5 Star dash payoff must fire a cooldown-free normal-target volley", failures)
+	_assert_true(weapon_manager.debug_star_node_count() == node_count_before_dash, "Star dash volley must not create new Star nodes", failures)
+
+	for _upgrade in 5:
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
+		await physics_frame
+
+	var extra_before := float(l10_health.current_health)
+	weapon_manager.debug_fire_weapon_at(&"star_sticker_swarm", primary)
+	await process_frame
+	await physics_frame
+	_assert_true(float(l10_health.current_health) < extra_before, "L10 Star node ricochet must fire one extra non-node star", failures)
+	_assert_true(weapon_manager.debug_star_node_extra_star_count() > 0, "L10 Star node extra shot must be counted", failures)
 
 	_finish_after_root(root, failures)
 

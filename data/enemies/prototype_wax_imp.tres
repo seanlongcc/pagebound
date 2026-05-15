@@ -6,10 +6,10 @@
 script = ExtResource("1_enemy")
 id = &"wax_imp"
 display_name = "Wax Imp"
-description = "Authored opening slow normal enemy. HP equals two starting Waxlight hits."
+description = "Authored opening slow normal enemy. Tuned to die to one baseline Star Sticker hit."
 tags = Array[StringName]([&"hostile_ink", &"prototype"])
 behavior_id = &"chaser"
-max_health = 200.0
+max_health = 70.0
 move_speed = 1.45
 contact_damage = 60.0
 reward_xp = 5

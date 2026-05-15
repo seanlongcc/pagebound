@@ -68,12 +68,20 @@ func deposit_mark(
 
 ## Activates marks crossed by a dash path.
 func activate_path(start_position: Vector3, end_position: Vector3) -> void:
+	var activated_indices := {}
 	for index in _marks.size():
 		var mark := _marks[index]
 		if mark.get("activated", false):
 			continue
+		if not _can_activate_mark(mark):
+			continue
 		if _distance_to_segment(mark["position"], start_position, end_position) <= float(mark["radius"]) + dash_activation_padding:
-			_activate_mark(index, start_position, end_position)
+			var indices := _activation_indices_for(index)
+			for activation_index in indices:
+				if activated_indices.has(activation_index):
+					continue
+				_activate_mark(activation_index, start_position, end_position, activated_indices.is_empty())
+				activated_indices[activation_index] = true
 
 
 ## Returns active mark count for smoke/debug checks.
@@ -166,18 +174,23 @@ func debug_first_mark_position() -> Vector3:
 	return _marks[0]["position"]
 
 
-func _activate_mark(index: int, start_position: Vector3, end_position: Vector3) -> void:
+func _activate_mark(index: int, start_position: Vector3, end_position: Vector3, create_pulse: bool = true) -> void:
+	if index < 0 or index >= _marks.size():
+		return
 	var mark := _marks[index]
+	if mark.get("activated", false):
+		return
 	mark["activated"] = true
 	mark["remaining_duration"] = _activation_duration_seconds()
-	mark["damage_tick_remaining"] = activation_damage_tick_seconds
+	mark["damage_tick_remaining"] = 0.0
 	_marks[index] = mark
 	_activation_count += 1
 	var visual = mark.get("visual", null)
 	if visual is MeshInstance3D:
 		(visual as MeshInstance3D).material_override = _mark_material(true)
 		(visual as MeshInstance3D).scale *= 1.35
-	_create_dash_pulse(start_position, end_position)
+	if create_pulse:
+		_create_dash_pulse(start_position, end_position)
 	_apply_activation_damage(mark)
 	_emit_activated(mark)
 
@@ -193,13 +206,9 @@ func _tick_marks(delta: float) -> void:
 			_marks[index] = mark
 			continue
 		mark["remaining_duration"] = float(mark.get("remaining_duration", 0.0)) - delta
-		mark["damage_tick_remaining"] = float(mark.get("damage_tick_remaining", 0.0)) - delta
 		if float(mark["remaining_duration"]) <= 0.0:
 			_remove_mark_at(index)
 			continue
-		if float(mark["damage_tick_remaining"]) <= 0.0:
-			_apply_activation_damage(mark)
-			mark["damage_tick_remaining"] = activation_damage_tick_seconds
 		_update_active_visual(mark)
 		_marks[index] = mark
 
@@ -315,6 +324,72 @@ func _apply_activation_damage(mark: Dictionary) -> void:
 			continue
 		_activation_damage_count += 1
 		_last_activation_damage = float(result.get("amount", activation_damage))
+
+
+func _activation_indices_for(origin_index: int) -> Array[int]:
+	if origin_index < 0 or origin_index >= _marks.size():
+		return []
+	var origin := _marks[origin_index]
+	if not _connected_activation_enabled(origin):
+		return [origin_index]
+	var result: Array[int] = []
+	var queue: Array[int] = [origin_index]
+	var visited := {}
+	while not queue.is_empty():
+		var current_index: int = queue.pop_front()
+		if visited.has(current_index):
+			continue
+		visited[current_index] = true
+		var current := _marks[current_index]
+		if current.get("activated", false) or not _same_activation_group(origin, current):
+			continue
+		result.append(current_index)
+		for candidate_index in _marks.size():
+			if visited.has(candidate_index):
+				continue
+			var candidate := _marks[candidate_index]
+			if candidate.get("activated", false) or not _same_activation_group(origin, candidate):
+				continue
+			if _marks_touch(current, candidate):
+				queue.append(candidate_index)
+	return result
+
+
+func _can_activate_mark(mark: Dictionary) -> bool:
+	var source_id: StringName = mark.get("source_id", &"")
+	if source_id != &"waxlight_comet":
+		return true
+	if _upgrade_state != null and _upgrade_state.has_method("waxlight_dash_unlocked"):
+		return _upgrade_state.waxlight_dash_unlocked()
+	return false
+
+
+func _connected_activation_enabled(mark: Dictionary) -> bool:
+	if mark.get("source_id", &"") != &"waxlight_comet":
+		return false
+	if _upgrade_state != null and _upgrade_state.has_method("waxlight_connected_activation_unlocked"):
+		return _upgrade_state.waxlight_connected_activation_unlocked()
+	return false
+
+
+func _same_activation_group(a: Dictionary, b: Dictionary) -> bool:
+	return a.get("source_id", &"") == b.get("source_id", &"") and a.get("material_tag", &"") == b.get("material_tag", &"")
+
+
+func _marks_touch(a: Dictionary, b: Dictionary) -> bool:
+	var a_position: Vector3 = a.get("position", Vector3.ZERO)
+	var b_position: Vector3 = b.get("position", Vector3.ZERO)
+	var reach := _connected_mark_reach(a, b)
+	return a_position.distance_to(b_position) <= reach
+
+
+func _connected_mark_reach(a: Dictionary, b: Dictionary) -> float:
+	var base_reach := float(a.get("radius", 0.0)) + float(b.get("radius", 0.0))
+	if a.get("source_id", &"") != &"waxlight_comet" or b.get("source_id", &"") != &"waxlight_comet":
+		return base_reach
+	if _upgrade_state != null and _upgrade_state.has_method("waxlight_connected_reach_meters"):
+		return _upgrade_state.waxlight_connected_reach_meters(base_reach)
+	return base_reach
 
 
 func _enforce_unactivated_mark_cap(material_tag: StringName) -> void:

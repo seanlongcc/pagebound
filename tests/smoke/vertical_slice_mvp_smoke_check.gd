@@ -54,13 +54,13 @@ func _initialize() -> void:
 	var opening_enemy := _first_enemy(root, &"wax_imp")
 	var opening_health := _health(opening_enemy)
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage") and opening_health != null:
-		var wax_damage := float(weapon_manager.debug_weapon_damage(&"waxlight_comet"))
-		_assert_float_equal(opening_health.max_health, wax_damage * 2.0, 0.01, "opening normal HP must equal two starting Waxlight hits", failures)
+		var star_damage := float(weapon_manager.debug_weapon_damage(&"star_sticker_swarm"))
+		_assert_float_equal(opening_health.max_health, 70.0, 0.01, "opening Wax Imp HP must use tuned 70 HP baseline", failures)
+		_assert_true(opening_health.max_health < star_damage, "opening Wax Imp must be one-shot by base Star Sticker Swarm", failures)
 		if weapon_manager.has_method("debug_fire_weapon_at"):
-			weapon_manager.debug_fire_weapon_at(&"waxlight_comet", opening_enemy)
-			weapon_manager.debug_fire_weapon_at(&"waxlight_comet", opening_enemy)
+			weapon_manager.debug_fire_weapon_at(&"star_sticker_swarm", opening_enemy)
 			await physics_frame
-			_assert_true(not opening_health.is_alive(), "opening normal enemy must die in two Waxlight hits", failures)
+			_assert_true(not opening_health.is_alive(), "opening normal enemy must die in one Star Sticker hit", failures)
 
 	if director != null and director.has_method("debug_force_run_time"):
 		director.debug_force_run_time(75.0)
@@ -74,11 +74,14 @@ func _initialize() -> void:
 	if later_enemy != null and later_enemy != opening_enemy:
 		var later_health := _health(later_enemy)
 		if later_health != null and opening_health != null:
-			_assert_true(later_health.max_health > opening_health.max_health, "later enemies must scale to higher max HP", failures)
+			var later_base_health := 70.0
+			if later_enemy.has_method("debug_enemy_id") and later_enemy.debug_enemy_id() == &"flicker_imp":
+				later_base_health = 45.0
+			_assert_true(later_health.max_health > later_base_health, "later enemies must scale above their authored base HP", failures)
 
 	if player != null and player.has_method("debug_dash_distance"):
 		_assert_float_equal(float(player.debug_dash_distance()), 2.1, 0.01, "default dash distance must be 2.1 meters", failures)
-	if pagecraft != null and pagecraft.has_method("debug_deposit_test_mark") and player != null and player.has_method("debug_integrate"):
+	if pagecraft != null and pagecraft.has_method("debug_deposit_test_mark") and player != null and player.has_method("debug_integrate") and runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		pagecraft.debug_clear_marks()
 		player.global_position = Vector3.ZERO
 		if player.has_method("debug_force_dash_ready"):
@@ -87,16 +90,26 @@ func _initialize() -> void:
 		pagecraft.debug_deposit_test_mark(player.global_position + Vector3.RIGHT * 1.0)
 		player.debug_integrate(Vector2.RIGHT, true, 0.01)
 		player.debug_integrate(Vector2.ZERO, false, 0.4)
-		_assert_true(pagecraft.debug_activation_count() > activation_before, "short dash must still activate nearby Waxlight mark", failures)
+		_assert_true(pagecraft.debug_activation_count() == activation_before, "L1 Waxlight mark must not dash-activate before L5 payoff", failures)
+		runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
+		for _upgrade in 4:
+			runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+		pagecraft.debug_clear_marks()
+		pagecraft.debug_deposit_test_mark(player.global_position + Vector3.RIGHT * 1.0)
+		if player.has_method("debug_force_dash_ready"):
+			player.debug_force_dash_ready()
+		player.debug_integrate(Vector2.RIGHT, true, 0.01)
+		player.debug_integrate(Vector2.ZERO, false, 0.4)
+		_assert_true(pagecraft.debug_activation_count() > activation_before, "L5 Waxlight dash payoff must activate nearby marks", failures)
 
 	var hud_text := _visible_text(hud)
 	_assert_true(hud_text.contains("HP") and hud_text.contains("1000") and hud_text.contains("XP") and hud_text.contains("Level") and hud_text.contains("Dog"), "HUD must show player-facing HP, XP, Level, and Dog surfaces", failures)
-	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Lv1") and hud_text.contains("Empty"), "HUD must show loadout slots and levels", failures)
+	_assert_true(hud_text.contains("Star Sticker Swarm") and hud_text.contains("Lv1") and hud_text.contains("Empty"), "HUD must show loadout slots and starter Star level", failures)
 	_assert_true(_find_named(root, "PartyReserve") == null or not (_find_named(root, "PartyReserve") as Control).visible, "solo HUD must not render top-left multiplayer placeholders", failures)
 	_assert_true(_find_named(root, "RunTimer") != null and _visible_text(_find_named(root, "RunTimer")).contains(":"), "HUD must show constant run timer", failures)
 	_assert_true(not hud_text.contains("Waxlight damage") and not hud_text.contains("Director"), "HUD must not show debug stat text", failures)
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"waxlight_damage_plus_1")
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
 		await physics_frame
 		_assert_true(not _visible_text(hud).contains("Waxlight damage"), "direct stat upgrades must stay out of player HUD", failures)
 
@@ -107,7 +120,7 @@ func _initialize() -> void:
 	_assert_true(_buttons_are_horizontal(buttons), "draft cards must be in one horizontal row", failures)
 	_assert_true(_buttons_contain_text(buttons, "->"), "draft cards must show current -> new values", failures)
 	_assert_true(_buttons_contain_text(buttons, "Icon:") and _buttons_contain_text(buttons, "Tags:"), "draft cards must show icon and tag info", failures)
-	_assert_true(not _buttons_contain_text(buttons, "Waxlight Comet +1"), "Waxlight upgrade must name its specific stat/scope", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Star Sticker Swarm +1"), "Star upgrade must name its specific stat/scope", failures)
 	var candle_visible := _draft_contains_choice(runtime, &"new_passive_candle_spark")
 	if candle_visible and runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
 		runtime.debug_focus_draft_choice_id(&"new_passive_candle_spark")
@@ -116,22 +129,22 @@ func _initialize() -> void:
 	if not candle_visible and runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		runtime.debug_apply_upgrade_choice(&"new_passive_candle_spark")
 	await process_frame
-	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"waxlight_comet"), "run must keep Waxlight starter weapon", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"star_sticker_swarm"), "run must keep Star starter weapon", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_owned_passive_ids") and runtime.debug_owned_passive_ids().has(&"candle_spark"), "selecting Candle Spark must add passive", failures)
 	_assert_true(_visible_text(hud).contains("Candle Spark"), "HUD must show selected passive item", failures)
 
 	await _open_draft(runtime, player)
-	_assert_true(not _buttons_contain_text(_draft_buttons(root), "Waxlight Comet +1"), "owned weapon upgrade card must stay specific after passive selection", failures)
+	_assert_true(not _buttons_contain_text(_draft_buttons(root), "Star Sticker Swarm +1"), "owned weapon upgrade card must stay specific after passive selection", failures)
 	if _draft_contains_choice(runtime, &"passive_upgrade_candle_spark"):
 		_assert_true(_buttons_contain_text(_draft_buttons(root), "Candle Spark +1"), "owned package passive must keep upgrading", failures)
 	elif runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		runtime.debug_apply_upgrade_choice(&"passive_upgrade_candle_spark")
 	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
-		runtime.debug_focus_draft_choice_id(&"weapon_upgrade_waxlight_comet")
+		runtime.debug_focus_draft_choice_id(&"weapon_upgrade_star_sticker_swarm")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 	await process_frame
-	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"waxlight_comet"), "Waxlight upgrade must preserve starter weapon", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"star_sticker_swarm"), "Star upgrade must preserve starter weapon", failures)
 
 	if runtime != null and runtime.has_method("debug_kill_player"):
 		runtime.debug_kill_player()

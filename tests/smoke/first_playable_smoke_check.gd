@@ -87,15 +87,24 @@ func _initialize() -> void:
 				await physics_frame
 			_assert_true(runtime.debug_player_health() < runtime.debug_player_max_health(), "enemy contact must damage player through damage model", failures)
 	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP text", failures)
+	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
+		for _upgrade in 4:
+			runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	if pagecraft_manager != null and pagecraft_manager.has_method("debug_clear_marks") and pagecraft_manager.has_method("debug_deposit_test_mark"):
+		pagecraft_manager.debug_clear_marks()
+		pagecraft_manager.debug_deposit_test_mark(Vector3.ZERO)
 	if pagecraft_manager != null:
-		_assert_true(pagecraft_manager.debug_mark_count() > 0, "weapon must leave Pagecraft mark", failures)
+		_assert_true(pagecraft_manager.debug_mark_count() > 0, "Waxlight must leave Pagecraft marks after acquisition", failures)
 
 	if player != null and pagecraft_manager != null and pagecraft_manager.has_method("debug_first_mark_position"):
 		var mark_position: Vector3 = pagecraft_manager.debug_first_mark_position()
 		player.global_position = mark_position - Vector3.RIGHT * 0.5
+		if player.has_method("debug_force_dash_ready"):
+			player.debug_force_dash_ready()
 		player.debug_integrate(Vector2.RIGHT, true, 0.01)
 		player.debug_integrate(Vector2.ZERO, false, 0.25)
-		_assert_true(pagecraft_manager.debug_activation_count() > 0, "dash must activate Pagecraft mark", failures)
+		_assert_true(pagecraft_manager.debug_activation_count() > 0, "L5 dash must activate Waxlight Pagecraft mark", failures)
 
 	root.queue_free()
 	await process_frame

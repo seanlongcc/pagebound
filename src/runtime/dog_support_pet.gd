@@ -3,7 +3,7 @@ extends Node3D
 
 signal pickup_assisted(amount: int, pickup_type: StringName, world_position: Vector3)
 
-const TIER_ONE_RADIUS := 4.5
+const TIER_ONE_RADIUS := 6.0
 const TIER_THREE_RADIUS := 8.625
 const FOLLOW_OFFSET := Vector3(-0.85, 0.0, 0.65)
 const FOLLOW_SMOOTHING := 12.0
@@ -72,13 +72,13 @@ func _follow_player(delta: float) -> void:
 func _acquire_fetch_target() -> void:
 	if _player == null or _pickups_root == null:
 		return
-	if _is_valid_fetch_target(_fetch_target):
+	if _is_collectible_fetch_target(_fetch_target):
 		return
 	_fetch_target = null
 	var nearest: Node3D = null
 	var nearest_distance := fetch_range()
 	for child in _pickups_root.get_children():
-		if not _is_valid_fetch_target(child):
+		if not _is_acquirable_fetch_target(child):
 			continue
 		var distance := _player.global_position.distance_to((child as Node3D).global_position)
 		if distance <= nearest_distance:
@@ -88,7 +88,7 @@ func _acquire_fetch_target() -> void:
 
 
 func _fetch_pickup(delta: float) -> void:
-	if not _is_valid_fetch_target(_fetch_target):
+	if not _is_collectible_fetch_target(_fetch_target):
 		_fetch_target = null
 		return
 	var desired := _fetch_target.global_position
@@ -100,15 +100,21 @@ func _fetch_pickup(delta: float) -> void:
 		_collect_pickup(pickup, _pickup_type(pickup))
 
 
-func _is_valid_fetch_target(candidate: Node) -> bool:
-	if _player == null or candidate == null or not candidate is Node3D:
+func _is_acquirable_fetch_target(candidate: Node) -> bool:
+	if _player == null or not _is_collectible_fetch_target(candidate):
+		return false
+	return _player.global_position.distance_to((candidate as Node3D).global_position) <= fetch_range()
+
+
+func _is_collectible_fetch_target(candidate: Node) -> bool:
+	if candidate == null or not candidate is Node3D:
 		return false
 	var pickup_type := _pickup_type(candidate)
 	if not accepts_pickup_type(pickup_type):
 		return false
 	if not candidate.has_method("is_collectible") or not candidate.is_collectible():
 		return false
-	return _player.global_position.distance_to((candidate as Node3D).global_position) <= fetch_range()
+	return true
 
 
 func _collect_pickup(pickup: Node3D, pickup_type: StringName) -> void:

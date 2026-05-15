@@ -20,9 +20,9 @@ func _initialize() -> void:
 
 	_assert_true(runtime != null and runtime.has_method("debug_toggle_pause_menu"), "runtime must expose pause menu debug toggle", failures)
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"new_weapon_star_sticker_swarm")
+		runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
 		runtime.debug_apply_upgrade_choice(&"new_passive_candle_spark")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
 		runtime.debug_apply_upgrade_choice(&"passive_upgrade_candle_spark")
 		await process_frame
 
@@ -35,9 +35,9 @@ func _initialize() -> void:
 	_assert_true(paused, "pause menu must pause gameplay", failures)
 	_assert_true(pause_screen != null and pause_screen.visible, "Escape/debug pause must show pause screen", failures)
 	_assert_true(text.contains("Resume") and text.contains("Options") and text.contains("Quit"), "pause menu must show resume/options/quit placeholders", failures)
-	_assert_true(text.contains("Waxlight Comet") and text.contains("Lv2"), "pause menu must show weapon levels and upgrades", failures)
-	_assert_true(text.contains("Applied Upgrades") and text.contains("Comet Hit"), "pause menu must list each weapon's applied upgrades", failures)
-	_assert_true(text.contains("Star Sticker Swarm") and text.contains("Lv1"), "pause menu must show second weapon stats", failures)
+	_assert_true(text.contains("Star Sticker Swarm") and text.contains("Lv2"), "pause menu must show starter weapon levels and upgrades", failures)
+	_assert_true(text.contains("Applied Upgrades") and text.contains("Star Strike"), "pause menu must list each weapon's applied upgrades", failures)
+	_assert_true(text.contains("Waxlight Comet") and text.contains("Lv1"), "pause menu must show second weapon stats", failures)
 	_assert_true(text.contains("Candle Spark") and text.contains("Lv2"), "pause menu must show passive item levels", failures)
 
 	if runtime != null and runtime.has_method("debug_toggle_pause_menu"):

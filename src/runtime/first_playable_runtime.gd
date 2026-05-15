@@ -19,6 +19,7 @@ const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const RunMenuControllerScript := preload("res://src/runtime/run_menu_controller.gd")
 const RunPauseSummaryBuilderScript := preload("res://src/runtime/run_pause_summary_builder.gd")
 const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
+const XpRangeDebugCirclesScript := preload("res://src/runtime/xp_range_debug_circles.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
@@ -35,6 +36,7 @@ var _page_event_orchestrator = FirstPlayablePageEventOrchestratorScript.new()
 var _boss_controller = CrownlessEchoControllerScript.new()
 var _run_ui = FirstPlayableRunUiScript.new()
 var _upgrade_state = RunUpgradeStateScript.new()
+var _xp_range_debug_circles = XpRangeDebugCirclesScript.new()
 var _event_bus: Node
 var _draft_controller: Node
 var _menu_controller: Node
@@ -59,6 +61,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_tick_contact_damage(delta)
 	_tick_dog_feedback(delta)
+	_xp_range_debug_circles.update()
 	_page_event_orchestrator.tick(_run_time_seconds(), delta, _run_director())
 	_boss_controller.tick(_run_time_seconds(), _page_event_orchestrator.is_active())
 	_check_vertical_slice_end()
@@ -95,6 +98,7 @@ func _start_run() -> void:
 	_ensure_draft_controller()
 	_spawn_player()
 	_ensure_dog_pet()
+	_configure_xp_range_debug_circles()
 	_ensure_boss_controller()
 	_ensure_run_director()
 	_ensure_weapon_manager()
@@ -357,6 +361,7 @@ func debug_set_dog_tier(tier: int) -> void:
 	var dog := _dog_pet()
 	if dog != null and dog.has_method("set_tier"):
 		dog.set_tier(tier)
+	_configure_xp_range_debug_circles()
 	_update_hud()
 
 
@@ -369,6 +374,18 @@ func debug_dog_accepts_pickup_type(pickup_type: StringName) -> bool:
 ## Returns current Dog HUD feedback text.
 func debug_dog_feedback_text() -> String:
 	return _dog_feedback_text
+
+
+## Shows or hides developer-only XP pickup/fetch range circles.
+func debug_set_xp_range_circles_visible(visible: bool) -> void:
+	_configure_xp_range_debug_circles()
+	_xp_range_debug_circles.set_visible_enabled(visible)
+
+
+## Returns visible developer-only XP pickup/fetch range circles.
+func debug_xp_range_circle_count() -> int:
+	_configure_xp_range_debug_circles()
+	return _xp_range_debug_circles.circle_count()
 
 
 func _ensure_runtime_services() -> void:
@@ -420,7 +437,7 @@ func _ensure_weapon_manager() -> void:
 		manager.name = "WeaponManager"
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.waxlight_comet_weapon(), _pagecraft_manager(), _upgrade_state, _content_factory)
+		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.star_sticker_swarm_weapon(), _pagecraft_manager(), _upgrade_state, _content_factory)
 
 
 func _ensure_dog_pet() -> void:
@@ -433,6 +450,10 @@ func _ensure_dog_pet() -> void:
 		dog.configure(player(), _pickups_root())
 	if dog.has_signal("pickup_assisted") and not dog.pickup_assisted.is_connected(_on_dog_pickup_assisted):
 		dog.pickup_assisted.connect(_on_dog_pickup_assisted)
+
+
+func _configure_xp_range_debug_circles() -> void:
+	_xp_range_debug_circles.configure(_vfx_root(), player(), _dog_pet())
 
 
 func _ensure_boss_controller() -> void:
@@ -496,12 +517,20 @@ func _ensure_page_event_orchestrator() -> void:
 
 
 func _connect_player_dash(player_body: Node) -> void:
-	var manager := _pagecraft_manager()
-	if player_body == null or manager == null or not player_body.has_signal("dash_path_sampled"):
+	if player_body == null or not player_body.has_signal("dash_path_sampled"):
 		return
-	var callable := Callable(manager, "activate_path")
+	var callable := Callable(self, "_on_player_dash_path_sampled")
 	if not player_body.dash_path_sampled.is_connected(callable):
 		player_body.dash_path_sampled.connect(callable)
+
+
+func _on_player_dash_path_sampled(start_position: Vector3, end_position: Vector3) -> void:
+	var pagecraft := _pagecraft_manager()
+	if pagecraft != null and pagecraft.has_method("activate_path"):
+		pagecraft.activate_path(start_position, end_position)
+	var manager := _projectiles_root().get_node_or_null("WeaponManager")
+	if manager != null and manager.has_method("trigger_dash_payoffs"):
+		manager.trigger_dash_payoffs(start_position, end_position)
 
 
 func _ensure_health(owner: Node, entity_id: StringName, max_health: float, team_id: StringName) -> Node:
@@ -752,6 +781,7 @@ func _prepare_clean_run_state() -> void:
 	_clear_children(_enemies_root())
 	_clear_children(_pickups_root())
 	_clear_children(_projectiles_root())
+	_xp_range_debug_circles.clear()
 	var pagecraft := _pagecraft_manager()
 	if pagecraft != null and pagecraft.has_method("debug_clear_marks"):
 		pagecraft.debug_clear_marks()
@@ -931,6 +961,10 @@ func _camera_rig() -> Node3D:
 
 func _damage_numbers_root() -> Node3D:
 	return _run_root().get_node("DamageNumbers") as Node3D
+
+
+func _vfx_root() -> Node3D:
+	return _run_root().get_node("VFX") as Node3D
 
 
 func _pickups_root() -> Node3D:

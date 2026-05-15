@@ -16,7 +16,8 @@ const SPAWN_INTERVAL_END := 0.2
 const AVERAGE_XP_MULTIPLIER_START := 1.0
 const AVERAGE_XP_MULTIPLIER_END := 1.8
 const BASE_ENEMY_XP := 5.0
-const HEALTH_MULTIPLIER_END := 10.0
+const HEALTH_MULTIPLIER_END := 8.0
+const HEALTH_SCALING_CURVE := 1.6
 
 @export_range(1, 1000, 1) var safety_enemy_cap := 350
 @export_range(1, 512, 1) var active_budget := OPENING_MIN_ALIVE_START
@@ -249,7 +250,7 @@ func _apply_time_band(run_time_seconds: float) -> void:
 	active_budget = _min_alive_for_time(run_time_seconds, p)
 	spawn_interval_seconds = lerpf(SPAWN_INTERVAL_START, SPAWN_INTERVAL_END, p)
 	spawn_batch_size = maxi(1, floori(_target_kills_per_second() * _effective_spawn_interval()))
-	_health_multiplier = lerpf(1.0, HEALTH_MULTIPLIER_END, _progress01(run_time_seconds))
+	_health_multiplier = _enemy_health_multiplier(run_time_seconds)
 	_current_time_band_id = _band_id_for_minute(run_time_seconds / 60.0)
 
 
@@ -298,6 +299,11 @@ func _average_xp_per_kill() -> float:
 	return BASE_ENEMY_XP * multiplier
 
 
+func _enemy_health_multiplier(run_time_seconds: float) -> float:
+	var p := _progress01(run_time_seconds)
+	return 1.0 + ((HEALTH_MULTIPLIER_END - 1.0) * pow(p, HEALTH_SCALING_CURVE))
+
+
 func _band_id_for_minute(minute: float) -> StringName:
 	if minute < 3.0:
 		return &"opening"
@@ -312,9 +318,8 @@ func _band_id_for_minute(minute: float) -> StringName:
 	return &"elite_wave"
 
 
-# Enemy durability uses simple visible time-band multipliers for the first slice.
-# Opening HP is authored from two starter Waxlight hits; later bands gently multiply
-# that base so the player feels early power before pressure rises.
+# Enemy durability uses an eased 1x -> 8x curve over the 30-minute run.
+# Opening HP is authored against the Star Sticker Swarm starter baseline.
 func _scaled_enemy_health(enemy_data: Resource) -> float:
 	return maxf(1.0, float(enemy_data.max_health) * _health_multiplier)
 

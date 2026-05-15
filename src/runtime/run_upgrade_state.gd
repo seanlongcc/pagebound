@@ -15,6 +15,7 @@ const MAX_PASSIVES := 5
 const DRAFT_CHOICE_COUNT := 3
 const BASE_PLAYER_MAX_HEALTH := 1000.0
 const LEGACY_RANGE_STEP := 1.5
+const BASE_STAR_NODE_CAP := 5
 const RARITY_COMMON := &"common"
 const RARITY_UNCOMMON := &"uncommon"
 const RARITY_RARE := &"rare"
@@ -37,25 +38,25 @@ const COUNT_BY_RARITY := {
 const WEAPON_UPGRADE_TRACKS := {
 	WEAPON_WAXLIGHT_COMET: [
 		{"name": "Comet Hit", "scope": "base projectile", "stat": &"damage", "rarity": RARITY_COMMON, "note": "Scales direct comet hit."},
-		{"name": "Impact Splat", "scope": "impact mark", "stat": &"size", "rarity": RARITY_COMMON, "note": "Scales splat footprint."},
-		{"name": "Wax Trail", "scope": "Pagecraft trail", "stat": &"duration", "rarity": RARITY_COMMON, "note": "Trails remain longer."},
-		{"name": "Spark Release", "scope": "impact proc", "stat": &"proc_chance", "rarity": RARITY_UNCOMMON, "note": "L5 fork sparks plus release chance."},
-		{"name": "Trail Width", "scope": "Pagecraft trail", "stat": &"size", "rarity": RARITY_RARE, "note": "Trails become wider."},
-		{"name": "Trail Burn", "scope": "Pagecraft trail", "stat": &"damage", "rarity": RARITY_RARE, "note": "Trail and activation damage rises."},
-		{"name": "Spark Count", "scope": "impact proc", "stat": &"effect_count", "rarity": RARITY_UNCOMMON, "note": "Adds more sparks."},
-		{"name": "Spark Reach", "scope": "impact proc", "stat": &"range", "rarity": RARITY_EPIC, "note": "Sparks travel farther."},
-		{"name": "Dash Ignition", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 highway plus stronger dash slash."},
+		{"name": "Impact Radius", "scope": "AoE mark", "stat": &"size", "rarity": RARITY_COMMON, "note": "Scales Waxlight burst footprint."},
+		{"name": "Comet Cadence", "scope": "base projectile", "stat": &"cadence", "rarity": RARITY_COMMON, "note": "Waxlight Comet fires more often."},
+		{"name": "Dash Burst", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_UNCOMMON, "note": "L5 crossed marks burst harder."},
+		{"name": "Waxlight Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_RARE, "note": "Scales target range and any unlocked connected-mark reach."},
+		{"name": "Mark Cap", "scope": "AoE marks", "stat": &"active_cap", "rarity": RARITY_UNCOMMON, "note": "More unactivated Waxlight marks can wait on the page."},
+		{"name": "Burst Burn", "scope": "AoE mark", "stat": &"damage", "rarity": RARITY_RARE, "note": "Mark burst damage rises."},
+		{"name": "Comet Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_EPIC, "note": "Scales target range and any unlocked connected-mark reach."},
+		{"name": "Chain Burst", "scope": "connected marks", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 connected bursts hit harder."},
 	],
 	WEAPON_STAR_STICKER_SWARM: [
 		{"name": "Star Strike", "scope": "orbit star", "stat": &"damage", "rarity": RARITY_COMMON, "note": "Scales star contact hit."},
-		{"name": "Orbit Reach", "scope": "orbit star", "stat": &"range", "rarity": RARITY_COMMON, "note": "Stars reach farther from player."},
-		{"name": "Star Node", "scope": "Pagecraft node", "stat": &"duration", "rarity": RARITY_COMMON, "note": "Nodes remain longer."},
+		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_COMMON, "note": "Scales target range and any unlocked node ricochet range."},
+		{"name": "Star Node Cap", "scope": "Star node", "stat": &"active_cap", "rarity": RARITY_COMMON, "note": "Raises persistent Star node cap."},
 		{"name": "Ricochet Hit", "scope": "node ricochet", "stat": &"damage", "rarity": RARITY_UNCOMMON, "note": "L5 node ricochet damage."},
-		{"name": "Ricochet Reach", "scope": "node ricochet", "stat": &"range", "rarity": RARITY_UNCOMMON, "note": "Ricochets find farther nodes."},
+		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_UNCOMMON, "note": "Scales target range and any unlocked node ricochet range."},
 		{"name": "Extra Stars", "scope": "orbit star", "stat": &"effect_count", "rarity": RARITY_RARE, "note": "Adds orbiting stars."},
-		{"name": "Node Spawn", "scope": "star hit proc", "stat": &"proc_chance", "rarity": RARITY_RARE, "note": "Chance to leave a node."},
-		{"name": "Node Pop", "scope": "Pagecraft node", "stat": &"size", "rarity": RARITY_EPIC, "note": "Node pop footprint grows."},
-		{"name": "Dash Launch", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 constellation rain plus stronger launched nodes."},
+		{"name": "Star Node Cap", "scope": "Star node", "stat": &"active_cap", "rarity": RARITY_RARE, "note": "Raises persistent Star node cap again."},
+		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_EPIC, "note": "Scales target range and any unlocked node ricochet range."},
+		{"name": "Dash Volley", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 node-fired stars inherit stronger Star damage."},
 	],
 }
 
@@ -79,7 +80,7 @@ func configure(content_factory) -> void:
 
 
 func reset() -> void:
-	_owned_weapon_levels = {WEAPON_WAXLIGHT_COMET: 1}
+	_owned_weapon_levels = {WEAPON_STAR_STICKER_SWARM: 1}
 	_owned_passive_levels = {}
 	_weapon_stat_bonuses = {}
 	_weapon_range_bonuses = {}
@@ -150,12 +151,40 @@ func star_sticker_lifetime_seconds(base_duration_seconds: float) -> float:
 	return base_duration_seconds * duration_multiplier() * (1.0 + _weapon_stat_bonus(WEAPON_STAR_STICKER_SWARM, &"duration"))
 
 
+func star_sticker_node_cap(base_cap: int = BASE_STAR_NODE_CAP) -> int:
+	return base_cap + int(_weapon_stat_bonus(WEAPON_STAR_STICKER_SWARM, &"active_cap"))
+
+
+func star_sticker_nodes_unlocked() -> bool:
+	return _weapon_level(WEAPON_STAR_STICKER_SWARM) >= 5
+
+
+func star_sticker_l10_unlocked() -> bool:
+	return _weapon_level(WEAPON_STAR_STICKER_SWARM) >= 10
+
+
+func star_sticker_dash_unlocked() -> bool:
+	return star_sticker_nodes_unlocked()
+
+
 func waxlight_active_duration_seconds(base_duration_seconds: float) -> float:
 	return base_duration_seconds * duration_multiplier() * (1.0 + _weapon_stat_bonus(WEAPON_WAXLIGHT_COMET, &"duration"))
 
 
 func waxlight_unactivated_mark_cap(base_cap: int) -> int:
 	return base_cap + int(_weapon_stat_bonus(WEAPON_WAXLIGHT_COMET, &"active_cap"))
+
+
+func waxlight_dash_unlocked() -> bool:
+	return _weapon_level(WEAPON_WAXLIGHT_COMET) >= 5
+
+
+func waxlight_connected_activation_unlocked() -> bool:
+	return _weapon_level(WEAPON_WAXLIGHT_COMET) >= 10
+
+
+func waxlight_connected_reach_meters(base_reach_meters: float) -> float:
+	return weapon_range_meters(WEAPON_WAXLIGHT_COMET, base_reach_meters)
 
 
 func waxlight_damage_bonus() -> float:

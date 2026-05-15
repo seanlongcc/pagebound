@@ -16,7 +16,7 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md`; `design/gdd/mvp-weapon-c
 | Domain | Exemplar Choice | Notes |
 |---|---|---|
 | Chapter feel | Waxlight Castle | Storybook page, Waxlight material identity. |
-| Starter weapon | Waxlight Comet | Starter weapon. Starts at level 1. Current prototype pool also includes the second-batch Star Sticker Swarm. |
+| Starter weapon | Star Sticker Swarm | Starter baseline weapon. Starts at level 1. Waxlight Comet remains an early AoE/Pagecraft weapon in the prototype pool. |
 | Passive item | Candle Spark | First passive item. Global passive item, not weapon-specific. Current prototype pool also includes Cloud Seed, Dream Thread, Ribbon Spool, and Moon Button. |
 | Pet | Dog | Support-only pickup fetch helper. No direct damage. Not a loadout slot. |
 | Page Event | Color Well | Offscreen event, 60s timer, 15 kills inside circle. |
@@ -30,7 +30,7 @@ The game does not hard stop at 5:00. Five minutes is the target evaluation windo
 
 | Time | Target Beat |
 |---:|---|
-| `0:00` | Run starts with Waxlight Comet level 1 and Dog active. No passive item by default. |
+| `0:00` | Run starts with Star Sticker Swarm level 1 and Dog active. No passive item by default. |
 | `~0:30` | First normal level-up draft may appear, depending on XP tuning. |
 | `1:00` | Color Well Page Event spawns outside current vision at a random valid reachable page location. Timer starts immediately. |
 | `2:00` | Color Well succeeds or fails. Success opens a Page Event reward draft. Failure gives no event reward and run continues. |
@@ -89,22 +89,21 @@ Overflow:
 - Overflow cards are global `+5%` stat crumbs using existing broad stat channels.
 - Overflow is not needed for the first 5-minute package but must not be confused with pity or fallback rewards.
 
-## Tiny Pool Behavior
+## Current Prototype Pool Behavior
 
-Historical first-package pool:
+Historical first-package pool, now superseded by the current prototype pool:
 
-- Weapon pool contains only Waxlight Comet.
-- Item pool contains only Candle Spark.
+- Weapon pool contained only Waxlight Comet.
+- Item pool contained only Candle Spark.
 
 Current prototype implementation note: the user-approved second content batch expands the pool with `Star Sticker Swarm`, `Cloud Seed`, `Dream Thread`, `Ribbon Spool`, and `Moon Button`. Runtime draft logic must use the authored content pool dynamically and must not assume Waxlight/Candle are the only legal gear.
 
 Implications:
 
-- The player starts with Waxlight Comet, so no legal new weapon exists until another weapon is implemented.
-- If a draft rolls new weapon while no unowned weapon exists, it redirects to new item if Candle Spark is legal.
-- Candle Spark can appear from a normal level-up draft before the Page Event.
-- If Candle Spark is not owned by the first Page Event reward, the event's new-gear guarantee will redirect to Candle Spark because it is the only legal unowned gear.
-- If Candle Spark is already owned, the Page Event gear guarantee fails gracefully because no legal unowned gear remains in the tiny pool.
+- The player starts with Star Sticker Swarm.
+- Waxlight Comet is legal as an unowned new weapon while a weapon slot is open.
+- Candle Spark, Cloud Seed, Dream Thread, Ribbon Spool, and Moon Button are legal as unowned passive items while passive slots are open.
+- Page Event reward guarantees use the full current legal gear pool, not the historical Waxlight/Candle-only redirect.
 
 ## HUD Contract
 
@@ -130,9 +129,11 @@ Dog is a support-only pet in this package.
 - Dog is a visible decorative follower.
 - Dog has no collision, no combat AI, and no direct damage.
 - Dog has no pickup aura.
+- Developer-only XP range debug circles can show the player's 3.0m XP pickup range and Dog's fetch range when a debug toggle is enabled; these are not player-facing auras.
 - Dog extends the player's effective pickup reach by watching pickups inside its fetch range.
 - Pickups inside that range are not credited instantly; Dog moves to them and fetches them with its own simple pathing/follow AI.
-- T1: Dog fetches Color Motes inside a 4.5m fetch range, 50% larger than default XP magnetism.
+- Once Dog starts moving toward a pickup, leaving Dog fetch range does not cancel that fetch; Dog finishes unless the pickup becomes invalid or is collected first.
+- T1: Dog fetches Color Motes inside a 6.0m fetch range, 100% larger than default 3.0m XP magnetism.
 - T2: Dog can also fetch health pickups.
 - T3: Dog fetch range increases to 8.625m.
 - When Dog fetches XP, credit is applied only when Dog reaches the pickup.

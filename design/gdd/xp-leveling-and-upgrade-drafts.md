@@ -56,14 +56,14 @@ Page Events do not have stronger pools, evolution rewards, Pagecraft modifiers, 
 
 ### First Polished Exemplar Pool
 
-The first polished exemplar originally used a tiny pool:
+The first polished exemplar originally used a tiny pool, now superseded by the current prototype pool:
 
 | Type | Entry | Notes |
 |---|---|---|
-| Starting weapon | `Waxlight Comet` | Owned at run start, level 1. |
+| Starting weapon | `Waxlight Comet` | Historical first-package starter, superseded by Star Sticker Swarm for current first-playable tuning. |
 | Passive item | `Candle Spark` | Only item in first package. |
 
-Because the player starts with `Waxlight Comet`, a new weapon roll has no legal unowned weapon in the first package and redirects to `Candle Spark` if it is still legal. If `Candle Spark` appears before the first Page Event reward, that is acceptable. If it has not appeared, the first successful Page Event reward guarantee points at `Candle Spark`.
+Current first-playable tuning starts the player with `Star Sticker Swarm`. `Waxlight Comet` is legal as an unowned early AoE/Pagecraft weapon while a weapon slot is open, and the event reward guarantee uses the full current legal gear pool.
 
 The tiny pool can temporarily underfill distinct 3-card choices during implementation. Prototype may allow repeated simple upgrade targets only after all distinct legal normal cards have already been represented. Full content pool should avoid duplicate target/action cards within the same draft.
 

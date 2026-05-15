@@ -56,10 +56,12 @@ func _initialize() -> void:
 	var base_duration := 0.0
 	if manager.has_method("debug_activation_duration_seconds"):
 		base_duration = manager.debug_activation_duration_seconds()
+	runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
 	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
 	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
 	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
-	_assert_true(manager.debug_activation_duration_seconds() > base_duration, "duration upgrade must extend active Waxlight duration", failures)
+	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	_assert_true(is_equal_approx(manager.debug_activation_duration_seconds(), base_duration), "Waxlight burst tuning must keep active visual duration stable", failures)
 
 	var base_cap: int = manager.debug_unactivated_mark_cap()
 	for index in base_cap + 2:

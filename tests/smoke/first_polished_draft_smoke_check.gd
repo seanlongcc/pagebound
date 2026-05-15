@@ -10,16 +10,17 @@ func _initialize() -> void:
 	state.configure(PrototypeContentFactoryScript.new())
 	state.debug_set_draft_seed(42)
 
-	_assert_true(state.owned_weapon_ids() == [&"waxlight_comet"], "run must start with Waxlight Comet only", failures)
-	_assert_true(state.weapon_level(&"waxlight_comet") == 1, "Waxlight Comet must start at level 1", failures)
+	_assert_true(state.owned_weapon_ids() == [&"star_sticker_swarm"], "run must start with Star Sticker Swarm only", failures)
+	_assert_true(state.weapon_level(&"star_sticker_swarm") == 1, "Star Sticker Swarm must start at level 1", failures)
 	_assert_true(state.owned_passive_ids().is_empty(), "run must start with no passive items", failures)
 	_assert_true(state.has_method("page_event_reward_choices"), "upgrade state must expose Page Event reward drafts", failures)
+	_assert_true(_contains_target(state.debug_eligible_choices_for_level(2), &"weapon_upgrade", &"star_sticker_swarm"), "eligible draft pool must include legal Star +1 upgrade", failures)
+	_assert_true(_contains_choice_id(state.debug_eligible_choices_for_level(2), &"new_weapon_waxlight_comet"), "eligible draft pool must offer Waxlight as second weapon", failures)
 
 	var normal_choices: Array[Dictionary] = state.prototype_choices_for_level(2)
 	_assert_true(normal_choices.size() == 3, "normal draft must show exactly 3 choices", failures)
-	_assert_true(_contains_target(normal_choices, &"weapon_upgrade", &"waxlight_comet"), "normal draft must include legal Waxlight +1 upgrade", failures)
 	_assert_true(_contains_new_gear(normal_choices), "expanded normal draft may offer legal second-batch gear", failures)
-	_assert_true(_contains_choice_id(normal_choices, &"new_weapon_star_sticker_swarm") or _contains_any_requested_passive(normal_choices), "expanded pool must use authored Star Sticker/passive gear, not fixed weapon-pick levels", failures)
+	_assert_true(_contains_choice_id(normal_choices, &"new_weapon_waxlight_comet") or _contains_any_requested_passive(normal_choices), "expanded pool must use authored Waxlight/passive gear, not fixed weapon-pick levels", failures)
 	_assert_choices_have_unique_tags(normal_choices, failures)
 
 	if state.has_method("page_event_reward_choices"):
@@ -27,9 +28,13 @@ func _initialize() -> void:
 		_assert_true(event_choices.size() == 3, "Page Event reward draft must show exactly 3 choices", failures)
 		_assert_true(_contains_new_gear(event_choices), "Page Event reward must guarantee legal new gear while legal", failures)
 
-	var wax_upgrade: Dictionary = state.apply_choice(&"weapon_upgrade_waxlight_comet")
-	_assert_true(not wax_upgrade.is_empty(), "Waxlight +1 upgrade must apply", failures)
-	_assert_true(state.weapon_level(&"waxlight_comet") == 2, "Waxlight +1 upgrade must add exactly one weapon level", failures)
+	var star_upgrade: Dictionary = state.apply_choice(&"weapon_upgrade_star_sticker_swarm")
+	_assert_true(not star_upgrade.is_empty(), "Star Sticker +1 upgrade must apply", failures)
+	_assert_true(state.weapon_level(&"star_sticker_swarm") == 2, "Star Sticker +1 upgrade must add exactly one weapon level", failures)
+
+	var wax_new: Dictionary = state.apply_choice(&"new_weapon_waxlight_comet")
+	_assert_true(not wax_new.is_empty(), "Waxlight acquisition must apply as second weapon", failures)
+	_assert_true(state.weapon_level(&"waxlight_comet") == 1, "Waxlight must enter at level 1", failures)
 
 	var candle_new: Dictionary = state.apply_choice(&"new_passive_candle_spark")
 	_assert_true(not candle_new.is_empty(), "Candle Spark acquisition must apply", failures)
