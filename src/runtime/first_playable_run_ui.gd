@@ -15,8 +15,11 @@ func ensure_hud(hud: Control) -> void:
 	_hud.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_remove_old_debug_label()
 	_ensure_party_reserve()
+	_ensure_run_timer()
 	_ensure_top_right_banner()
+	_ensure_event_marker()
 	_ensure_hp_chip()
+	_ensure_dash_meter()
 	_ensure_loadout_book()
 	_ensure_bottom_xp_bar()
 	_ensure_level_badge()
@@ -34,7 +37,10 @@ func update_hud(context: Dictionary) -> void:
 	if _hud == null:
 		return
 	_update_hp(context)
+	_update_dash(context)
+	_update_run_timer(context)
 	_update_banner(context)
+	_update_event_marker(context)
 	_update_xp(context)
 	_update_level(context)
 	_update_pet(context)
@@ -87,6 +93,14 @@ func passive_display_names(passive_ids: Array) -> Array[String]:
 		match passive_id:
 			&"candle_spark":
 				names.append("Candle Spark")
+			&"cloud_seed":
+				names.append("Cloud Seed")
+			&"dream_thread":
+				names.append("Dream Thread")
+			&"ribbon_spool":
+				names.append("Ribbon Spool")
+			&"moon_button":
+				names.append("Moon Button")
 			_:
 				names.append(String(passive_id).capitalize())
 	if names.is_empty():
@@ -102,19 +116,47 @@ func _remove_old_debug_label() -> void:
 
 
 func _ensure_party_reserve() -> void:
-	if _hud.get_node_or_null("PartyReserve") != null:
+	var row := _hud.get_node_or_null("PartyReserve") as CanvasItem
+	if row != null:
+		row.visible = false
+
+
+func _ensure_run_timer() -> void:
+	if _hud.get_node_or_null("RunTimer") != null:
 		return
-	var row := HBoxContainer.new()
-	row.name = "PartyReserve"
-	row.position = Vector2(24.0, 22.0)
-	row.add_theme_constant_override("separation", 8)
-	_hud.add_child(row)
-	for index in 3:
-		var badge := PanelContainer.new()
-		badge.name = "PartySlot%d" % (index + 1)
-		badge.custom_minimum_size = Vector2(42.0, 42.0)
-		badge.add_theme_stylebox_override("panel", _panel_style(Color(0.96, 0.89, 0.66, 0.82), Color(0.25, 0.20, 0.12, 0.75), 2))
-		row.add_child(badge)
+	var timer := Label.new()
+	timer.name = "RunTimer"
+	timer.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	timer.offset_left = 0.0
+	timer.offset_top = 16.0
+	timer.offset_right = 0.0
+	timer.offset_bottom = 56.0
+	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	timer.add_theme_font_size_override("font_size", 28)
+	timer.add_theme_color_override("font_color", Color(0.05, 0.035, 0.02, 1.0))
+	timer.add_theme_color_override("font_outline_color", Color(1.0, 0.92, 0.76, 0.9))
+	timer.add_theme_constant_override("outline_size", 3)
+	_hud.add_child(timer)
+
+
+func _ensure_event_marker() -> void:
+	if _hud.get_node_or_null("PageEventEdgeMarker") != null:
+		return
+	var marker := Label.new()
+	marker.name = "PageEventEdgeMarker"
+	marker.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	marker.offset_left = 0.0
+	marker.offset_top = 58.0
+	marker.offset_right = 0.0
+	marker.offset_bottom = 86.0
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marker.add_theme_font_size_override("font_size", 18)
+	marker.add_theme_color_override("font_color", Color(0.42, 0.02, 0.18, 1.0))
+	marker.text = "Color Well ->"
+	marker.visible = false
+	_hud.add_child(marker)
 
 
 func _ensure_top_right_banner() -> void:
@@ -174,6 +216,34 @@ func _ensure_hp_chip() -> void:
 	hp_bar.show_percentage = false
 	hp_bar.custom_minimum_size = Vector2(176.0, 16.0)
 	stack.add_child(hp_bar)
+
+
+func _ensure_dash_meter() -> void:
+	if _hud.get_node_or_null("DashMeter") != null:
+		return
+	var meter := PanelContainer.new()
+	meter.name = "DashMeter"
+	meter.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	meter.offset_left = 230.0
+	meter.offset_top = -142.0
+	meter.offset_right = 390.0
+	meter.offset_bottom = -86.0
+	meter.add_theme_stylebox_override("panel", _panel_style(Color(0.94, 0.97, 0.88, 0.9), Color(0.14, 0.24, 0.12, 0.9), 2))
+	_hud.add_child(meter)
+	var stack := VBoxContainer.new()
+	meter.add_child(stack)
+	var dash_label := Label.new()
+	dash_label.name = "DashLabel"
+	dash_label.add_theme_font_size_override("font_size", 16)
+	dash_label.add_theme_color_override("font_color", Color(0.05, 0.07, 0.03, 1.0))
+	stack.add_child(dash_label)
+	var dash_bar := ProgressBar.new()
+	dash_bar.name = "DashProgress"
+	dash_bar.min_value = 0.0
+	dash_bar.max_value = 100.0
+	dash_bar.show_percentage = false
+	dash_bar.custom_minimum_size = Vector2(136.0, 16.0)
+	stack.add_child(dash_bar)
 
 
 func _ensure_loadout_book() -> void:
@@ -237,6 +307,8 @@ func _ensure_level_badge() -> void:
 
 func _ensure_pet_badge() -> void:
 	if _hud.get_node_or_null("PetBadge") != null:
+		if _hud.get_node_or_null("DogPetIcon") == null:
+			_add_dog_icon()
 		return
 	var badge := Label.new()
 	badge.name = "PetBadge"
@@ -248,6 +320,22 @@ func _ensure_pet_badge() -> void:
 	badge.add_theme_font_size_override("font_size", 16)
 	badge.add_theme_color_override("font_color", Color(0.05, 0.035, 0.02, 1.0))
 	_hud.add_child(badge)
+	_add_dog_icon()
+
+
+func _add_dog_icon() -> void:
+	var icon := Label.new()
+	icon.name = "DogPetIcon"
+	icon.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	icon.offset_left = 296.0
+	icon.offset_top = -72.0
+	icon.offset_right = 352.0
+	icon.offset_bottom = -28.0
+	icon.text = "Dog"
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.add_theme_font_size_override("font_size", 16)
+	icon.add_theme_color_override("font_color", Color(0.18, 0.10, 0.04, 1.0))
+	_hud.add_child(icon)
 
 
 func _add_slot_row(parent: Node, row_name: String) -> void:
@@ -276,6 +364,22 @@ func _update_hp(context: Dictionary) -> void:
 		bar.value = clampf(float(current) / float(max_value) * 100.0, 0.0, 100.0)
 
 
+func _update_dash(context: Dictionary) -> void:
+	var percent := clampi(int(context.get("dash_recharge_percent", 100)), 0, 100)
+	var dash_label := label("DashLabel")
+	if dash_label != null:
+		dash_label.text = "Dash %d%%" % percent
+	var dash_bar := _find_named(_hud, "DashProgress") as ProgressBar
+	if dash_bar != null:
+		dash_bar.value = percent
+
+
+func _update_run_timer(context: Dictionary) -> void:
+	var timer := _hud.get_node_or_null("RunTimer") as Label
+	if timer != null:
+		timer.text = format_run_time(float(context.get("run_time_seconds", 0.0)))
+
+
 func _update_banner(context: Dictionary) -> void:
 	var event_state: Dictionary = context.get("page_event_state", {})
 	var boss_state: Dictionary = context.get("boss_state", {})
@@ -294,6 +398,14 @@ func _update_banner(context: Dictionary) -> void:
 	elif show_boss:
 		var metric := "Queued" if bool(boss_state.get("queued_for_event", false)) else "%d%%" % int(boss_state.get("hp_percent", 0))
 		_set_banner("Crownless Echo", "The Scribble King Stirs", metric, "3:30", float(boss_state.get("hp_percent", 0)))
+
+
+func _update_event_marker(context: Dictionary) -> void:
+	var marker := _hud.get_node_or_null("PageEventEdgeMarker") as Label
+	if marker == null:
+		return
+	var event_state: Dictionary = context.get("page_event_state", {})
+	marker.visible = bool(event_state.get("edge_marker_visible", false))
 
 
 func _set_banner(kicker: String, title: String, metric: String, subline: String, progress: float) -> void:
@@ -327,11 +439,14 @@ func _update_pet(context: Dictionary) -> void:
 		int(context.get("dog_tier", 1)),
 		String(context.get("dog_feedback_text", "Dog")),
 	]
+	var icon := _hud.get_node_or_null("DogPetIcon") as Label
+	if icon != null:
+		icon.scale = Vector2.ONE * (1.18 if String(context.get("dog_feedback_text", "Dog")) != "Dog" else 1.0)
 
 
 func _update_loadout(context: Dictionary) -> void:
-	_update_slot_row(_hud.get_node_or_null("LoadoutBook/WeaponSlots"), weapon_display_names(context.get("weapon_ids", [])))
-	_update_slot_row(_hud.get_node_or_null("LoadoutBook/ItemSlots"), passive_display_names(context.get("passive_ids", [])))
+	_update_slot_row(_hud.get_node_or_null("LoadoutBook/WeaponSlots"), _names_with_levels(weapon_display_names(context.get("weapon_ids", [])), context.get("weapon_ids", []), context.get("weapon_levels", {})))
+	_update_slot_row(_hud.get_node_or_null("LoadoutBook/ItemSlots"), _names_with_levels(passive_display_names(context.get("passive_ids", [])), context.get("passive_ids", []), context.get("passive_levels", {})))
 
 
 func _update_slot_row(row: Node, names: Array[String]) -> void:
@@ -345,6 +460,18 @@ func _update_slot_row(row: Node, names: Array[String]) -> void:
 		if slot == null:
 			continue
 		slot.text = visible_names[index] if index < visible_names.size() else "Empty"
+
+
+func _names_with_levels(names: Array[String], ids: Array, levels: Dictionary) -> Array[String]:
+	var result: Array[String] = []
+	for index in names.size():
+		if names[index] == "none":
+			continue
+		var id = ids[index] if index < ids.size() else &""
+		result.append("%s Lv%d" % [names[index], int(levels.get(id, 1))])
+	if result.is_empty():
+		result.append("none")
+	return result
 
 
 func label(node_name: String) -> Label:

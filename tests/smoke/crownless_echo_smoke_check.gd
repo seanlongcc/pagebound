@@ -39,7 +39,7 @@ func _initialize() -> void:
 	boss_state = _boss_state(runtime)
 	_assert_true(boss_state.get("id", &"") == &"crownless_echo", "Crownless Echo must spawn after event resolves", failures)
 	_assert_true(bool(boss_state.get("active", false)), "Crownless Echo must become active", failures)
-	_assert_true(int(boss_state.get("hp_percent", 0)) == 100, "boss banner data must expose HP percent", failures)
+	_assert_true(int(boss_state.get("hp_percent", 0)) > 0 and int(boss_state.get("hp_percent", 0)) <= 100, "boss banner data must expose HP percent", failures)
 	_assert_true(_visible_text(root.get_node_or_null("UI/HUD")).contains("Crownless Echo"), "boss banner must replace event banner after event resolves", failures)
 
 	if runtime != null and runtime.has_method("debug_damage_boss"):

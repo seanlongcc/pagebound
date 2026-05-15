@@ -18,17 +18,18 @@ Weapons should make the page feel conquered by the player's build. The player mo
 ### Core Rules
 
 1. MVP includes all 20 shared weapons as data-defined content, placeholder visuals acceptable.
-2. Every weapon has exactly 10 levels.
-3. Every weapon defines type, material tags, page alteration, dash interaction, level entries, attack behavior reference, and 2 evolution catalyst tags.
-4. Every weapon has a maximum range used for targeting or effect placement.
+2. Every weapon has exactly 10 upgrade-count levels.
+3. Every weapon defines type, material tags, page alteration, dash interaction, one editable base stat set, attack behavior reference, and 2 evolution catalyst tags.
+4. Every weapon has a base maximum range used for targeting or effect placement before selected range modifiers.
 5. Weapons auto-fire without aim input.
 6. Player can own up to 5 weapon slots in normal MVP runs.
-7. Leveling a weapon increases exactly one level at a time unless a reward explicitly grants multiple levels.
+7. Selecting a weapon upgrade increases exactly one progress level at a time unless a reward explicitly grants multiple levels.
 8. Separate one-stat range upgrade cards may increase weapon range without changing damage, count, cooldown, or weapon level.
-9. Weapon runtime asks Damage Model to resolve damage; it does not directly subtract health.
-10. Weapon runtime asks Pagecraft to deposit/activate marks; it does not own grid state.
-11. Weapon visuals/projectiles use object pools.
-12. Evolved weapons replace base behavior while keeping the weapon slot and level 10 state.
+9. Weapon levels do not grant hidden baseline stat growth; only selected upgrades, items, evolutions, or explicit effects change runtime stats.
+10. Weapon runtime asks Damage Model to resolve damage; it does not directly subtract health.
+11. Weapon runtime asks Pagecraft to deposit/activate marks; it does not own grid state.
+12. Weapon visuals/projectiles use object pools.
+13. Evolved weapons replace base behavior while keeping the weapon slot and level 10 state.
 
 ### States and Transitions
 
@@ -46,7 +47,7 @@ Weapons should make the page feel conquered by the player's build. The player mo
 
 | System | Direction | Contract |
 |---|---|---|
-| Resource Data Schemas | Upstream | Provides weapon resources, levels, tags, paths, and behavior IDs. |
+| Resource Data Schemas | Upstream | Provides weapon resources, base stat fields, tags, paths, and behavior IDs. |
 | Damage and Status Model | Downstream | Resolves weapon damage/status payloads. |
 | Object Pooling and Performance Debug | Supporting | Supplies projectiles, VFX, decals, and debug counters. |
 | Pagecraft Materials and Grid | Downstream | Receives deposit/activation requests and material tags. |
@@ -60,7 +61,7 @@ Weapons should make the page feel conquered by the player's build. The player mo
 
 `attack_interval = base_interval / max(0.1, attack_speed_multiplier)`
 
-`weapon_damage = level_base_damage * player_damage_multiplier * weapon_specific_multiplier`
+`weapon_damage = base_damage * player_damage_multiplier * weapon_specific_multiplier`
 
 `weapon_can_target = distance_to_target <= current_weapon_range`
 
@@ -68,7 +69,7 @@ Weapons should make the page feel conquered by the player's build. The player mo
 
 Invalid states:
 
-- Weapon has not exactly 10 level entries.
+- Weapon is missing a valid base stat set.
 - Weapon runtime subtracts target health directly.
 - Weapon deposits unknown Pagecraft material tag.
 - Weapon is offered as new draft when all 5 weapon slots are full.
@@ -119,7 +120,7 @@ Invalid states:
 
 - Weapon system supports 5 normal weapon slots and 20 data-defined MVP weapons.
 - A weapon can auto-fire without aim input.
-- Weapon level 1-10 progression changes behavior/stats through data.
+- Weapon level 1-10 progression changes behavior through selected upgrades and milestones, not hidden baseline stat growth.
 - Weapon maximum range gates targeting/effect placement and can be upgraded by separate range cards.
 - Weapon hits flow through Damage Model and Event Bus.
 - Weapon Pagecraft deposits flow through Pagecraft system.

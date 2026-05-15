@@ -10,7 +10,7 @@ const EVENT_TITLE := "Fill the Color Well"
 const EVENT_DESCRIPTOR := "Defeat enemies inside the Color Well."
 const EVENT_DURATION_SECONDS := 60.0
 const REQUIRED_PROGRESS := 15
-const EVENT_RADIUS := 3.5
+const EVENT_RADIUS := 5.25
 const CURRENT_VISION_HALF_EXTENTS := Vector2(8.5, 5.0)
 
 @export_range(1.0, 1200.0, 1.0) var first_event_time_seconds := 60.0
@@ -25,7 +25,17 @@ var _progress := 0
 var _world_position := Vector3.ZERO
 var _spawn_outside_current_vision := false
 var _edge_marker_visible := false
+var _spawn_reachable := false
+var _spawn_blocked := false
+var _spawn_clipping := false
+var _spawn_boss_only := false
 var _anchor_visual: MeshInstance3D
+var _fill_visual: MeshInstance3D
+var _rng := RandomNumberGenerator.new()
+
+
+func _ready() -> void:
+	_rng.randomize()
 
 
 func configure(player: Node3D, page_half_extents: Vector2) -> void:
@@ -42,9 +52,11 @@ func reset() -> void:
 	_world_position = Vector3.ZERO
 	_spawn_outside_current_vision = false
 	_edge_marker_visible = false
-	if _anchor_visual != null:
-		_anchor_visual.queue_free()
-		_anchor_visual = null
+	_spawn_reachable = false
+	_spawn_blocked = false
+	_spawn_clipping = false
+	_spawn_boss_only = false
+	_cleanup_anchor_visual()
 
 
 func update(run_time_seconds: float, delta: float) -> void:
@@ -71,6 +83,7 @@ func add_kill_progress(death_position: Vector3, amount: int = 1) -> void:
 	if death_position.distance_to(_world_position) > EVENT_RADIUS:
 		return
 	_progress = mini(REQUIRED_PROGRESS, _progress + maxi(1, amount))
+	_update_anchor_progress()
 	if _progress >= REQUIRED_PROGRESS:
 		_complete()
 
@@ -87,7 +100,7 @@ func force_complete() -> void:
 
 
 func active_event_id() -> StringName:
-	if _active or _completed or _failed:
+	if _active:
 		return EVENT_FILL_COLOR_WELL
 	return &""
 
@@ -128,6 +141,10 @@ func debug_state() -> Dictionary:
 		"radius": EVENT_RADIUS,
 		"outside_current_vision": _spawn_outside_current_vision,
 		"edge_marker_visible": _edge_marker_visible,
+		"spawn_reachable": _spawn_reachable,
+		"spawn_blocked": _spawn_blocked,
+		"spawn_clipping": _spawn_clipping,
+		"spawn_boss_only": _spawn_boss_only,
 	}
 
 
@@ -160,6 +177,10 @@ func _start_event() -> void:
 	_progress = 0
 	_world_position = _random_offscreen_position()
 	_spawn_outside_current_vision = _is_outside_current_vision(_world_position)
+	_spawn_reachable = true
+	_spawn_blocked = false
+	_spawn_clipping = false
+	_spawn_boss_only = false
 	_edge_marker_visible = _spawn_outside_current_vision
 	_ensure_anchor_visual()
 	event_started.emit({
@@ -174,31 +195,43 @@ func _complete() -> void:
 	_completed = true
 	_active = false
 	_edge_marker_visible = false
-	event_completed.emit(debug_state())
+	var event := debug_state()
+	event["id"] = EVENT_FILL_COLOR_WELL
+	_cleanup_anchor_visual()
+	event_completed.emit(event)
 
 
 func _fail() -> void:
 	_failed = true
 	_active = false
 	_edge_marker_visible = false
-	event_failed.emit(debug_state())
+	var event := debug_state()
+	event["id"] = EVENT_FILL_COLOR_WELL
+	_cleanup_anchor_visual()
+	event_failed.emit(event)
 
 
 func _random_offscreen_position() -> Vector3:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 6001
 	var candidates: Array[Vector3] = []
 	for _index in 48:
 		var candidate := Vector3(
-			rng.randf_range(-_page_half_extents.x + EVENT_RADIUS, _page_half_extents.x - EVENT_RADIUS),
+			_rng.randf_range(-_page_half_extents.x + EVENT_RADIUS, _page_half_extents.x - EVENT_RADIUS),
 			0.04,
-			rng.randf_range(-_page_half_extents.y + EVENT_RADIUS, _page_half_extents.y - EVENT_RADIUS)
+			_rng.randf_range(-_page_half_extents.y + EVENT_RADIUS, _page_half_extents.y - EVENT_RADIUS)
 		)
-		if _is_outside_current_vision(candidate):
+		if _valid_spawn_position(candidate):
 			candidates.append(candidate)
 	if candidates.is_empty():
 		return Vector3(_page_half_extents.x - EVENT_RADIUS, 0.04, _page_half_extents.y - EVENT_RADIUS)
-	return candidates[rng.randi_range(0, candidates.size() - 1)]
+	return candidates[_rng.randi_range(0, candidates.size() - 1)]
+
+
+func _valid_spawn_position(candidate: Vector3) -> bool:
+	if not _is_outside_current_vision(candidate):
+		return false
+	var inside_x := absf(candidate.x) <= _page_half_extents.x - EVENT_RADIUS
+	var inside_z := absf(candidate.z) <= _page_half_extents.y - EVENT_RADIUS
+	return inside_x and inside_z
 
 
 func _is_outside_current_vision(candidate: Vector3) -> bool:
@@ -221,8 +254,38 @@ func _ensure_anchor_visual() -> void:
 		_anchor_visual.mesh = mesh
 		_anchor_visual.material_override = _anchor_material()
 		add_child(_anchor_visual)
+	if _fill_visual == null:
+		_fill_visual = MeshInstance3D.new()
+		_fill_visual.name = "ColorWellFill"
+		var fill_mesh := CylinderMesh.new()
+		fill_mesh.top_radius = EVENT_RADIUS
+		fill_mesh.bottom_radius = EVENT_RADIUS
+		fill_mesh.height = 0.04
+		fill_mesh.radial_segments = 48
+		_fill_visual.mesh = fill_mesh
+		_fill_visual.material_override = _fill_material()
+		add_child(_fill_visual)
 	_anchor_visual.global_position = _world_position
 	_anchor_visual.visible = true
+	_fill_visual.global_position = _world_position + Vector3(0.0, 0.015, 0.0)
+	_fill_visual.visible = true
+	_update_anchor_progress()
+
+
+func _update_anchor_progress() -> void:
+	if _fill_visual == null:
+		return
+	var ratio := maxf(0.05, progress_ratio())
+	_fill_visual.scale = Vector3(ratio, 1.0, ratio)
+
+
+func _cleanup_anchor_visual() -> void:
+	if _anchor_visual != null:
+		_anchor_visual.queue_free()
+		_anchor_visual = null
+	if _fill_visual != null:
+		_fill_visual.queue_free()
+		_fill_visual = null
 
 
 func _anchor_material() -> StandardMaterial3D:
@@ -231,5 +294,15 @@ func _anchor_material() -> StandardMaterial3D:
 	material.emission_enabled = true
 	material.emission = Color(0.95, 0.22, 0.58, 1.0)
 	material.emission_energy_multiplier = 0.5
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return material
+
+
+func _fill_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.95, 0.74, 0.12, 0.36)
+	material.emission_enabled = true
+	material.emission = Color(0.95, 0.62, 0.08, 1.0)
+	material.emission_energy_multiplier = 0.45
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return material

@@ -105,7 +105,7 @@ func validate():
 	_add_duplicate_id_check(result, "duplicate_passive_ids_valid", _passives)
 	_add_duplicate_id_check(result, "duplicate_upgrade_ids_valid", _upgrades)
 	_add_tag_reference_check(result)
-	_add_weapon_level_count_check(result)
+	_add_weapon_base_stats_check(result)
 	_add_passive_level_count_check(result)
 	_add_upgrade_range_check(result)
 	_add_enemy_range_check(result)
@@ -165,16 +165,16 @@ func _add_tag_reference_check(result) -> void:
 	)
 
 
-func _add_weapon_level_count_check(result) -> void:
+func _add_weapon_base_stats_check(result) -> void:
 	var invalid_weapons: Array[String] = []
 	for weapon_resource in _weapons:
-		if weapon_resource == null or not weapon_resource.has_valid_level_track():
+		if weapon_resource == null or not weapon_resource.has_valid_base_stats():
 			invalid_weapons.append(_resource_label(weapon_resource))
 
 	result.add_check(
-		"weapon_level_counts_valid",
+		"weapon_base_stats_valid",
 		invalid_weapons.is_empty(),
-		"Weapons must define exactly 10 valid level entries.",
+		"Weapons must define one valid editable base stat set.",
 		{"invalid_weapons": invalid_weapons}
 	)
 

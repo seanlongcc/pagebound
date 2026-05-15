@@ -16,9 +16,9 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md`; `design/gdd/mvp-weapon-c
 | Domain | Exemplar Choice | Notes |
 |---|---|---|
 | Chapter feel | Waxlight Castle | Storybook page, Waxlight material identity. |
-| Starter weapon | Waxlight Comet | Only weapon in the first tiny implementation pool. Starts at level 1. |
-| Passive item | Candle Spark | Only item in the first tiny implementation pool. Global passive item, not weapon-specific. |
-| Pet | Dog | Support-only pickup assist aura. No direct damage. Not a loadout slot. |
+| Starter weapon | Waxlight Comet | Starter weapon. Starts at level 1. Current prototype pool also includes the second-batch Star Sticker Swarm. |
+| Passive item | Candle Spark | First passive item. Global passive item, not weapon-specific. Current prototype pool also includes Cloud Seed, Dream Thread, Ribbon Spool, and Moon Button. |
+| Pet | Dog | Support-only pickup fetch helper. No direct damage. Not a loadout slot. |
 | Page Event | Color Well | Offscreen event, 60s timer, 15 kills inside circle. |
 | Enemy family | Waxlight Imps | Wax Imp basic chaser + Flicker Imp fast low-HP chaser. |
 | Mini-boss echo | Crownless Echo / Crownless Scribble | Killable mini-boss echo, not full final boss. |
@@ -91,10 +91,12 @@ Overflow:
 
 ## Tiny Pool Behavior
 
-For the first tiny implementation pool:
+Historical first-package pool:
 
 - Weapon pool contains only Waxlight Comet.
 - Item pool contains only Candle Spark.
+
+Current prototype implementation note: the user-approved second content batch expands the pool with `Star Sticker Swarm`, `Cloud Seed`, `Dream Thread`, `Ribbon Spool`, and `Moon Button`. Runtime draft logic must use the authored content pool dynamically and must not assume Waxlight/Candle are the only legal gear.
 
 Implications:
 
@@ -108,7 +110,7 @@ Implications:
 
 HUD direction follows the approved `Refined C` prototype.
 
-- Top-left is reserved for party/multiplayer friend status.
+- Top-left is reserved for future party/multiplayer friend status, but solo prototype placeholders stay hidden.
 - Top-right is one exclusive banner slot. It shows Page Event state or boss state, never both.
 - Event banner shows percentage as primary progress, with count/timer secondary.
 - Boss banner shows HP percentage as primary progress, with boss name and health bar.
@@ -127,12 +129,13 @@ Dog is a support-only pet in this package.
 
 - Dog is a visible decorative follower.
 - Dog has no collision, no combat AI, and no direct damage.
-- Dog acts as a pickup assist aura around the player, not as an autonomous fetch pathing agent.
-- Dog pickup radius stacks additively with player pickup radius bonuses.
-- T1: Dog aura collects Color Motes inside its assist radius.
-- T2: Dog aura can also collect health pickups.
-- T3: Dog assist radius increases.
-- When Dog collects XP, credit is instant when the pickup enters the Dog aura.
+- Dog has no pickup aura.
+- Dog extends the player's effective pickup reach by watching pickups inside its fetch range.
+- Pickups inside that range are not credited instantly; Dog moves to them and fetches them with its own simple pathing/follow AI.
+- T1: Dog fetches Color Motes inside a 4.5m fetch range, 50% larger than default XP magnetism.
+- T2: Dog can also fetch health pickups.
+- T3: Dog fetch range increases to 8.625m.
+- When Dog fetches XP, credit is applied only when Dog reaches the pickup.
 - Feedback is both world feedback (`Dog fetch +3 XP`) and pet icon pulse near the level badge.
 
 ## Color Well Page Event

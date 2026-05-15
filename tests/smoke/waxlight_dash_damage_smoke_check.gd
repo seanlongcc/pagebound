@@ -50,7 +50,7 @@ func _initialize() -> void:
 	var victim_health := HealthComponentScript.new()
 	victim_health.name = "HealthComponent"
 	victim.add_child(victim_health)
-	victim_health.configure(&"waxlight_dash_damage_victim", 6.0, &"enemy")
+	victim_health.configure(&"waxlight_dash_damage_victim", 200.0, &"enemy")
 
 	var damage_numbers_before := 0
 	if damage_manager != null:
@@ -67,7 +67,7 @@ func _initialize() -> void:
 	if manager.has_method("debug_activation_damage_count"):
 		_assert_true(manager.debug_activation_damage_count() > 0, "Pagecraft activation must record DamageModel routed damage", failures)
 	if damage_manager != null:
-		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before and _has_visible_number_text(root, "5"), "dash activation damage must show active damage number", failures)
+		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before and _has_visible_number_text(root, "100"), "dash activation damage must show active damage number", failures)
 	_assert_true(_has_waxlight_pulse(root), "dash activation must leave primitive Waxlight pulse visual", failures)
 
 	_finish_after_root(root, failures)

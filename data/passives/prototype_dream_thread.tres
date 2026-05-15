@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PassiveItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/data/passive_item_data.gd" id="1_passive"]
+
+[resource]
+script = ExtResource("1_passive")
+id = &"dream_thread"
+display_name = "Dream Thread"
+description = "Common duration passive. Every 5th eligible timed effect gets extra duration at level 5."
+tags = Array[StringName]([&"prototype"])
+draft_rarity = &"common"
+catalyst_tags = Array[StringName]([&"dream", &"thread"])
+stat_id = &"duration"
+level_values = Array[float]([0.1, 0.2, 0.3, 0.4, 0.5])

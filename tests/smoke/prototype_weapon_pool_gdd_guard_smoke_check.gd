@@ -4,6 +4,7 @@ const PrototypeContentFactoryScript := preload("res://src/data/prototype_content
 
 const ALLOWED_FIRST_PLAYABLE_WEAPONS := {
 	&"waxlight_comet": true,
+	&"star_sticker_swarm": true,
 }
 
 
@@ -20,8 +21,8 @@ func _initialize() -> void:
 		weapon_names.append(weapon.display_name)
 		_assert_true(ALLOWED_FIRST_PLAYABLE_WEAPONS.has(weapon.id), "prototype weapon pool must only contain current GDD-backed first-playable weapon IDs, got %s" % weapon.id, failures)
 
-	_assert_true(weapon_ids == [&"waxlight_comet"], "first polished weapon pool must contain only Waxlight Comet", failures)
-	_assert_true(not weapon_ids.has(&"star_sticker_swarm"), "first polished weapon pool must not include old broad Star Sticker weapon", failures)
+	_assert_true(weapon_ids == [&"waxlight_comet", &"star_sticker_swarm"], "prototype weapon pool must contain Waxlight Comet and Star Sticker Swarm", failures)
+	_assert_true(weapon_ids.has(&"star_sticker_swarm"), "second weapon pool must include GDD-backed Star Sticker Swarm", failures)
 	_assert_true(not weapon_ids.has(&"dreamsap_glob"), "first polished weapon pool must not include old broad Dreamsap weapon", failures)
 	_assert_true(not weapon_ids.has(&"color_bloom"), "first polished weapon pool must not include old broad Color Bloom weapon", failures)
 	_assert_true(not weapon_ids.has(&"paper_plane_dart"), "weapon pool must not include non-GDD Paper Plane Dart", failures)

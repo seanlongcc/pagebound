@@ -9,8 +9,8 @@ const BOSS_ID := &"crownless_echo"
 const BOSS_DISPLAY_NAME := "Crownless Echo"
 const BOSS_BANNER_TITLE := "The Scribble King Stirs"
 const SPAWN_TIME_SECONDS := 210.0
-const MAX_HEALTH := 120.0
-const REWARD_XP := 6
+const MAX_HEALTH := 2400.0
+const REWARD_XP := 1000
 
 var _enemies_root: Node3D
 var _target: Node3D
@@ -114,7 +114,7 @@ func _boss_data() -> Resource:
 	enemy.behavior_id = &"boss_chaser"
 	enemy.max_health = MAX_HEALTH
 	enemy.move_speed = 1.65
-	enemy.contact_damage = 8.0
+	enemy.contact_damage = 160.0
 	enemy.reward_xp = REWARD_XP
 	enemy.pagecraft_interaction_tags = _string_name_array([&"waxlight"])
 	return enemy

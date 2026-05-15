@@ -26,6 +26,7 @@ extends VBoxContainer
 
 const ServerStateScript := preload("res://addons/godot_ai/utils/mcp_server_state.gd")
 const ClientRefreshStateScript := preload("res://addons/godot_ai/utils/mcp_client_refresh_state.gd")
+const Telemetry := preload("res://addons/godot_ai/telemetry.gd")
 const UpdateManagerScript := preload("res://addons/godot_ai/utils/update_manager.gd")
 const UpdateMixedStateScript := preload("res://addons/godot_ai/utils/update_mixed_state.gd")
 const Client := preload("res://addons/godot_ai/clients/_base.gd")
@@ -1046,6 +1047,10 @@ func _apply_dev_mode_visibility() -> void:
 # --- Button handlers ---
 
 func _on_reload_plugin() -> void:
+	# Persist a pending plugin_reload telemetry event *before* the
+	# disable kills the live WebSocket — the new plugin's _enter_tree
+	# flushes it via `_telemetry.flush_pending_plugin_reload()`.
+	Telemetry.record_pending_plugin_reload("dock_button")
 	# Toggle plugin off/on to reload all GDScript
 	EditorInterface.set_plugin_enabled("res://addons/godot_ai/plugin.cfg", false)
 	EditorInterface.set_plugin_enabled("res://addons/godot_ai/plugin.cfg", true)
@@ -1335,6 +1340,8 @@ func _on_dev_primary_pressed() -> void:
 		return
 	if not _plugin.has_method("force_restart_or_start_dev_server"):
 		return
+	if _plugin.has_method("record_dev_server_toggle"):
+		_plugin.record_dev_server_toggle("start")
 	_server_restart_in_progress = true
 	_update_dev_section_buttons()
 	if not is_inside_tree():
@@ -1351,6 +1358,8 @@ func _on_dev_stop_pressed() -> void:
 		return
 	if _plugin.has_method("stop_dev_server"):
 		_plugin.stop_dev_server()
+		if _plugin.has_method("record_dev_server_toggle"):
+			_plugin.record_dev_server_toggle("stop")
 	_update_dev_section_buttons.call_deferred()
 
 

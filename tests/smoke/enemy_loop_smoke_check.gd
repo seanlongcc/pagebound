@@ -1,6 +1,7 @@
 extends SceneTree
 
 const MAIN_SCENE := "res://Main.tscn"
+const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 
 
 func _initialize() -> void:
@@ -45,7 +46,8 @@ func _initialize() -> void:
 	_assert_true(flicker_imp != null, "Flicker Imp instance must expose family ID", failures)
 	if wax_imp != null and flicker_imp != null:
 		_assert_true(flicker_imp.move_speed > wax_imp.move_speed, "Flicker Imp must be faster than Wax Imp", failures)
-		_assert_true(_max_health(flicker_imp) < _max_health(wax_imp), "Flicker Imp must have less health than Wax Imp", failures)
+		var factory = PrototypeContentFactoryScript.new()
+		_assert_true(factory.flicker_imp_enemy().max_health < factory.wax_imp_enemy().max_health, "Flicker Imp base profile must have less health than Wax Imp before time scaling", failures)
 
 	var target := _first_living_enemy(enemies_root)
 	_assert_true(target != null, "must have a living enemy for lifecycle check", failures)

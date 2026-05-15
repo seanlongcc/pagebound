@@ -4,19 +4,23 @@ extends Node
 const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
 
-# Early-slice pressure uses readable time bands: shorter intervals and small batch
-# increases over time. Active enemies are not a gameplay pacing cap; only the high
-# safety cap protects prototype performance if cleanup fails.
-const TIME_BANDS := [
-	{"id": &"opening", "start_seconds": 0.0, "target": 8, "spawn_interval": 1.45, "batch_size": 1, "health_multiplier": 1.0},
-	{"id": &"first_pressure", "start_seconds": 60.0, "target": 16, "spawn_interval": 1.10, "batch_size": 1, "health_multiplier": 1.15},
-	{"id": &"flicker_surge", "start_seconds": 120.0, "target": 26, "spawn_interval": 0.88, "batch_size": 2, "health_multiplier": 1.3},
-	{"id": &"page_crush", "start_seconds": 240.0, "target": 42, "spawn_interval": 0.70, "batch_size": 2, "health_multiplier": 1.5},
-]
+const TARGET_RUN_MINUTES := 30.0
+const START_KILLS_PER_SECOND := 1.0
+const END_KILLS_PER_SECOND := 10.0
+const OPENING_MIN_ALIVE_START := 8
+const OPENING_GRACE_SECONDS := 60.0
+const MIN_ALIVE_START := 25
+const MIN_ALIVE_END := 320
+const SPAWN_INTERVAL_START := 1.0
+const SPAWN_INTERVAL_END := 0.2
+const AVERAGE_XP_MULTIPLIER_START := 1.0
+const AVERAGE_XP_MULTIPLIER_END := 1.8
+const BASE_ENEMY_XP := 5.0
+const HEALTH_MULTIPLIER_END := 10.0
 
-@export_range(1, 1000, 1) var safety_enemy_cap := 120
-@export_range(1, 256, 1) var active_budget := 8
-@export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := 1.45
+@export_range(1, 1000, 1) var safety_enemy_cap := 350
+@export_range(1, 512, 1) var active_budget := OPENING_MIN_ALIVE_START
+@export_range(0.1, 60.0, 0.05) var spawn_interval_seconds := SPAWN_INTERVAL_START
 @export_range(1, 16, 1) var spawn_batch_size := 1
 @export var page_half_extents := Vector2(11.0, 7.0)
 
@@ -31,6 +35,7 @@ var _spawned_enemy_ids: Array[StringName] = []
 var _running := false
 var _health_multiplier := 1.0
 var _event_pressure_multiplier := 1.0
+var _pressure_spawn_credit := 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -40,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	_apply_time_band(_run_time)
 	_spawn_timer = maxf(0.0, _spawn_timer - delta)
 	if _spawn_timer <= 0.0:
-		_spawn_batch()
+		_spawn_tick()
 		_spawn_timer = _effective_spawn_interval()
 
 
@@ -57,7 +62,7 @@ func configure(enemies_root: Node3D, target: Node3D, content_factory, new_page_h
 func start() -> void:
 	_running = true
 	if _spawned_count == 0 and debug_active_enemy_count() == 0:
-		_spawn_enemy(_next_enemy_data())
+		_spawn_tick()
 		_spawn_timer = _effective_spawn_interval()
 
 
@@ -75,6 +80,7 @@ func reset() -> void:
 	_current_time_band_id = &"opening"
 	_health_multiplier = 1.0
 	_event_pressure_multiplier = 1.0
+	_pressure_spawn_credit = 0.0
 	_apply_time_band(_run_time)
 
 
@@ -98,6 +104,11 @@ func debug_spawn_interval_seconds() -> float:
 	return _effective_spawn_interval()
 
 
+## Returns current base wave interval before event-pressure overrides.
+func debug_base_spawn_interval_seconds() -> float:
+	return spawn_interval_seconds
+
+
 ## Returns current director pressure time-band ID.
 func debug_current_time_band_id() -> StringName:
 	return _current_time_band_id
@@ -108,6 +119,7 @@ func debug_force_run_time(seconds: float) -> void:
 	_run_time = maxf(0.0, seconds)
 	_apply_time_band(_run_time)
 	_spawn_timer = 0.0
+	_pressure_spawn_credit = 0.0
 
 
 ## Returns enemy family IDs spawned during this run.
@@ -130,9 +142,19 @@ func debug_safety_enemy_cap() -> int:
 	return safety_enemy_cap
 
 
-## Returns current pressure spawn rate for stats HUD.
+## Returns current target pressure rate; opening grace can suppress above-minimum pressure.
 func debug_spawn_rate_per_second() -> float:
-	return float(spawn_batch_size) / maxf(0.01, _effective_spawn_interval())
+	return _target_kills_per_second()
+
+
+## Returns target kill-rate curve for smoke/debug checks.
+func debug_target_kills_per_second() -> float:
+	return _target_kills_per_second()
+
+
+## Returns target XP/minute implied by kill rate and average XP mix.
+func debug_target_xp_per_minute() -> float:
+	return _target_kills_per_second() * 60.0 * _average_xp_per_kill()
 
 
 ## Returns current enemy health multiplier.
@@ -156,8 +178,12 @@ func set_event_pressure_multiplier(multiplier: float) -> void:
 	_event_pressure_multiplier = clampf(multiplier, 0.25, 4.0)
 
 
-func _spawn_batch() -> void:
-	for _index in spawn_batch_size:
+func _spawn_tick() -> void:
+	var active_count := debug_active_enemy_count()
+	if active_count >= safety_enemy_cap:
+		return
+	var spawn_count := _spawn_count_for_tick(active_count)
+	for _index in spawn_count:
 		if debug_active_enemy_count() >= safety_enemy_cap:
 			return
 		_spawn_enemy(_next_enemy_data())
@@ -219,19 +245,71 @@ func _next_enemy_data() -> Resource:
 
 
 func _apply_time_band(run_time_seconds: float) -> void:
-	var selected_band := TIME_BANDS[0]
-	for band in TIME_BANDS:
-		if run_time_seconds >= float(band["start_seconds"]):
-			selected_band = band
-	active_budget = int(selected_band["target"])
-	spawn_interval_seconds = float(selected_band["spawn_interval"])
-	spawn_batch_size = int(selected_band["batch_size"])
-	_health_multiplier = float(selected_band["health_multiplier"])
-	_current_time_band_id = selected_band["id"]
+	var p := _smoothstep(_progress01(run_time_seconds))
+	active_budget = _min_alive_for_time(run_time_seconds, p)
+	spawn_interval_seconds = lerpf(SPAWN_INTERVAL_START, SPAWN_INTERVAL_END, p)
+	spawn_batch_size = maxi(1, floori(_target_kills_per_second() * _effective_spawn_interval()))
+	_health_multiplier = lerpf(1.0, HEALTH_MULTIPLIER_END, _progress01(run_time_seconds))
+	_current_time_band_id = _band_id_for_minute(run_time_seconds / 60.0)
 
 
 func _effective_spawn_interval() -> float:
 	return maxf(0.1, spawn_interval_seconds / _event_pressure_multiplier)
+
+
+func _spawn_count_for_tick(active_count: int) -> int:
+	var remaining_capacity := maxi(0, safety_enemy_cap - active_count)
+	if active_count < active_budget:
+		return mini(active_budget - active_count, remaining_capacity)
+	if _run_time < OPENING_GRACE_SECONDS:
+		_pressure_spawn_credit = 0.0
+		return 0
+	_pressure_spawn_credit += _target_kills_per_second() * _effective_spawn_interval()
+	var pressure_count := floori(_pressure_spawn_credit)
+	if pressure_count <= 0:
+		return 0
+	_pressure_spawn_credit -= float(pressure_count)
+	return mini(pressure_count, remaining_capacity)
+
+
+func _min_alive_for_time(run_time_seconds: float, wave_progress: float) -> int:
+	if run_time_seconds < OPENING_GRACE_SECONDS:
+		var opening_progress := _smoothstep(clampf(run_time_seconds / OPENING_GRACE_SECONDS, 0.0, 1.0))
+		return roundi(lerpf(float(OPENING_MIN_ALIVE_START), float(MIN_ALIVE_START), opening_progress))
+	return roundi(lerpf(float(MIN_ALIVE_START), float(MIN_ALIVE_END), wave_progress))
+
+
+func _progress01(run_time_seconds: float) -> float:
+	return clampf((run_time_seconds / 60.0) / TARGET_RUN_MINUTES, 0.0, 1.0)
+
+
+func _smoothstep(x: float) -> float:
+	return x * x * (3.0 - (2.0 * x))
+
+
+func _target_kills_per_second() -> float:
+	var p := _smoothstep(_progress01(_run_time))
+	return lerpf(START_KILLS_PER_SECOND, END_KILLS_PER_SECOND, p)
+
+
+func _average_xp_per_kill() -> float:
+	var p := _progress01(_run_time)
+	var multiplier := lerpf(AVERAGE_XP_MULTIPLIER_START, AVERAGE_XP_MULTIPLIER_END, p)
+	return BASE_ENEMY_XP * multiplier
+
+
+func _band_id_for_minute(minute: float) -> StringName:
+	if minute < 3.0:
+		return &"opening"
+	if minute < 7.0:
+		return &"fast_wave"
+	if minute < 12.0:
+		return &"tough_wave"
+	if minute < 18.0:
+		return &"tank_wave"
+	if minute < 24.0:
+		return &"special_wave"
+	return &"elite_wave"
 
 
 # Enemy durability uses simple visible time-band multipliers for the first slice.

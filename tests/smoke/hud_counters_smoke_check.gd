@@ -24,14 +24,14 @@ func _initialize() -> void:
 	_assert_true(hud != null and hud.visible, "HUD must be visible", failures)
 	_assert_true(_find_named(hud, "FirstPlayableHudLabel") == null, "legacy debug HUD label must be removed", failures)
 	var initial_text := _visible_text(hud)
-	_assert_true(initial_text.contains("HP") and initial_text.contains("50/50"), "HUD must show HP clearly", failures)
+	_assert_true(initial_text.contains("HP") and initial_text.contains("1000/1000"), "HUD must show HP clearly", failures)
 	_assert_true(initial_text.contains("XP"), "HUD must show XP", failures)
 	_assert_true(initial_text.contains("Level"), "HUD must show level badge", failures)
 	_assert_true(initial_text.contains("Dog"), "HUD must show Dog pet badge", failures)
 	_assert_true(not initial_text.contains("Enemies") and not initial_text.contains("Time"), "player HUD must not show debug enemy/time counters", failures)
 
 	if runtime != null and runtime.has_method("debug_spawn_xp_pickup") and player != null:
-		runtime.debug_spawn_xp_pickup(player.global_position, 1)
+		runtime.debug_spawn_xp_pickup(player.global_position, 5)
 		for index in 3:
 			await physics_frame
 

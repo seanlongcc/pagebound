@@ -57,9 +57,21 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 
 `run_time_seconds = current_time - run_start_time - paused_duration`
 
-`spawn_budget = base_budget_by_time * difficulty_multiplier * event_pressure_multiplier * active_enemy_budget_modifier`
+`wave_progress = smoothstep(clamp(run_time_minutes / 30.0, 0.0, 1.0))`
 
-`spawn_allowed = active_enemy_count < spawn_budget and pool_available`
+`opening_progress = smoothstep(clamp(run_time_seconds / 60.0, 0.0, 1.0))`
+
+`min_alive = round(lerp(8, 25, opening_progress))` before 1:00, otherwise `round(lerp(25, 320, wave_progress))`
+
+`base_spawn_interval = lerp(1.00, 0.20, wave_progress)`
+
+`effective_spawn_interval = base_spawn_interval / event_pressure_multiplier`
+
+`target_kills_per_second = lerp(1.0, 10.0, wave_progress)`
+
+`spawn_count = min_alive - active_enemy_count` when below minimum. During the first 1:00 opening grace, above-minimum pressure spawn count is `0`. After 1:00, pressure spawns use accumulated `target_kills_per_second * effective_spawn_interval` credit so fractional early rates do not round into a horde wall.
+
+`spawn_allowed = active_enemy_count < 350 and pool_available`
 
 `spawn_position_valid = inside_chapter_bounds and outside_camera_margin and reachable_from_play_area`
 
@@ -102,7 +114,12 @@ Invalid states:
 | `endless_event_first_seconds` | `2100` | tuning | No earlier than 35:00, and only if no boss/event is active. |
 | `event_countdown_seconds` | `180` | fixed MVP | Page Event rule. |
 | `spawn_margin_from_camera_m` | `8` | `2-30` | Prevents visible pop-in. |
-| `active_enemy_stress_target` | `300` | `100-800` | Profiling target. |
+| `max_alive_enemies` | `350` | `100-800` | Hard standard-spawn cap for the MVP wave model. |
+| `opening_min_alive_curve` | `8 -> 25` | tuning | Smoothstep over the first 60 seconds; director refills below this count and does not pressure-spawn above it. |
+| `min_alive_curve` | `25 -> 320` | tuning | Smoothstep over 30 minutes after opening grace; director refills below this count. |
+| `spawn_interval_curve` | `1.00s -> 0.20s` | tuning | Smoothstep over 30 minutes before event-pressure overrides. |
+| `target_kills_per_second` | `1.0 -> 10.0` | tuning | Smoothstep over 30 minutes; pressure spawns match this rate after opening grace. |
+| `enemy_health_multiplier` | `1.0 -> 10.0` | tuning | Linear over 30 minutes for the current prototype enemy profiles. |
 | `pre_boss_wave_time_seconds` | `1650` | `1500-1790` | Root GDD uses 27:30. |
 
 ## Visual/Audio Requirements

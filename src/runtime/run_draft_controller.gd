@@ -27,6 +27,7 @@ var _hud_was_visible := false
 var _choice_provider
 var _choice_buttons: Array[Button] = []
 var _current_choices: Array[Dictionary] = []
+var _pending_drafts: Array[Dictionary] = []
 var _draft_open := false
 var _focused_choice_index := 0
 var _selected_choice_id: StringName = &""
@@ -83,10 +84,11 @@ func accept_focused_choice() -> void:
 
 ## Opens a Page Event reward draft with event-specific guarantee rules.
 func open_page_event_reward(event: Dictionary) -> void:
-	if _draft_open:
-		return
 	var reward_event := event.duplicate(true)
 	reward_event["draft_source"] = &"page_event"
+	if _draft_open:
+		_pending_drafts.append(reward_event)
+		return
 	_open_draft(reward_event)
 
 
@@ -117,11 +119,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_run_level_gained(event: Dictionary) -> void:
 	if _draft_open:
+		_pending_drafts.append(event.duplicate(true))
 		return
 	_open_draft(event)
 
 
-func _open_draft(level_event: Dictionary) -> void:
+func _open_draft(level_event: Dictionary, keep_hud_state: bool = false) -> void:
 	_current_choices = _prototype_choices(int(level_event.get("level", 0)), level_event.get("draft_source", &"level_up"))
 	_focused_choice_index = 0
 	_selected_choice_id = &""
@@ -131,7 +134,8 @@ func _open_draft(level_event: Dictionary) -> void:
 	if _level_up_screen != null:
 		_level_up_screen.visible = true
 	if _hud_layer != null:
-		_hud_was_visible = _hud_layer.visible
+		if not keep_hud_state:
+			_hud_was_visible = _hud_layer.visible
 		_hud_layer.visible = false
 	if not _choice_buttons.is_empty():
 		_choice_buttons[0].grab_focus()
@@ -152,6 +156,10 @@ func _select_choice_index(choice_index: int) -> void:
 
 func _close_draft() -> void:
 	_draft_open = false
+	if not _pending_drafts.is_empty():
+		var next_event: Dictionary = _pending_drafts.pop_front()
+		_open_draft(next_event, true)
+		return
 	if _level_up_screen != null:
 		_level_up_screen.visible = false
 	if _modal_layer != null:
@@ -165,6 +173,7 @@ func _close_draft() -> void:
 ## Closes draft UI without selecting a card.
 func force_close(keep_tree_paused: bool = false) -> void:
 	_draft_open = false
+	_pending_drafts.clear()
 	if _level_up_screen != null:
 		_level_up_screen.visible = false
 	if _modal_layer != null:
@@ -248,12 +257,15 @@ func _sync_choice_buttons() -> void:
 		var choice := _current_choices[index]
 		button.visible = true
 		_apply_rarity_border(button, choice.get("rarity", &"common"))
-		button.text = "%s - %s\n%s\n%s\n%s" % [
+		button.text = "%s - %s\n%s\n%s\n%s\n%s\n%s\nTags: %s" % [
 			choice.get("category_label", "Choice"),
 			choice.get("rarity_label", "Common"),
+			choice.get("icon_label", "Icon: card"),
 			choice.get("title", ""),
 			choice.get("stat_line", ""),
 			choice.get("description", ""),
+			choice.get("level_line", "Level ?"),
+			_tag_line(choice.get("tags", [])),
 		]
 
 
@@ -299,6 +311,15 @@ func _rarity_border_color(rarity: StringName) -> Color:
 		&"legendary":
 			return Color(0.96, 0.68, 0.18, 1.0)
 	return Color(0.56, 0.56, 0.56, 1.0)
+
+
+func _tag_line(tags: Array) -> String:
+	if tags.is_empty():
+		return "none"
+	var names: Array[String] = []
+	for tag in tags:
+		names.append(String(tag).capitalize())
+	return ", ".join(names)
 
 
 func _prototype_choices(run_level: int, draft_source: StringName = &"level_up") -> Array[Dictionary]:

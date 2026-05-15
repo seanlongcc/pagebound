@@ -53,8 +53,10 @@ func _initialize() -> void:
 	await process_frame
 	state = _page_event_state(runtime)
 	_assert_true(bool(state.get("completed", false)), "15th inside-circle death must complete Color Well", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_active_page_event_id") and runtime.debug_active_page_event_id() == &"", "completed Color Well must stop reporting an active event id", failures)
+	_assert_true(_visible_named_count(root, "ColorWellAnchor") == 0, "completed Color Well must remove world anchor visual", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_draft_is_open") and runtime.debug_draft_is_open(), "successful Color Well must open reward draft", failures)
-	_assert_true(_visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Candle Spark"), "Color Well reward must guarantee new Candle Spark when legal", failures)
+	_assert_true(_visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Star Sticker Swarm") or _visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Candle Spark") or _visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Cloud Seed") or _visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Dream Thread") or _visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Ribbon Spool") or _visible_text(root.get_node_or_null("UI/ModalLayer/LevelUpScreen")).contains("Moon Button"), "Color Well reward must guarantee legal new gear when legal", failures)
 
 	root.queue_free()
 	await process_frame
@@ -76,6 +78,8 @@ func _initialize() -> void:
 	await process_frame
 	state = _page_event_state(runtime)
 	_assert_true(bool(state.get("failed", false)), "Color Well must fail after 60s with no progress", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_active_page_event_id") and runtime.debug_active_page_event_id() == &"", "failed Color Well must stop reporting an active event id", failures)
+	_assert_true(_visible_named_count(root, "ColorWellAnchor") == 0, "failed Color Well must remove world anchor visual", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_draft_is_open") and not runtime.debug_draft_is_open(), "failed Color Well must not open reward draft", failures)
 
 	root.queue_free()
@@ -102,6 +106,25 @@ func _visible_text(node: Node) -> String:
 	for child in node.get_children():
 		text += _visible_text(child)
 	return text
+
+
+func _visible_named_count(root: Node, name_prefix: String) -> int:
+	var count := 0
+	if root == null:
+		return count
+	if String(root.name).begins_with(name_prefix) and _node_visible(root):
+		count += 1
+	for child in root.get_children():
+		count += _visible_named_count(child, name_prefix)
+	return count
+
+
+func _node_visible(node: Node) -> bool:
+	if node is Node3D:
+		return (node as Node3D).visible
+	if node is CanvasItem:
+		return (node as CanvasItem).visible
+	return true
 
 
 func _load_main(failures: Array[String]) -> Node:

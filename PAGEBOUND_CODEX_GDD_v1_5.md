@@ -753,24 +753,32 @@ XP thresholds should remain multiples of 5.
 
 ```gdscript
 func xp_required_for_next_level(current_level: int) -> int:
-    var raw := 10 + (current_level * 5) + (floori(current_level / 5.0) * 10)
-    return int(ceil(raw / 5.0) * 5)
+    var unscaled := 5
+    if current_level == 1:
+        unscaled = 5
+    elif current_level <= 20:
+        unscaled = 5 + ((current_level - 1) * 10)
+    elif current_level <= 40:
+        unscaled = 195 + ((current_level - 20) * 13)
+    else:
+        unscaled = 455 + ((current_level - 40) * 16)
+    return unscaled * 5
 ```
 
 Example thresholds:
 
 | Current Level | XP to Next |
 |---:|---:|
-| 1 | 15 |
-| 5 | 45 |
-| 10 | 80 |
-| 15 | 115 |
-| 20 | 150 |
-| 25 | 185 |
-| 30 | 220 |
-| 35 | 255 |
-| 40 | 290 |
-| 45 | 325 |
+| 1 | 25 |
+| 5 | 225 |
+| 10 | 475 |
+| 15 | 725 |
+| 20 | 975 |
+| 25 | 1300 |
+| 30 | 1625 |
+| 35 | 1950 |
+| 40 | 2275 |
+| 45 | 2675 |
 | 50 | Endless scaling |
 
 Target pacing is:
@@ -1036,8 +1044,8 @@ Each weapon must define:
 - **Pagecraft material tags**: the material identity used by weapons, items, pets, enemies, map features, and evolutions.
 - **Page alteration**: what mark/object/zone the weapon leaves on the page.
 - **Dash interaction**: what happens when the player dashes through, across, or near the weapon's marks.
-- **Maximum range**: how far the weapon can target or place its effect at the current level.
-- **10 progression levels**: milestone levels and upgrade-card pools must be defined in the focused weapon sheet.
+- **Base tuning**: starting damage, cadence, mark/effect radius, and maximum targeting or placement range before selected upgrades.
+- **10 progression levels**: upgrade-count progress, milestone unlocks, and upgrade-card pools defined in the focused weapon sheet.
 - **2 evolution catalyst tags**: the tags that can transform the weapon at level 10.
 
 Weapons should be powerful and visually expressive. A weapon that only deals invisible damage is not acceptable for Pagebound.
@@ -1062,6 +1070,8 @@ Each weapon has **10 levels**.
 - Level 5: major behavior breakpoint plus one upgrade card.
 - Levels 6-9: one-stat upgrade cards from the weapon's upgrade pool.
 - Level 10: capstone and evolution eligibility plus one upgrade card.
+- Weapon level is upgrade-count progress only. It must not apply hidden baseline stat growth.
+- Base weapon stats remain fixed unless a selected upgrade card, item, evolution, or explicit effect modifies them.
 - Range can also be upgraded by separate one-stat draft cards. A range card must not bundle damage, projectile count, cooldown, or level increases.
 
 ### MVP Weapon Pool
@@ -1074,6 +1084,7 @@ Root-GDD weapon invariants:
 - Each weapon has 10 levels.
 - L1 is base behavior, L5 is a major behavior breakpoint, and L10 is capstone plus evolution eligibility.
 - Non-milestone levels use one-stat upgrade cards from that weapon's upgrade pool.
+- Weapon `.tres` resources store one editable base stat set; level rows must not duplicate or auto-scale damage, cadence, size, or range.
 - Every weapon must visibly affect the page through marks, temporary objects, terrain effects, dash interactions, or Pagecraft state.
 - Range upgrades are separate one-stat draft cards and must not bundle damage, projectile count, cadence, or level increases.
 
@@ -3654,12 +3665,20 @@ XP values should use multiples of 5:
 
 ### 37.2 XP Curve
 
-Use a rounded multiple-of-5 curve:
+Use a Vampire Survivors-inspired, Pagebound-scaled curve. Basic enemies are worth `5 XP`; the curve scales VS-style thresholds by `5`, removes the level 20/40 walls, and stays continuous across the 20/40 band changes. Total XP required to reach level 50 is `67,225`.
 
 ```gdscript
 func xp_required_for_level(level: int) -> int:
-    var raw := 20.0 + pow(float(level), 1.45) * 8.0
-    return int(ceil(raw / 5.0) * 5.0)
+    var unscaled := 5
+    if level == 1:
+        unscaled = 5
+    elif level <= 20:
+        unscaled = 5 + ((level - 1) * 10)
+    elif level <= 40:
+        unscaled = 195 + ((level - 20) * 13)
+    else:
+        unscaled = 455 + ((level - 40) * 16)
+    return unscaled * 5
 ```
 
 Expected run-level pacing:
@@ -3675,6 +3694,19 @@ Expected run-level pacing:
 | 35:00 | 55-60 if endless continues |
 
 These are tuning targets, not hard caps.
+
+Enemy XP reward anchors:
+
+| Enemy Class | XP |
+|---|---:|
+| Basic | 5 |
+| Fast | 5 |
+| Tough | 10 |
+| Tank | 15 |
+| Special | 25 |
+| Elite | 75 |
+| Miniboss | 375 |
+| Boss | 1000 |
 
 ### 37.3 Upgrade Draft Count
 
@@ -3789,6 +3821,25 @@ Enemy pressure should come from:
 - boss attacks that force dash timing.
 
 Avoid making every enemy a sponge. The player should feel strong.
+
+### 38.2.1 Wave Balance Targets
+
+The MVP director uses Vampire Survivors-inspired time waves: each minute resolves to a minimum alive count, base spawn interval, allowed enemy mix, and pressure spawn count. If active enemies are below the wave minimum, the director refills to that minimum. If active enemies are already above minimum, it spawns pressure batches based on the target kill-rate curve. Standard spawns stop at `350` active enemies.
+
+Opening uses a readability grace ramp: minimum alive starts at `8` at 0:00, ramps to the normal `25` by 1:00, and does not pressure-spawn above that grace minimum during the first minute. This keeps the opening low density while preserving the uncondensed 30-minute curve anchors.
+
+Prototype combat uses the 1000 HP player baseline: opening Wax Imp base health is `200`, starter Waxlight damage is `100`, normal contact damage is `60`, and basic/fast enemy XP remains `5`. Prototype enemy health pressure scales from `1.0x` at 0:00 to `10.0x` at 30:00 while authored base health and weapon damage remain the readable per-enemy/per-weapon anchors.
+
+| Time | Min Alive | Base Spawn Interval | Target Kills/Sec |
+|---:|---:|---:|---:|
+| 0:00 | 8 | 1.00s | 1.0 |
+| 1:00 | about 25 | about 1.00s | about 1.0 |
+| 5:00 | about 47 | about 0.94s | about 1.7 |
+| 10:00 | about 101 | about 0.79s | about 3.3 |
+| 15:00 | about 173 | 0.60s | 5.5 |
+| 20:00 | about 244 | about 0.41s | about 7.7 |
+| 25:00 | about 298 | about 0.26s | about 9.3 |
+| 30:00 | 320 | 0.20s | 10.0 |
 
 ### 38.3 Finite Map Spawn Rules
 

@@ -17,6 +17,7 @@ const RunDirectorScript := preload("res://src/runtime/run_director.gd")
 const RunDraftControllerScript := preload("res://src/runtime/run_draft_controller.gd")
 const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const RunMenuControllerScript := preload("res://src/runtime/run_menu_controller.gd")
+const RunPauseSummaryBuilderScript := preload("res://src/runtime/run_pause_summary_builder.gd")
 const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
@@ -194,6 +195,13 @@ func debug_draft_choice_count() -> int:
 	return _draft_controller.debug_choice_count()
 
 
+## Returns visible draft choice ID at index for smoke checks.
+func debug_draft_choice_id_at(choice_index: int) -> StringName:
+	if _draft_controller == null or not _draft_controller.has_method("debug_choice_id_at"):
+		return &""
+	return _draft_controller.debug_choice_id_at(choice_index)
+
+
 ## Accepts the focused/default draft choice for smoke checks.
 func debug_accept_focused_draft_choice() -> void:
 	if _draft_controller != null and _draft_controller.has_method("accept_focused_choice"):
@@ -328,6 +336,22 @@ func debug_dog_aura_radius() -> float:
 	return 0.0
 
 
+## Returns Dog fetch acquisition range for smoke/debug checks.
+func debug_dog_fetch_range() -> float:
+	var dog := _dog_pet()
+	if dog != null and dog.has_method("fetch_range"):
+		return dog.fetch_range()
+	return debug_dog_aura_radius()
+
+
+## Toggles Escape pause menu for smoke/debug checks.
+func debug_toggle_pause_menu() -> void:
+	if _pause_menu_visible():
+		_resume_from_pause()
+	else:
+		_show_pause_menu()
+
+
 ## Sets Dog support tier for smoke/debug checks.
 func debug_set_dog_tier(tier: int) -> void:
 	var dog := _dog_pet()
@@ -384,7 +408,7 @@ func _spawn_player() -> void:
 	_camera_controller.configure_camera(_camera(), _camera_rig())
 	if player_body.has_method("set_follow_camera"):
 		player_body.set_follow_camera(_camera())
-	_ensure_health(player_body, &"player_hero", 50.0, &"player")
+	_ensure_health(player_body, &"player_hero", 1000.0, &"player")
 	_camera_controller.ensure_follow(player_body, _camera_rig())
 	_connect_player_dash(player_body)
 
@@ -459,6 +483,10 @@ func _ensure_menu_controller() -> void:
 		_menu_controller.retry_requested.connect(_start_run)
 	if _menu_controller.has_signal("main_menu_requested") and not _menu_controller.main_menu_requested.is_connected(_return_to_main_menu):
 		_menu_controller.main_menu_requested.connect(_return_to_main_menu)
+	if _menu_controller.has_signal("pause_requested") and not _menu_controller.pause_requested.is_connected(_show_pause_menu):
+		_menu_controller.pause_requested.connect(_show_pause_menu)
+	if _menu_controller.has_signal("resume_requested") and not _menu_controller.resume_requested.is_connected(_resume_from_pause):
+		_menu_controller.resume_requested.connect(_resume_from_pause)
 
 
 func _ensure_page_event_orchestrator() -> void:
@@ -519,7 +547,7 @@ func _on_dog_pickup_assisted(amount: int, pickup_type: StringName, _world_positi
 		_dog_feedback_text = "Dog fetch +%d XP" % amount
 	else:
 		_dog_feedback_text = "Dog fetch"
-	_dog_feedback_remaining = 1.0
+	_dog_feedback_remaining = 3.0
 	_update_hud()
 
 
@@ -583,6 +611,7 @@ func _ensure_minimal_hud() -> void:
 
 
 func _update_hud() -> void:
+	_sync_player_health_ratio()
 	_run_ui.update_hud(_run_ui_context())
 
 
@@ -611,8 +640,12 @@ func _run_ui_context() -> Dictionary:
 		"boss_state": _boss_controller.state(),
 		"weapon_ids": debug_owned_weapon_ids(),
 		"passive_ids": debug_owned_passive_ids(),
+		"weapon_levels": _upgrade_state.weapon_levels(),
+		"passive_levels": _upgrade_state.passive_levels(),
+		"weapon_applied_upgrades": _upgrade_state.weapon_applied_upgrades(),
 		"dog_feedback_text": _dog_feedback_text,
 		"dog_tier": _dog_tier(),
+		"dash_recharge_percent": _dash_recharge_percent(),
 		"xp_total": debug_xp_total(),
 		"enemies_defeated": _enemies_defeated,
 	}
@@ -651,9 +684,45 @@ func _apply_player_upgrade_effects(upgrade_event: Dictionary) -> void:
 
 
 func _refresh_weapon_runtime_modifiers() -> void:
+	_sync_player_health_ratio()
 	var manager := _projectiles_root().get_node_or_null("WeaponManager")
 	if manager != null and manager.has_method("refresh_runtime_modifiers"):
 		manager.refresh_runtime_modifiers()
+
+
+func _sync_player_health_ratio() -> void:
+	var health := _player_health()
+	if health == null or not "current_health" in health or not "max_health" in health:
+		_upgrade_state.set_player_health_ratio(1.0)
+		return
+	_upgrade_state.set_player_health_ratio(float(health.current_health) / maxf(1.0, float(health.max_health)))
+
+
+func _show_pause_menu() -> void:
+	if not _run_started or _run_ended or debug_draft_is_open():
+		return
+	if _menu_controller != null and _menu_controller.has_method("show_pause"):
+		_menu_controller.show_pause(_pause_summary_lines())
+	if get_tree() != null:
+		get_tree().paused = true
+
+
+func _resume_from_pause() -> void:
+	if _menu_controller != null and _menu_controller.has_method("hide_all"):
+		_menu_controller.hide_all()
+	if get_tree() != null and _run_started and not _run_ended:
+		get_tree().paused = false
+
+
+func _pause_menu_visible() -> bool:
+	return _menu_controller != null and _menu_controller.has_method("pause_screen_visible") and _menu_controller.pause_screen_visible()
+
+
+func _pause_summary_lines() -> Array[String]:
+	var context := _run_ui_context()
+	context["run_ui"] = _run_ui
+	context["content_factory"] = _content_factory
+	return RunPauseSummaryBuilderScript.lines(context)
 
 
 func _end_run_from_player_death(event: Dictionary) -> void:
@@ -751,14 +820,14 @@ func _waxlight_damage_value() -> float:
 	var manager := _projectiles_root().get_node_or_null("WeaponManager")
 	if manager != null and manager.has_method("debug_weapon_damage"):
 		return manager.debug_weapon_damage(&"waxlight_comet")
-	return _content_factory.waxlight_comet_weapon().level_data_for(1).base_damage
+	return _content_factory.waxlight_comet_weapon().base_damage
 
 
 func _waxlight_cooldown_value() -> float:
 	var manager := _projectiles_root().get_node_or_null("WeaponManager")
 	if manager != null and manager.has_method("debug_cooldown_seconds"):
 		return manager.debug_cooldown_seconds()
-	return _content_factory.waxlight_comet_weapon().level_data_for(1).cooldown_seconds
+	return _content_factory.waxlight_comet_weapon().base_cooldown_seconds
 
 
 func _waxlight_duration_value() -> float:
@@ -808,6 +877,13 @@ func _safety_enemy_cap() -> int:
 	if director != null and director.has_method("debug_safety_enemy_cap"):
 		return director.debug_safety_enemy_cap()
 	return 0
+
+
+func _dash_recharge_percent() -> int:
+	var current_player := player()
+	if current_player != null and current_player.has_method("dash_recharge_percent"):
+		return roundi(float(current_player.dash_recharge_percent()))
+	return 100
 
 
 func _event_position(event: Dictionary) -> Vector3:

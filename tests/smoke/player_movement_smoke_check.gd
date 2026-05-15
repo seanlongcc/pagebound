@@ -35,8 +35,11 @@ func _initialize() -> void:
 	var player := root.get_node_or_null("RunRoot/Actors/Players/Player")
 	_assert_true(player is CharacterBody3D, "player must spawn under Players root as CharacterBody3D", failures)
 	if player != null:
+		_assert_true(is_equal_approx(float(player.move_speed), 4.5), "player move speed must use 4.5 m/s GDD baseline", failures)
+		_assert_true(is_equal_approx(float(player.dash_cooldown_seconds), 2.0), "dash recharge must use 2.0s GDD baseline", failures)
 		_assert_true(player.has_signal("dash_path_sampled"), "player must expose dash_path_sampled signal", failures)
 		_assert_true(player.has_method("debug_integrate"), "player must expose debug_integrate for smoke tests", failures)
+		_assert_true(player.has_method("dash_recharge_percent"), "player must expose dash recharge meter percent", failures)
 		_assert_player_moves_and_dashes(player, failures)
 
 	root.queue_free()
@@ -80,6 +83,8 @@ func _assert_player_moves_and_dashes(player: Node, failures: Array[String]) -> v
 		dash_events.append({"start": start, "end": end})
 	)
 	player.debug_integrate(Vector2.RIGHT, true, 0.01)
+	if player.has_method("dash_recharge_percent"):
+		_assert_true(float(player.dash_recharge_percent()) < 100.0, "dash recharge meter must drop after dash use", failures)
 	player.debug_integrate(Vector2.ZERO, false, 0.25)
 	_assert_equal(dash_events.size(), 1, "dash must emit one dash path sample", failures)
 	if not dash_events.is_empty():

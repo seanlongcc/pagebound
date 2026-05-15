@@ -56,7 +56,9 @@ func _initialize() -> void:
 	var base_duration := 0.0
 	if manager.has_method("debug_activation_duration_seconds"):
 		base_duration = manager.debug_activation_duration_seconds()
-	runtime.debug_apply_upgrade_choice(&"waxlight_duration_plus_1")
+	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
 	_assert_true(manager.debug_activation_duration_seconds() > base_duration, "duration upgrade must extend active Waxlight duration", failures)
 
 	var base_cap: int = manager.debug_unactivated_mark_cap()
@@ -64,16 +66,14 @@ func _initialize() -> void:
 		manager.debug_deposit_test_mark(Vector3(float(index) * 0.4, 0.0, -2.0))
 	_assert_true(manager.debug_unactivated_mark_count() == base_cap, "unactivated Waxlight marks must respect cap", failures)
 
-	runtime.debug_apply_upgrade_choice(&"waxlight_mark_cap_plus_2")
-	_assert_true(manager.debug_unactivated_mark_cap() == base_cap + 3, "mark cap upgrade must increase unactivated Waxlight cap", failures)
 	for index in 3:
 		manager.debug_deposit_test_mark(Vector3(float(index) * 0.4, 0.0, -3.0))
-	_assert_true(manager.debug_unactivated_mark_count() == base_cap + 3, "upgraded cap must allow more unactivated Waxlight marks", failures)
+	_assert_true(manager.debug_unactivated_mark_count() == base_cap, "unactivated Waxlight marks must keep respecting cap after upgrades", failures)
 
 	manager.debug_clear_marks()
 	manager.debug_deposit_test_mark(Vector3.ZERO)
 	_assert_true(manager.debug_unactivated_mark_count() == 1, "inactive Waxlight test mark must deposit", failures)
-	for _frame in 560:
+	for _frame in 780:
 		await physics_frame
 	_assert_true(manager.debug_unactivated_mark_count() == 0, "unactivated Waxlight marks must expire after finite inactive lifetime", failures)
 

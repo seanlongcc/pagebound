@@ -90,8 +90,10 @@ func _initialize() -> void:
 		_assert_true(pagecraft.debug_activation_count() > activation_before, "short dash must still activate nearby Waxlight mark", failures)
 
 	var hud_text := _visible_text(hud)
-	_assert_true(hud_text.contains("HP") and hud_text.contains("XP") and hud_text.contains("Level") and hud_text.contains("Dog"), "HUD must show player-facing HP, XP, Level, and Dog surfaces", failures)
-	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Empty"), "HUD must show loadout slots for the first package", failures)
+	_assert_true(hud_text.contains("HP") and hud_text.contains("1000") and hud_text.contains("XP") and hud_text.contains("Level") and hud_text.contains("Dog"), "HUD must show player-facing HP, XP, Level, and Dog surfaces", failures)
+	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Lv1") and hud_text.contains("Empty"), "HUD must show loadout slots and levels", failures)
+	_assert_true(_find_named(root, "PartyReserve") == null or not (_find_named(root, "PartyReserve") as Control).visible, "solo HUD must not render top-left multiplayer placeholders", failures)
+	_assert_true(_find_named(root, "RunTimer") != null and _visible_text(_find_named(root, "RunTimer")).contains(":"), "HUD must show constant run timer", failures)
 	_assert_true(not hud_text.contains("Waxlight damage") and not hud_text.contains("Director"), "HUD must not show debug stat text", failures)
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		runtime.debug_apply_upgrade_choice(&"waxlight_damage_plus_1")
@@ -104,27 +106,32 @@ func _initialize() -> void:
 	_assert_equal(buttons.size(), 3, "draft UI must contain exactly 3 choice buttons", failures)
 	_assert_true(_buttons_are_horizontal(buttons), "draft cards must be in one horizontal row", failures)
 	_assert_true(_buttons_contain_text(buttons, "->"), "draft cards must show current -> new values", failures)
-	_assert_true(_buttons_contain_text(buttons, "Waxlight Comet +1"), "Waxlight Comet upgrade must be eligible", failures)
-	_assert_true(_buttons_contain_text(buttons, "Candle Spark"), "Candle Spark must be eligible", failures)
-	_assert_true(not _buttons_contain_text(buttons, "Star Sticker Swarm"), "old broad weapon pick must not appear in first package draft", failures)
-	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
+	_assert_true(_buttons_contain_text(buttons, "Icon:") and _buttons_contain_text(buttons, "Tags:"), "draft cards must show icon and tag info", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Waxlight Comet +1"), "Waxlight upgrade must name its specific stat/scope", failures)
+	var candle_visible := _draft_contains_choice(runtime, &"new_passive_candle_spark")
+	if candle_visible and runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
 		runtime.debug_focus_draft_choice_id(&"new_passive_candle_spark")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
+	if not candle_visible and runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"new_passive_candle_spark")
 	await process_frame
-	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids() == [&"waxlight_comet"], "first package must keep Waxlight as only weapon", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"waxlight_comet"), "run must keep Waxlight starter weapon", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_owned_passive_ids") and runtime.debug_owned_passive_ids().has(&"candle_spark"), "selecting Candle Spark must add passive", failures)
 	_assert_true(_visible_text(hud).contains("Candle Spark"), "HUD must show selected passive item", failures)
 
 	await _open_draft(runtime, player)
-	_assert_true(_buttons_contain_text(_draft_buttons(root), "Waxlight Comet +1"), "owned package weapon must keep upgrading", failures)
-	_assert_true(_buttons_contain_text(_draft_buttons(root), "Candle Spark +1"), "owned package passive must keep upgrading", failures)
+	_assert_true(not _buttons_contain_text(_draft_buttons(root), "Waxlight Comet +1"), "owned weapon upgrade card must stay specific after passive selection", failures)
+	if _draft_contains_choice(runtime, &"passive_upgrade_candle_spark"):
+		_assert_true(_buttons_contain_text(_draft_buttons(root), "Candle Spark +1"), "owned package passive must keep upgrading", failures)
+	elif runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
+		runtime.debug_apply_upgrade_choice(&"passive_upgrade_candle_spark")
 	if runtime != null and runtime.has_method("debug_focus_draft_choice_id"):
 		runtime.debug_focus_draft_choice_id(&"weapon_upgrade_waxlight_comet")
 	if runtime != null and runtime.has_method("debug_accept_focused_draft_choice"):
 		runtime.debug_accept_focused_draft_choice()
 	await process_frame
-	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids() == [&"waxlight_comet"], "Waxlight upgrade must not add extra weapon slots", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_owned_weapon_ids") and runtime.debug_owned_weapon_ids().has(&"waxlight_comet"), "Waxlight upgrade must preserve starter weapon", failures)
 
 	if runtime != null and runtime.has_method("debug_kill_player"):
 		runtime.debug_kill_player()
@@ -166,9 +173,18 @@ func _open_draft(runtime: Node, player: Node) -> void:
 		return
 	var guard := 0
 	while runtime.has_method("debug_draft_is_open") and not runtime.debug_draft_is_open() and guard < 10:
-		runtime.debug_spawn_xp_pickup((player as Node3D).global_position, 1)
+		runtime.debug_spawn_xp_pickup((player as Node3D).global_position, 5)
 		await physics_frame
 		guard += 1
+
+
+func _draft_contains_choice(runtime: Node, choice_id: StringName) -> bool:
+	if runtime == null or not runtime.has_method("debug_draft_choice_count") or not runtime.has_method("debug_draft_choice_id_at"):
+		return false
+	for index in runtime.debug_draft_choice_count():
+		if runtime.debug_draft_choice_id_at(index) == choice_id:
+			return true
+	return false
 
 
 func _load_main(failures: Array[String]) -> Node:

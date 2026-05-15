@@ -23,7 +23,7 @@ Players should never notice Resource Data Schemas as a system. They should feel 
 4. Display names, descriptions, icons, VFX references, SFX references, and localization keys are data references, not gameplay logic.
 5. Cross-resource references use IDs, not scene paths or direct object references, unless the referenced object is an asset-only dependency such as an icon, audio clip, or scene prefab.
 6. Tags are shared vocabulary. Weapon materials, evolution catalysts, Pagecraft materials, enemy traits, draft pools, pet traits, and chapter themes must reference approved tag IDs.
-7. Weapons must define exactly 10 level entries. Level 1 is base behavior, level 5 is a major breakpoint, and level 10 is capstone/evolution eligibility.
+7. Weapons must define one valid editable base stat set and 10 upgrade-count levels at runtime. Level 1 is base behavior, level 5 is a major breakpoint, and level 10 is capstone/evolution eligibility; levels do not store hidden stat rows.
 8. Passive items must define exactly 5 level entries. Level 5 enables catalyst tags for evolution checks.
 9. Pets must define authored support tiers. The first polished exemplar Dog defines exactly 3 support tiers and no attack behavior reference.
 10. Characters must define starter weapon, dash profile reference, passive trait reference, preferred material tag, stat profile, unlock condition, and 10 mastery entries.
@@ -54,7 +54,7 @@ Players should never notice Resource Data Schemas as a system. They should feel 
 |---|---|---|
 | Godot Project Shell | Upstream | Shell provides boot timing only. Schemas do not modify `Main.tscn` topology. |
 | Damage and Status Model | Downstream | Consumes stat profiles, damage tags, status tags, resistance tags, and combat metadata. |
-| Weapons and Auto-Attacks | Downstream | Consumes weapon IDs, 10 level entries, material tags, attack behavior references, Pagecraft mark references, dash interaction references, and evolution paths. |
+| Weapons and Auto-Attacks | Downstream | Consumes weapon IDs, base stat fields, material tags, attack behavior references, Pagecraft mark references, dash interaction references, and evolution paths. |
 | Passive Items and Drafts | Downstream | Consumes passive IDs, 5 level entries, catalyst tags, stat modifier references, and draft metadata. |
 | XP, Leveling, and Upgrade Drafts | Downstream | Consumes draft pool tags, rarity/weight metadata, unlock gates, level caps, and 3-choice draft eligibility metadata. |
 | Evolution System | Downstream | Consumes weapon evolution paths and item catalyst tags. It owns eligibility evaluation and draft presentation. |
@@ -135,7 +135,7 @@ Invalid states are blocking schema errors:
 - `total_required_content_counts == 0`
 - Any resource ID is blank.
 - Any active resource uses a deprecated resource ID without explicit migration metadata.
-- Any weapon has not exactly 10 levels.
+- Any weapon is missing valid base damage, cooldown, mark radius, or range fields.
 - Any passive item has not exactly 5 levels.
 - Dog exemplar pet has not exactly 3 support tiers.
 - Any character mastery track has not exactly 10 levels.
@@ -147,7 +147,7 @@ Invalid states are blocking schema errors:
 - If a resource references an unknown ID, validation fails and reports the owner resource, field name, and missing ID.
 - If a resource references an unknown tag, validation fails and reports the unknown tag plus the approved tag registry path.
 - If active content references deprecated content, validation fails unless the reference is marked migration-only or the deprecated resource explicitly allows new runs.
-- If a weapon has fewer or more than 10 levels, validation fails and the weapon cannot enter draft pools.
+- If a weapon has invalid base stats, validation fails and the weapon cannot enter draft pools.
 - If a passive item has fewer or more than 5 levels, validation fails and the item cannot enter draft pools or enable evolutions.
 - If Dog has fewer or more than 3 support tiers in the first polished exemplar, validation fails and Dog cannot be equipped or upgraded.
 - If a character references a missing starter weapon, validation fails and the character cannot appear in character select.

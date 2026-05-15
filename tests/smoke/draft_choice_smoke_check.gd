@@ -45,8 +45,8 @@ func _initialize() -> void:
 		)
 
 	if runtime != null and player != null and runtime.has_method("debug_spawn_xp_pickup"):
-		for mote_index in 3:
-			runtime.debug_spawn_xp_pickup(player.global_position, 1)
+		for mote_index in 5:
+			runtime.debug_spawn_xp_pickup(player.global_position, 5)
 			for frame_index in 3:
 				await physics_frame
 
@@ -94,9 +94,13 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> void:
 	var buttons := _choice_buttons(level_up_screen)
 	_assert_true(buttons.size() == 3, "LevelUpScreen must contain exactly 3 choice buttons", failures)
-	_assert_true(_buttons_contain_text(buttons, "Waxlight Comet +1"), "normal draft must include Waxlight Comet +1", failures)
-	_assert_true(_buttons_contain_text(buttons, "Candle Spark"), "normal draft must include Candle Spark while legal", failures)
-	_assert_true(not _buttons_contain_text(buttons, "Star Sticker Swarm"), "first package draft must not include old second weapon", failures)
+	_assert_true(_buttons_contain_text(buttons, "Icon:"), "draft cards must include icon area text until art exists", failures)
+	_assert_true(_buttons_contain_text(buttons, "Tags:"), "draft cards must include material/catalyst tags", failures)
+	_assert_true(_buttons_contain_text(buttons, "Level"), "draft cards must include current/new level", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Slot"), "draft cards must omit slot-fill state to reduce clutter", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Evolves"), "draft cards must omit evolution hints because tags carry compatibility", failures)
+	_assert_true(not _buttons_contain_text(buttons, "Waxlight Comet +1"), "weapon upgrade cards must name the specific upgraded stat/scope", failures)
+	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm") or _buttons_contain_text(buttons, "Candle Spark") or _buttons_contain_text(buttons, "Cloud Seed") or _buttons_contain_text(buttons, "Dream Thread") or _buttons_contain_text(buttons, "Ribbon Spool") or _buttons_contain_text(buttons, "Moon Button"), "normal draft must include legal new gear from expanded pool when rolled", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Dreamsap Glob"), "first package draft must not include old Dreamsap weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Color Bloom"), "first package draft must not include old Color Bloom weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Paper Plane Dart"), "weapon-pick draft must not include non-GDD Paper Plane Dart weapon", failures)
@@ -104,7 +108,7 @@ func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> voi
 
 
 func _is_first_package_choice(choice_id: StringName) -> bool:
-	return choice_id == &"weapon_upgrade_waxlight_comet" or choice_id == &"new_passive_candle_spark" or choice_id == &"passive_upgrade_candle_spark"
+	return String(choice_id).begins_with("weapon_upgrade_waxlight_comet") or String(choice_id).begins_with("new_passive_") or String(choice_id).begins_with("passive_upgrade_") or choice_id == &"new_weapon_star_sticker_swarm"
 
 
 func _choice_buttons(root: Node) -> Array[Button]:

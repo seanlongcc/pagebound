@@ -14,13 +14,12 @@ func _initialize() -> void:
 	var upgrade_state = RunUpgradeStateScript.new()
 	upgrade_state.configure(factory)
 	var waxlight = factory.waxlight_comet_weapon()
-	var waxlight_level = waxlight.level_data_for(1) if waxlight != null else null
 
-	_assert_true(waxlight_level != null and "range_meters" in waxlight_level, "weapon levels must expose range_meters", failures)
+	_assert_true(waxlight != null and "base_range_meters" in waxlight, "weapon data must expose base_range_meters", failures)
 	_assert_true(upgrade_state.has_method("weapon_range_meters"), "upgrade state must expose weapon_range_meters", failures)
 	var base_range := 0.0
-	if waxlight_level != null and "range_meters" in waxlight_level:
-		base_range = float(waxlight_level.range_meters)
+	if waxlight != null and "base_range_meters" in waxlight:
+		base_range = float(waxlight.base_range_meters)
 		_assert_true(base_range > 0.0, "weapon range_meters must be positive", failures)
 	if upgrade_state.has_method("weapon_range_meters"):
 		_assert_true(is_equal_approx(upgrade_state.weapon_range_meters(&"waxlight_comet", base_range), base_range), "base weapon range must be unchanged before range upgrade", failures)

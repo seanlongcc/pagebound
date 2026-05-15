@@ -30,13 +30,14 @@ func _initialize() -> void:
 		return
 
 	var initial_spawned: int = director.debug_spawned_count()
-	for index in 360:
+	for index in 960:
 		await physics_frame
 
 	_assert_true(director.debug_spawned_count() > initial_spawned, "director must spawn enemies over time", failures)
-	_assert_true(director.debug_spawned_count() >= initial_spawned + 4, "opening spawn pressure must mildly beat old dead-air 6s baseline", failures)
-	_assert_true(director.debug_spawned_count() <= initial_spawned + 5, "opening spawn pressure must stay below aggressive 6s baseline", failures)
-	_assert_true(director.debug_active_enemy_count() <= director.debug_active_budget(), "director must enforce active enemy budget", failures)
+	_assert_true(director.debug_active_budget() >= 10 and director.debug_active_budget() <= 12, "0:16 opening grace minimum alive must be about 11", failures)
+	_assert_true(director.debug_spawned_count() <= 32, "0:16 opening grace must not spawn a horde wall", failures)
+	_assert_true(director.debug_active_enemy_count() <= 16, "0:16 opening grace must keep active enemies readable", failures)
+	_assert_true(director.debug_active_enemy_count() <= director.debug_active_budget(), "opening wave must not pressure-spawn above the grace minimum", failures)
 	_assert_true(director.debug_active_enemy_count() <= director.debug_safety_enemy_cap(), "director safety cap must prevent runaway enemy count", failures)
 	_assert_true(director.debug_all_active_enemies_within_bounds(), "director must keep active enemies inside finite page bounds", failures)
 

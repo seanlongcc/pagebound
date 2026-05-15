@@ -6,14 +6,18 @@ const PageboundTagDataScript := preload("res://src/data/pagebound_tag_data.gd")
 const PassiveItemDataScript := preload("res://src/data/passive_item_data.gd")
 const UpgradeChoiceDataScript := preload("res://src/data/upgrade_choice_data.gd")
 const WeaponDataScript := preload("res://src/data/weapon_data.gd")
-const WeaponLevelDataScript := preload("res://src/data/weapon_level_data.gd")
 
 const PAGECRAFT_TAG_WAXLIGHT := &"waxlight"
 const PAGECRAFT_TAG_STAR_STICKER := &"star_sticker"
 const PAGECRAFT_TAG_DREAMSAP := &"dreamsap"
 const PAGECRAFT_TAG_COLOR_BLOOM := &"color_bloom"
 const TAG_FIRELIGHT := &"firelight"
+const TAG_LIGHT := &"light"
 const TAG_DREAMLIGHT := &"dreamlight"
+const TAG_DREAM := &"dream"
+const TAG_THREAD := &"thread"
+const TAG_ECHO := &"echo"
+const TAG_WONDER := &"wonder"
 const TAG_BINDING := &"binding"
 const TAG_WATER := &"water"
 const TAG_BLOOM := &"bloom"
@@ -27,6 +31,10 @@ const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
 const WEAPON_DREAMSAP_GLOB := &"dreamsap_glob"
 const WEAPON_COLOR_BLOOM := &"color_bloom"
 const PASSIVE_CANDLE_SPARK := &"candle_spark"
+const PASSIVE_CLOUD_SEED := &"cloud_seed"
+const PASSIVE_DREAM_THREAD := &"dream_thread"
+const PASSIVE_RIBBON_SPOOL := &"ribbon_spool"
+const PASSIVE_MOON_BUTTON := &"moon_button"
 const ENEMY_WAX_IMP := &"wax_imp"
 const ENEMY_FLICKER_IMP := &"flicker_imp"
 const WAXLIGHT_RESOURCE_PATH := "res://data/weapons/prototype_waxlight_comet.tres"
@@ -34,6 +42,10 @@ const STAR_STICKER_RESOURCE_PATH := "res://data/weapons/prototype_star_sticker_s
 const WAX_IMP_RESOURCE_PATH := "res://data/enemies/prototype_wax_imp.tres"
 const FLICKER_IMP_RESOURCE_PATH := "res://data/enemies/prototype_flicker_imp.tres"
 const CANDLE_SPARK_RESOURCE_PATH := "res://data/passives/prototype_candle_spark.tres"
+const CLOUD_SEED_RESOURCE_PATH := "res://data/passives/prototype_cloud_seed.tres"
+const DREAM_THREAD_RESOURCE_PATH := "res://data/passives/prototype_dream_thread.tres"
+const RIBBON_SPOOL_RESOURCE_PATH := "res://data/passives/prototype_ribbon_spool.tres"
+const MOON_BUTTON_RESOURCE_PATH := "res://data/passives/prototype_moon_button.tres"
 const UPGRADE_RESOURCE_PATHS := [
 	"res://data/upgrades/waxlight_damage_plus_1.tres",
 	"res://data/upgrades/waxlight_cooldown_minus_10.tres",
@@ -111,10 +123,42 @@ func candle_spark_passive() -> Resource:
 	return resource if resource != null else _candle_spark_passive()
 
 
+func cloud_seed_passive() -> Resource:
+	return _load_or_make_passive(CLOUD_SEED_RESOURCE_PATH, PASSIVE_CLOUD_SEED, "Cloud Seed", "Common size passive.", [TAG_BLOOM, TAG_WONDER], &"size")
+
+
+func dream_thread_passive() -> Resource:
+	return _load_or_make_passive(DREAM_THREAD_RESOURCE_PATH, PASSIVE_DREAM_THREAD, "Dream Thread", "Common duration passive.", [TAG_DREAM, TAG_THREAD], &"duration")
+
+
+func ribbon_spool_passive() -> Resource:
+	return _load_or_make_passive(RIBBON_SPOOL_RESOURCE_PATH, PASSIVE_RIBBON_SPOOL, "Ribbon Spool", "Common range passive.", [TAG_THREAD, TAG_STAR], &"range")
+
+
+func moon_button_passive() -> Resource:
+	return _load_or_make_passive(MOON_BUTTON_RESOURCE_PATH, PASSIVE_MOON_BUTTON, "Moon Button", "Common cadence passive.", [TAG_MOON, TAG_ECHO], &"cadence")
+
+
+func passive_for_id(passive_id: StringName) -> Resource:
+	match passive_id:
+		PASSIVE_CANDLE_SPARK:
+			return candle_spark_passive()
+		PASSIVE_CLOUD_SEED:
+			return cloud_seed_passive()
+		PASSIVE_DREAM_THREAD:
+			return dream_thread_passive()
+		PASSIVE_RIBBON_SPOOL:
+			return ribbon_spool_passive()
+		PASSIVE_MOON_BUTTON:
+			return moon_button_passive()
+	return null
+
+
 ## Creates weapons in the locked first-polished exemplar package.
 func weapon_pool() -> Array[Resource]:
 	return [
 		waxlight_comet_weapon(),
+		star_sticker_swarm_weapon(),
 	]
 
 
@@ -122,6 +166,10 @@ func weapon_pool() -> Array[Resource]:
 func passive_items() -> Array[Resource]:
 	return [
 		candle_spark_passive(),
+		cloud_seed_passive(),
+		dream_thread_passive(),
+		ribbon_spool_passive(),
+		moon_button_passive(),
 	]
 
 
@@ -172,7 +220,12 @@ func _prototype_tags() -> Array[Resource]:
 		_make_tag(PAGECRAFT_TAG_DREAMSAP, "Dreamsap", "material", "Sticky dream sap puddle."),
 		_make_tag(PAGECRAFT_TAG_COLOR_BLOOM, "Color Bloom", "material", "Growing color bloom zone."),
 		_make_tag(TAG_FIRELIGHT, "Firelight", "catalyst", "Prototype fire/light evolution catalyst."),
+		_make_tag(TAG_LIGHT, "Light", "catalyst", "Radiant light evolution catalyst."),
 		_make_tag(TAG_DREAMLIGHT, "Dreamlight", "material", "Soft storybook dream glow."),
+		_make_tag(TAG_DREAM, "Dream", "catalyst", "Dream evolution catalyst."),
+		_make_tag(TAG_THREAD, "Thread", "catalyst", "Thread evolution catalyst."),
+		_make_tag(TAG_ECHO, "Echo", "catalyst", "Echo evolution catalyst."),
+		_make_tag(TAG_WONDER, "Wonder", "catalyst", "Wonder evolution catalyst."),
 		_make_tag(TAG_BINDING, "Binding", "catalyst", "Binding evolution catalyst."),
 		_make_tag(TAG_WATER, "Water", "catalyst", "Water evolution catalyst."),
 		_make_tag(TAG_BLOOM, "Bloom", "catalyst", "Bloom evolution catalyst."),
@@ -193,10 +246,13 @@ func _waxlight_comet_weapon() -> Resource:
 	weapon.weapon_type_id = &"direct_nearest"
 	weapon.attack_behavior_id = &"nearest_direct_hit"
 	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT, TAG_FIRELIGHT])
-	weapon.catalyst_tags = _string_name_array([TAG_FIRELIGHT, PAGECRAFT_TAG_WAXLIGHT])
+	weapon.catalyst_tags = _string_name_array([TAG_FIRELIGHT, TAG_LIGHT])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_WAXLIGHT
 	weapon.dash_interaction_id = &"waxlight_dash_pulse"
-	weapon.levels = _weapon_levels()
+	weapon.base_damage = 100.0
+	weapon.base_cooldown_seconds = 1.15
+	weapon.base_mark_radius_meters = 0.98
+	weapon.base_range_meters = 12.0
 	return weapon
 
 
@@ -208,11 +264,14 @@ func _star_sticker_swarm_weapon() -> Resource:
 	weapon.tags = _string_name_array([TAG_PROTOTYPE])
 	weapon.weapon_type_id = &"orbit_attach"
 	weapon.attack_behavior_id = &"star_sticker_burst"
-	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_STAR_STICKER, TAG_DREAMLIGHT])
+	weapon.material_tags = _string_name_array([PAGECRAFT_TAG_STAR_STICKER, TAG_STAR])
 	weapon.catalyst_tags = _string_name_array([TAG_STAR, TAG_MOON])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_STAR_STICKER
 	weapon.dash_interaction_id = &"sticker_dash_launch"
-	weapon.levels = _star_sticker_levels()
+	weapon.base_damage = 80.0
+	weapon.base_cooldown_seconds = 2.0
+	weapon.base_mark_radius_meters = 0.6
+	weapon.base_range_meters = 10.5
 	return weapon
 
 
@@ -228,7 +287,10 @@ func _dreamsap_glob_weapon() -> Resource:
 	weapon.catalyst_tags = _string_name_array([TAG_BINDING, TAG_WATER])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_DREAMSAP
 	weapon.dash_interaction_id = &"dreamsap_dash_snare"
-	weapon.levels = _dreamsap_levels()
+	weapon.base_damage = 60.0
+	weapon.base_cooldown_seconds = 2.0
+	weapon.base_mark_radius_meters = 1.2
+	weapon.base_range_meters = 9.75
 	return weapon
 
 
@@ -244,7 +306,10 @@ func _color_bloom_weapon() -> Resource:
 	weapon.catalyst_tags = _string_name_array([TAG_BLOOM, TAG_CLOUD])
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_COLOR_BLOOM
 	weapon.dash_interaction_id = &"color_bloom_dash_splash"
-	weapon.levels = _color_bloom_levels()
+	weapon.base_damage = 70.0
+	weapon.base_cooldown_seconds = 1.8
+	weapon.base_mark_radius_meters = 1.125
+	weapon.base_range_meters = 9.75
 	return weapon
 
 
@@ -257,8 +322,8 @@ func _wax_imp_enemy() -> Resource:
 	enemy.behavior_id = &"chaser"
 	enemy.max_health = _opening_enemy_health()
 	enemy.move_speed = 1.45
-	enemy.contact_damage = 3.0
-	enemy.reward_xp = 1
+	enemy.contact_damage = 60.0
+	enemy.reward_xp = 5
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
 	return enemy
 
@@ -270,10 +335,10 @@ func _flicker_imp_enemy() -> Resource:
 	enemy.description = "Authored delayed fast weak pressure enemy."
 	enemy.tags = _string_name_array([TAG_HOSTILE_INK, TAG_PROTOTYPE])
 	enemy.behavior_id = &"swarmer"
-	enemy.max_health = 8.0
+	enemy.max_health = 160.0
 	enemy.move_speed = 3.2
-	enemy.contact_damage = 3.0
-	enemy.reward_xp = 1
+	enemy.contact_damage = 60.0
+	enemy.reward_xp = 5
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
 	return enemy
 
@@ -282,70 +347,35 @@ func _candle_spark_passive() -> Resource:
 	var passive = PassiveItemDataScript.new()
 	passive.id = PASSIVE_CANDLE_SPARK
 	passive.display_name = "Candle Spark"
-	passive.description = "Documented Firelight/Waxlight passive. In prototype it gives a chunky Waxlight glow damage boost."
+	passive.description = "Documented Firelight/Light passive. In prototype it gives a broad player-owned damage boost."
 	passive.tags = _string_name_array([TAG_PROTOTYPE])
-	passive.catalyst_tags = _string_name_array([TAG_FIRELIGHT, PAGECRAFT_TAG_WAXLIGHT])
-	passive.stat_id = &"glow_damage_multiplier"
-	passive.level_values = [0.15, 0.30, 0.45, 0.60, 0.75]
+	passive.draft_rarity = &"common"
+	passive.catalyst_tags = _string_name_array([TAG_FIRELIGHT, TAG_LIGHT])
+	passive.stat_id = &"damage"
+	passive.level_values = [0.10, 0.20, 0.30, 0.40, 0.50]
 	return passive
 
 
-func _weapon_levels() -> Array[Resource]:
-	var levels: Array[Resource] = []
-	for level in range(1, 11):
-		var level_data = WeaponLevelDataScript.new()
-		level_data.level = level
-		level_data.base_damage = 5.0 + float(level - 1)
-		level_data.cooldown_seconds = maxf(0.45, 1.15 - float(level - 1) * 0.04)
-		level_data.mark_radius_meters = 0.65 + float(level - 1) * 0.03
-		level_data.range_meters = 8.0 + float(level - 1) * 0.1
-		levels.append(level_data)
-	return levels
-
-
-func _star_sticker_levels() -> Array[Resource]:
-	var levels: Array[Resource] = []
-	for level in range(1, 11):
-		var level_data = WeaponLevelDataScript.new()
-		level_data.level = level
-		level_data.base_damage = 4.0 + float(level - 1) * 2.0
-		level_data.cooldown_seconds = maxf(0.85, 2.0 - float(level - 1) * 0.06)
-		level_data.mark_radius_meters = 0.4 + float(level - 1) * 0.02
-		level_data.range_meters = 7.0 + float(level - 1) * 0.1
-		levels.append(level_data)
-	return levels
-
-
-func _dreamsap_levels() -> Array[Resource]:
-	var levels: Array[Resource] = []
-	for level in range(1, 11):
-		var level_data = WeaponLevelDataScript.new()
-		level_data.level = level
-		level_data.base_damage = 3.0 + float(level - 1) * 1.1
-		level_data.cooldown_seconds = maxf(0.85, 2.0 - float(level - 1) * 0.05)
-		level_data.mark_radius_meters = 0.8 + float(level - 1) * 0.03
-		level_data.range_meters = 6.5 + float(level - 1) * 0.1
-		levels.append(level_data)
-	return levels
-
-
-func _color_bloom_levels() -> Array[Resource]:
-	var levels: Array[Resource] = []
-	for level in range(1, 11):
-		var level_data = WeaponLevelDataScript.new()
-		level_data.level = level
-		level_data.base_damage = 3.5 + float(level - 1) * 1.2
-		level_data.cooldown_seconds = maxf(0.8, 1.8 - float(level - 1) * 0.05)
-		level_data.mark_radius_meters = 0.75 + float(level - 1) * 0.04
-		level_data.range_meters = 6.5 + float(level - 1) * 0.1
-		levels.append(level_data)
-	return levels
+func _load_or_make_passive(path: String, passive_id: StringName, display_name: String, description: String, catalyst_tags: Array, stat_id: StringName) -> Resource:
+	var resource := _load_resource(path)
+	if resource != null:
+		return resource
+	var passive = PassiveItemDataScript.new()
+	passive.id = passive_id
+	passive.display_name = display_name
+	passive.description = description
+	passive.tags = _string_name_array([TAG_PROTOTYPE])
+	passive.draft_rarity = &"common"
+	passive.catalyst_tags = _string_name_array(catalyst_tags)
+	passive.stat_id = stat_id
+	passive.level_values = [0.10, 0.20, 0.30, 0.40, 0.50]
+	return passive
 
 
 func _opening_enemy_health() -> float:
 	var waxlight = waxlight_comet_weapon()
 	if waxlight != null:
-		return float(waxlight.level_data_for(1).base_damage) * 2.0
+		return float(waxlight.base_damage) * 2.0
 	return 10.0
 
 

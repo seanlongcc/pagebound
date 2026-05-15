@@ -10,17 +10,19 @@ func _initialize() -> void:
 	helper.ensure_hud(hud)
 
 	var label := hud.get_node_or_null("FirstPlayableHudLabel") as Label
-	_assert_true(hud.get_node_or_null("PartyReserve") != null, "HUD must reserve top-left party space", failures)
+	_assert_true(hud.get_node_or_null("PartyReserve") == null or not (hud.get_node_or_null("PartyReserve") as Control).visible, "solo HUD must not show top-left multiplayer placeholders", failures)
+	_assert_true(hud.get_node_or_null("RunTimer") != null, "HUD must create top-middle run timer", failures)
 	_assert_true(hud.get_node_or_null("TopRightBanner") != null, "HUD must create exclusive top-right banner", failures)
 	_assert_true(hud.get_node_or_null("BottomXPBar") != null, "HUD must create full-width bottom XP bar", failures)
 	_assert_true(hud.get_node_or_null("LevelBadge") != null, "HUD must create bottom-left level badge", failures)
 	_assert_true(hud.get_node_or_null("PetBadge") != null, "HUD must create Dog pet badge", failures)
+	_assert_true(hud.get_node_or_null("DashMeter") != null, "HUD must create dash recharge meter", failures)
 	_assert_true(hud.get_node_or_null("LoadoutBook") != null, "HUD must create loadout slots", failures)
 	_assert_true(hud.get_node_or_null("HPChip") != null, "HUD must create readable HP chip", failures)
 
 	var context := {
 		"player_health": 42.0,
-		"player_max_health": 50.0,
+		"player_max_health": 1000.0,
 		"run_level": 2,
 		"current_level_xp": 1,
 		"xp_threshold": 6,
@@ -56,22 +58,27 @@ func _initialize() -> void:
 		},
 		"weapon_ids": [&"waxlight_comet", &"star_sticker_swarm"],
 		"passive_ids": [&"candle_spark"],
+		"weapon_levels": {&"waxlight_comet": 2, &"star_sticker_swarm": 1},
+		"passive_levels": {&"candle_spark": 1},
 		"dog_tier": 1,
 		"dog_feedback_text": "Dog fetch +2 XP",
+		"dash_recharge_percent": 42,
 		"xp_total": 7,
 		"enemies_defeated": 3,
 	}
 
 	helper.update_hud(context)
 	var hud_text := _visible_text(hud)
-	_assert_true(hud_text.contains("HP 42/50"), "HUD must show rounded HP in readable chip", failures)
+	_assert_true(hud_text.contains("HP 42/1000"), "HUD must show rounded HP in readable chip", failures)
+	_assert_true(hud_text.contains("02:05"), "HUD must show top-middle run timer", failures)
 	_assert_true(hud_text.contains("Level") and hud_text.contains("2"), "HUD must show run level near bottom-left", failures)
 	_assert_true(hud_text.contains("XP 17%"), "HUD must show XP percentage on bottom bar", failures)
 	_assert_true(hud_text.contains("Fill the Color Well"), "HUD must show active Page Event banner", failures)
 	_assert_true(hud_text.contains("75%"), "event banner must show percent as primary progress", failures)
 	_assert_true(not hud_text.contains("Crownless Echo"), "event banner must be exclusive over boss banner", failures)
 	_assert_true(hud_text.contains("Dog fetch +2 XP"), "HUD must show Dog pet feedback", failures)
-	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Candle Spark"), "HUD must include loadout names", failures)
+	_assert_true(hud_text.contains("Dash") and hud_text.contains("42%"), "HUD must show dash recharge meter", failures)
+	_assert_true(hud_text.contains("Waxlight Comet") and hud_text.contains("Lv2") and hud_text.contains("Candle Spark") and hud_text.contains("Lv1"), "HUD must include loadout names and levels", failures)
 	_assert_true(_named_children(hud.get_node_or_null("LoadoutBook/WeaponSlots")).size() == 5, "HUD must show 5 weapon slots", failures)
 	_assert_true(_named_children(hud.get_node_or_null("LoadoutBook/ItemSlots")).size() == 5, "HUD must show 5 item slots", failures)
 	_assert_true(not hud_text.contains("Wpn") and not hud_text.contains("Item Slots"), "HUD must not label rows with text category names", failures)

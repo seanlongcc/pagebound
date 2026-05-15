@@ -56,7 +56,7 @@ Page Events do not have stronger pools, evolution rewards, Pagecraft modifiers, 
 
 ### First Polished Exemplar Pool
 
-The first polished exemplar intentionally uses a tiny pool:
+The first polished exemplar originally used a tiny pool:
 
 | Type | Entry | Notes |
 |---|---|---|
@@ -66,6 +66,8 @@ The first polished exemplar intentionally uses a tiny pool:
 Because the player starts with `Waxlight Comet`, a new weapon roll has no legal unowned weapon in the first package and redirects to `Candle Spark` if it is still legal. If `Candle Spark` appears before the first Page Event reward, that is acceptable. If it has not appeared, the first successful Page Event reward guarantee points at `Candle Spark`.
 
 The tiny pool can temporarily underfill distinct 3-card choices during implementation. Prototype may allow repeated simple upgrade targets only after all distinct legal normal cards have already been represented. Full content pool should avoid duplicate target/action cards within the same draft.
+
+Current implementation note: the user-approved second content batch adds `Star Sticker Swarm`, `Cloud Seed`, `Dream Thread`, `Ribbon Spool`, and `Moon Button`, so runtime draft generation must use the authored content pool and no longer assume the tiny-pool redirect behavior.
 
 ### States and Transitions
 
@@ -147,8 +149,9 @@ Invalid states:
 | `max_weapon_slots` | `5` | fixed for MVP | Shared with weapon system. |
 | `max_passive_slots` | `5` | fixed for MVP | Shared with item system. |
 | `overflow_stat_bonus` | `5%` | tuning | Repeatable crumb only when no normal legal cards exist. |
-| `xp_curve_base` | `10` | `1+` | Prototype tuning. |
-| `xp_curve_growth` | `1.12` | `1.0-1.5` | Prototype tuning. |
+| `xp_curve_formula` | VS-style continuous bands scaled by `5` | fixed prototype | Level 1 threshold is `25 XP`; no level 20/40 walls. |
+| `target_total_xp_to_level_50` | `67,225` | tuning | Matches the 30:00 level-50 target with base enemies at `5 XP`. |
+| `base_enemy_xp` | `5` | fixed prototype | Basic and fast enemies drop Tiny Color Motes. |
 
 ## Visual/Audio Requirements
 
@@ -178,5 +181,5 @@ Invalid states:
 
 ## Open Questions
 
-- Exact XP curve values are prototype-tuned.
+- Exact XP curve values follow the current root-GDD prototype formula unless a later tuning pass updates it.
 - Full-content duplicate-card policy can be tightened once the real weapon/item pool is active.

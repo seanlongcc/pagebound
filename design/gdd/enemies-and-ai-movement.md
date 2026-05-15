@@ -92,6 +92,9 @@ Invalid states:
 |---|---:|---:|---|
 | `base_enemy_speed` | `3.5 m/s` | `1.0-8.0` | Per enemy override. |
 | `contact_damage_cooldown` | `0.5 s` | `0.1-2.0` | Shared with Damage Model. |
+| `normal_contact_damage` | `60` | tuning | Current 1000 HP prototype baseline. |
+| `opening_wax_imp_health` | `200` | tuning | Equals two starter Waxlight hits. |
+| `flicker_imp_health` | `160` | tuning | Fast weak pressure enemy. |
 | `separation_radius` | `0.6 m` | `0.0-2.0` | Horde readability/perf tradeoff. |
 | `elite_health_multiplier` | `4.0` | `2.0-20.0` | Tune by role. |
 | `enemy_pool_initial_size` | `128` | `16-512` | Per family/profile. |
@@ -121,4 +124,3 @@ Invalid states:
 
 - Exact first chapter enemy families belong to content implementation.
 - Navigation mesh use remains optional until steering prototype proves insufficient.
-

@@ -13,8 +13,14 @@ extends "res://src/data/pagebound_content_resource.gd"
 @export var pagecraft_material_tag: StringName
 ## Dash interaction behavior ID consumed by Pagecraft.
 @export var dash_interaction_id: StringName
-## Exactly 10 entries for MVP weapons.
-@export var levels: Array[Resource] = []
+## Authored starting hit/area damage before upgrade and passive modifiers.
+@export_range(0.0, 10000.0, 0.1) var base_damage := 1.0
+## Authored starting auto-fire interval before cadence modifiers.
+@export_range(0.05, 60.0, 0.01) var base_cooldown_seconds := 1.0
+## Authored starting mark, splash, or footprint radius before size modifiers.
+@export_range(0.0, 20.0, 0.1) var base_mark_radius_meters := 1.0
+## Authored starting targeting or placement range before range modifiers.
+@export_range(0.1, 40.0, 0.1) var base_range_meters := 8.0
 
 
 ## Returns every tag ID referenced by this weapon.
@@ -27,18 +33,11 @@ func referenced_tag_ids() -> Array[StringName]:
 	return referenced
 
 
-## Returns true when this weapon has exactly 10 valid level rows.
-func has_valid_level_track() -> bool:
-	if levels.size() != 10:
-		return false
-	for index in levels.size():
-		var level_data = levels[index]
-		if level_data == null or level_data.level != index + 1 or not level_data.has_valid_ranges():
-			return false
-	return true
+## Returns true when this weapon has valid editable base tuning.
+func has_valid_base_stats() -> bool:
+	return base_damage >= 0.0 and base_cooldown_seconds > 0.0 and base_mark_radius_meters >= 0.0 and base_range_meters > 0.0
 
 
-## Returns the level data for a one-based weapon level.
-func level_data_for(level: int) -> Resource:
-	var clamped_level: int = clampi(level, 1, levels.size())
-	return levels[clamped_level - 1]
+## Compatibility shim for older debug callers. Weapon level no longer changes base stats.
+func level_data_for(_level: int) -> Resource:
+	return self

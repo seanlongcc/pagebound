@@ -5,11 +5,11 @@ const DREAMSAP_FEEDBACK_SECONDS := 2.6
 const COLOR_BLOOM_FEEDBACK_SECONDS := 0.85
 
 
-static func fire_dreamsap_glob(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, level_data: Resource, target: Node3D, damage: float) -> Dictionary:
+static func fire_dreamsap_glob(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float) -> Dictionary:
 	if target == null:
 		return {"hits": 0, "transients": []}
 	var center := Vector3(target.global_position.x, 0.08, target.global_position.z)
-	var radius := maxf(0.65, float(level_data.mark_radius_meters))
+	var radius := maxf(0.65, mark_radius_meters)
 	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius)
 	return {
 		"hits": hits,
@@ -17,11 +17,11 @@ static func fire_dreamsap_glob(parent: Node, enemies_root: Node, damage_model, w
 	}
 
 
-static func fire_color_bloom(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, level_data: Resource, target: Node3D, damage: float) -> Dictionary:
+static func fire_color_bloom(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float) -> Dictionary:
 	if target == null:
 		return {"hits": 0, "transients": []}
 	var center := Vector3(target.global_position.x, 0.09, target.global_position.z)
-	var radius := maxf(0.7, float(level_data.mark_radius_meters) * 1.15)
+	var radius := maxf(0.7, mark_radius_meters * 1.15)
 	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius)
 	return {
 		"hits": hits,

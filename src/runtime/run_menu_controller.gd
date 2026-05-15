@@ -4,12 +4,16 @@ extends Node
 signal start_requested
 signal retry_requested
 signal main_menu_requested
+signal pause_requested
+signal resume_requested
 
 var _modal_layer: Control
 var _start_screen: Control
 var _death_screen: Control
 var _summary_screen: Control
+var _pause_screen: Control
 var _summary_label: Label
+var _pause_label: Label
 
 
 func _ready() -> void:
@@ -23,6 +27,7 @@ func configure(modal_layer: Control) -> void:
 	_ensure_start_screen()
 	_ensure_death_screen()
 	_ensure_summary_screen()
+	_ensure_pause_screen()
 
 
 func show_start_menu() -> void:
@@ -39,6 +44,8 @@ func hide_all() -> void:
 		_death_screen.visible = false
 	if _summary_screen != null:
 		_summary_screen.visible = false
+	if _pause_screen != null:
+		_pause_screen.visible = false
 
 
 func show_death_menu() -> void:
@@ -53,6 +60,13 @@ func show_summary(summary_lines: Array[String]) -> void:
 	_focus_first_button(_summary_screen)
 
 
+func show_pause(summary_lines: Array[String]) -> void:
+	_show_only(_pause_screen)
+	if _pause_label != null:
+		_pause_label.text = "\n".join(summary_lines)
+	_focus_first_button(_pause_screen)
+
+
 func start_screen_visible() -> bool:
 	return _start_screen != null and _start_screen.visible
 
@@ -65,10 +79,19 @@ func summary_screen_visible() -> bool:
 	return _summary_screen != null and _summary_screen.visible
 
 
+func pause_screen_visible() -> bool:
+	return _pause_screen != null and _pause_screen.visible
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if not start_screen_visible():
+	if event.is_action_pressed("ui_cancel"):
+		if pause_screen_visible():
+			resume_requested.emit()
+		else:
+			pause_requested.emit()
+		get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("ui_accept"):
+	if start_screen_visible() and event.is_action_pressed("ui_accept"):
 		start_requested.emit()
 		get_viewport().set_input_as_handled()
 
@@ -137,6 +160,36 @@ func _ensure_summary_screen() -> void:
 		_summary_screen.add_child(menu_button)
 
 
+func _ensure_pause_screen() -> void:
+	if _modal_layer == null:
+		return
+	_pause_screen = _modal_layer.get_node_or_null("PauseScreen") as Control
+	if _pause_screen == null:
+		_pause_screen = _screen("PauseScreen")
+		_modal_layer.add_child(_pause_screen)
+	_pause_screen.visible = false
+	_pause_label = _pause_screen.get_node_or_null("PauseSummaryLabel") as Label
+	if _pause_label == null:
+		_pause_label = _title_label("PauseSummaryLabel", "", Vector2(260.0, 100.0), 21)
+		_pause_label.custom_minimum_size = Vector2(620.0, 260.0)
+		_pause_screen.add_child(_pause_label)
+	if _pause_screen.get_node_or_null("ResumeButton") == null:
+		var resume_button := _button("ResumeButton", "Resume", Vector2(280.0, 410.0))
+		resume_button.pressed.connect(func() -> void:
+			resume_requested.emit()
+		)
+		_pause_screen.add_child(resume_button)
+	if _pause_screen.get_node_or_null("OptionsButton") == null:
+		var options_button := _button("OptionsButton", "Options", Vector2(450.0, 410.0))
+		_pause_screen.add_child(options_button)
+	if _pause_screen.get_node_or_null("QuitButton") == null:
+		var quit_button := _button("QuitButton", "Quit", Vector2(620.0, 410.0))
+		quit_button.pressed.connect(func() -> void:
+			main_menu_requested.emit()
+		)
+		_pause_screen.add_child(quit_button)
+
+
 func _screen(screen_name: String) -> Control:
 	var screen := Control.new()
 	screen.name = screen_name
@@ -173,7 +226,7 @@ func _button(button_name: String, text: String, position: Vector2) -> Button:
 func _show_only(screen: Control) -> void:
 	if _modal_layer != null:
 		_modal_layer.visible = true
-	for candidate in [_start_screen, _death_screen, _summary_screen]:
+	for candidate in [_start_screen, _death_screen, _summary_screen, _pause_screen]:
 		if candidate != null:
 			candidate.visible = candidate == screen
 

@@ -24,9 +24,8 @@ func _initialize() -> void:
 	var eligible: Array[Dictionary] = []
 	if state.has_method("debug_eligible_choices_for_level"):
 		eligible = state.debug_eligible_choices_for_level(3)
+	_assert_true(_rarity_present(eligible, &"common"), "common choices must be eligible in normal drafts", failures)
 	_assert_true(_rarity_present(eligible, &"rare"), "rare choices must be eligible in normal drafts", failures)
-	_assert_true(_rarity_present(eligible, &"epic"), "epic choices must be eligible in normal drafts", failures)
-	_assert_true(_rarity_present(eligible, &"legendary"), "legendary choices must be eligible in normal drafts", failures)
 
 	var upgrade_cards := 0
 	var new_gear_cards := 0
@@ -35,10 +34,10 @@ func _initialize() -> void:
 			state.debug_set_draft_seed(seed)
 		var choices: Array[Dictionary] = state.prototype_choices_for_level(3)
 		_assert_true(choices.size() == 3, "seeded draft must keep exactly 3 choices", failures)
-		_assert_true(_stays_inside_first_package(choices), "seeded draft must stay inside first polished package", failures)
+		_assert_true(_uses_allowed_expanded_pool(choices), "seeded draft must stay inside authored expanded prototype pool", failures)
 		upgrade_cards += _choice_type_count(choices, &"weapon_upgrade") + _choice_type_count(choices, &"passive_upgrade")
-		new_gear_cards += _choice_type_count(choices, &"passive")
-	_assert_true(upgrade_cards > new_gear_cards, "normal drafts must bias toward upgrade cards over new gear in tiny pool", failures)
+		new_gear_cards += _choice_type_count(choices, &"weapon") + _choice_type_count(choices, &"passive")
+	_assert_true(upgrade_cards > 0 and new_gear_cards > 0, "seeded drafts must mix legal upgrades and expanded new gear when both exist", failures)
 
 	_finish(failures)
 
@@ -50,11 +49,16 @@ func _rarity_present(choices: Array[Dictionary], rarity: StringName) -> bool:
 	return false
 
 
-func _stays_inside_first_package(choices: Array[Dictionary]) -> bool:
+func _uses_allowed_expanded_pool(choices: Array[Dictionary]) -> bool:
 	for choice in choices:
 		var id: StringName = choice.get("id", &"")
-		if id != &"weapon_upgrade_waxlight_comet" and id != &"new_passive_candle_spark" and id != &"passive_upgrade_candle_spark":
-			return false
+		if id == &"weapon_upgrade_waxlight_comet" or id == &"new_weapon_star_sticker_swarm":
+			continue
+		if String(id).begins_with("new_passive_") or String(id).begins_with("passive_upgrade_"):
+			continue
+		if String(id).begins_with("overflow_"):
+			continue
+		return false
 	return true
 
 

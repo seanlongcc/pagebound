@@ -50,8 +50,8 @@ func _initialize() -> void:
 	_assert_true(weapon_manager.debug_star_available_count() == weapon_manager.debug_star_orbit_count(), "orbit star must start available", failures)
 	_assert_true(_visible_named_count(root, "StarStickerOrbit") >= 1, "orbit star visual must be visible", failures)
 
-	var primary := _spawn_victim(enemies_root, "StarStickerPrimaryVictim", Vector3(1.5, 0.0, 0.0), 40.0)
-	var pop_victim := _spawn_victim(enemies_root, "StarStickerPopVictim", Vector3(1.75, 0.0, 0.0), 40.0)
+	var primary := _spawn_victim(enemies_root, "StarStickerPrimaryVictim", Vector3(1.5, 0.0, 0.0), 200.0)
+	var pop_victim := _spawn_victim(enemies_root, "StarStickerPopVictim", Vector3(1.75, 0.0, 0.0), 200.0)
 	var primary_health := primary.get_node("HealthComponent")
 	var pop_health := pop_victim.get_node("HealthComponent")
 	var number_count_before := 0
@@ -71,7 +71,7 @@ func _initialize() -> void:
 	if damage_numbers != null and damage_numbers.has_method("debug_presented_count"):
 		_assert_true(damage_numbers.debug_presented_count() > number_count_before, "Star Sticker hit must spawn a damage number", failures)
 
-	for _frame in 95:
+	for _frame in 118:
 		await physics_frame
 
 	_assert_true(weapon_manager.debug_star_pop_damage_count() > 0, "page-stuck Star Sticker must pop for AoE damage", failures)

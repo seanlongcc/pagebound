@@ -41,7 +41,7 @@ func _initialize() -> void:
 			player.global_position = Vector3(7.0, 0.0, 4.0)
 		if camera_rig != null:
 			camera_rig.global_position = Vector3(7.0, 0.0, 4.0)
-		runtime.damage_model().apply_damage(player_health, &"death_smoke", 999.0, [&"smoke"])
+		runtime.damage_model().apply_damage(player_health, &"death_smoke", float(player_health.max_health) + 1.0, [&"smoke"])
 		await process_frame
 
 	_assert_true(paused, "player death must pause/stop gameplay", failures)
@@ -58,7 +58,7 @@ func _initialize() -> void:
 		max_health_before = runtime.debug_player_max_health()
 
 	if runtime != null and player != null:
-		runtime.debug_spawn_xp_pickup(player.global_position, 3)
+		runtime.debug_spawn_xp_pickup(player.global_position, 5)
 		for frame_index in 5:
 			await process_frame
 	if runtime != null and runtime.has_method("debug_xp_total"):

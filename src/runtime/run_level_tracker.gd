@@ -1,8 +1,6 @@
 class_name RunLevelTracker
 extends RefCounted
 
-const DEFAULT_THRESHOLDS := [3, 6, 10, 15, 21, 28]
-
 var _event_bus: Node
 var _thresholds: Array[int] = []
 var _run_level := 1
@@ -15,8 +13,6 @@ var _level_up_count := 0
 func configure(event_bus: Node, thresholds: Array[int] = []) -> void:
 	_event_bus = event_bus
 	_thresholds = _normalized_thresholds(thresholds)
-	if _thresholds.is_empty():
-		_thresholds = _normalized_thresholds(DEFAULT_THRESHOLDS)
 
 
 ## Resets run XP and level state for retry/main menu flow.
@@ -68,9 +64,7 @@ func xp_threshold_for_next_level() -> int:
 	var index := maxi(0, _run_level - 1)
 	if index < _thresholds.size():
 		return _thresholds[index]
-	var last_threshold := _thresholds[_thresholds.size() - 1]
-	var overflow_index := index - _thresholds.size() + 1
-	return last_threshold + overflow_index * 10
+	return _gdd_threshold_for_level(_run_level)
 
 
 ## Returns emitted level-up count for smoke/debug checks.
@@ -85,6 +79,20 @@ func _normalized_thresholds(thresholds: Array) -> Array[int]:
 		if value > 0:
 			normalized.append(value)
 	return normalized
+
+
+func _gdd_threshold_for_level(level: int) -> int:
+	var current_level := maxi(1, level)
+	var unscaled_xp := 5
+	if current_level == 1:
+		unscaled_xp = 5
+	elif current_level <= 20:
+		unscaled_xp = 5 + ((current_level - 1) * 10)
+	elif current_level <= 40:
+		unscaled_xp = 195 + ((current_level - 20) * 13)
+	else:
+		unscaled_xp = 455 + ((current_level - 40) * 16)
+	return unscaled_xp * 5
 
 
 func _emit_xp_awarded(amount: int, source_id: StringName) -> void:

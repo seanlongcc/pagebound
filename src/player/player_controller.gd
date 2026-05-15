@@ -5,11 +5,11 @@ signal dash_path_sampled(start_position: Vector3, end_position: Vector3)
 
 const InputActionsScript := preload("res://src/input/input_actions.gd")
 
-@export_range(1.0, 20.0, 0.1) var move_speed := 7.0
+@export_range(1.0, 20.0, 0.1) var move_speed := 4.5
 @export_range(1.0, 40.0, 0.1) var dash_speed := 14.0
 @export_range(0.01, 1.0, 0.01) var dash_active_seconds := 0.15
 @export_range(0.0, 1.0, 0.01) var dash_recovery_seconds := 0.14
-@export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 0.9
+@export_range(0.1, 5.0, 0.01) var dash_cooldown_seconds := 2.0
 @export var page_half_extents := Vector2(11.0, 7.0)
 
 var _input_actions = InputActionsScript.new()
@@ -51,6 +51,15 @@ func is_dashing() -> bool:
 ## Returns expected straight-line dash travel distance for smoke tuning.
 func debug_dash_distance() -> float:
 	return dash_speed * dash_active_seconds
+
+
+## Returns percent until the next dash can be used.
+func dash_recharge_percent() -> float:
+	if _can_start_dash():
+		return 100.0
+	var remaining := maxf(_dash_cooldown_remaining, _dash_recovery_remaining)
+	var total := maxf(maxf(dash_cooldown_seconds, dash_recovery_seconds), 0.01)
+	return clampf((1.0 - (remaining / total)) * 100.0, 0.0, 100.0)
 
 
 ## Clears dash timers for deterministic smoke checks.

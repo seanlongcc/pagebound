@@ -37,12 +37,12 @@ func _initialize() -> void:
 	_assert_true(enemy_health != null, "enemy must own health", failures)
 
 	if runtime != null and runtime.has_method("debug_player_max_health"):
-		_assert_true(is_equal_approx(runtime.debug_player_max_health(), 50.0), "player max health must be 50", failures)
+		_assert_true(is_equal_approx(runtime.debug_player_max_health(), 1000.0), "player max health must use 1000 HP GDD baseline", failures)
 
 	if player != null and enemy != null and runtime != null and runtime.has_method("debug_player_health"):
 		enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
 		await physics_frame
-		_assert_true(is_equal_approx(runtime.debug_player_health(), 47.0), "enemy contact damage must be tuned to 3", failures)
+		_assert_true(is_equal_approx(runtime.debug_player_health(), 940.0), "enemy contact damage must subtract scaled damage from 1000 HP baseline", failures)
 		enemy.global_position = Vector3(6.5, 0.0, 3.0)
 
 	if runtime != null and runtime.has_method("debug_xp_total"):
@@ -54,9 +54,9 @@ func _initialize() -> void:
 
 	var pickup := _first_visible_pickup(root)
 	var xp_after_death: int = runtime.debug_xp_total() if runtime != null and runtime.has_method("debug_xp_total") else 0
-	_assert_true(pickup != null or xp_after_death == 1, "enemy death must spawn a Color Mote or let Dog assist collect it", failures)
+	_assert_true(pickup != null or xp_after_death == 5, "enemy death must spawn a 5 XP Color Mote or let Dog fetch it", failures)
 	if runtime != null and runtime.has_method("debug_xp_total"):
-		_assert_true(runtime.debug_xp_total() == 0 or runtime.debug_xp_total() == 1, "enemy death XP must only advance through pickup collection or Dog assist", failures)
+		_assert_true(runtime.debug_xp_total() == 0 or runtime.debug_xp_total() == 5, "enemy death XP must only advance through pickup collection or Dog fetch", failures)
 
 	if player != null and pickup != null and xp_after_death == 0:
 		player.global_position = pickup.global_position + Vector3(2.5, 0.0, 0.0)
@@ -72,14 +72,14 @@ func _initialize() -> void:
 			player.global_position = Vector3(pickup.global_position.x, player.global_position.y, pickup.global_position.z)
 			for index in 3:
 				await physics_frame
-	elif xp_after_death == 1:
+	elif xp_after_death == 5:
 		_assert_true(runtime != null and runtime.has_method("debug_dog_feedback_text") and runtime.debug_dog_feedback_text().contains("Dog fetch"), "Dog assist pickup path must expose feedback", failures)
 
 	if runtime != null and runtime.has_method("debug_xp_total"):
-		_assert_true(runtime.debug_xp_total() == 1, "XP must award when Color Mote is collected", failures)
+		_assert_true(runtime.debug_xp_total() == 5, "XP must award documented Color Mote value when collected", failures)
 	_assert_true(_first_visible_pickup(root) == null, "collected Color Mote must stop being visible", failures)
-	_assert_true(_hud_has_text(hud, "HP") and _hud_has_text(hud, "50"), "HUD must show max HP clearly", failures)
-	_assert_true(_hud_has_text(hud, "XP") and _hud_has_text(hud, "1"), "HUD must show XP after pickup", failures)
+	_assert_true(_hud_has_text(hud, "HP") and _hud_has_text(hud, "1000"), "HUD must show max HP clearly", failures)
+	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP after pickup", failures)
 
 	root.queue_free()
 	await process_frame

@@ -1,11 +1,11 @@
 class_name PagecraftManager
 extends Node
 
-@export_range(0.05, 2.0, 0.05) var dash_activation_padding := 0.45
-@export_range(0.1, 20.0, 0.1) var base_activation_duration_seconds := 2.0
+@export_range(0.05, 2.0, 0.05) var dash_activation_padding := 0.675
+@export_range(0.1, 20.0, 0.1) var base_activation_duration_seconds := 3.0
 @export_range(0.05, 5.0, 0.05) var activation_damage_tick_seconds := 0.35
-@export_range(0.5, 30.0, 0.5) var inactive_mark_lifetime_seconds := 8.0
-@export_range(0.1, 3.0, 0.05) var pulse_lifetime_seconds := 0.75
+@export_range(0.5, 30.0, 0.5) var inactive_mark_lifetime_seconds := 12.0
+@export_range(0.1, 3.0, 0.05) var pulse_lifetime_seconds := 1.125
 @export_range(1, 64, 1) var base_unactivated_mark_cap := 6
 
 var _event_bus: Node
@@ -46,10 +46,11 @@ func deposit_mark(
 	damage_tags: Array = []
 ) -> void:
 	_enforce_unactivated_mark_cap(material_tag)
-	var mark_visual := _create_mark_visual(world_position, radius, false)
+	var resolved_radius := _mark_radius(source_id, radius)
+	var mark_visual := _create_mark_visual(world_position, resolved_radius, false)
 	var mark := {
 		"position": Vector3(world_position.x, 0.04, world_position.z),
-		"radius": radius,
+		"radius": resolved_radius,
 		"material_tag": material_tag,
 		"source_id": source_id,
 		"activation_damage": activation_damage,
@@ -361,6 +362,12 @@ func _unactivated_mark_cap() -> int:
 	if _upgrade_state != null and _upgrade_state.has_method("waxlight_unactivated_mark_cap"):
 		return _upgrade_state.waxlight_unactivated_mark_cap(base_unactivated_mark_cap)
 	return base_unactivated_mark_cap
+
+
+func _mark_radius(source_id: StringName, base_radius: float) -> float:
+	if _upgrade_state != null and _upgrade_state.has_method("weapon_mark_radius_meters"):
+		return _upgrade_state.weapon_mark_radius_meters(source_id, base_radius)
+	return base_radius
 
 
 func _activation_source_id(mark: Dictionary) -> StringName:

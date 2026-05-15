@@ -85,7 +85,7 @@ func _initialize() -> void:
 				contact_enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
 			for contact_frame in 45:
 				await physics_frame
-			_assert_true(runtime.debug_player_health() < 50.0, "enemy contact must damage player through damage model", failures)
+			_assert_true(runtime.debug_player_health() < runtime.debug_player_max_health(), "enemy contact must damage player through damage model", failures)
 	_assert_true(_hud_has_text(hud, "XP"), "HUD must show XP text", failures)
 	if pagecraft_manager != null:
 		_assert_true(pagecraft_manager.debug_mark_count() > 0, "weapon must leave Pagecraft mark", failures)

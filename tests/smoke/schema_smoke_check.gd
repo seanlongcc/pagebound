@@ -15,7 +15,7 @@ func _initialize() -> void:
 	_assert_equal(result.error_count, 0, "schema validation must have no errors", failures)
 	_assert_true(result.has_check_id("resource_ids_valid"), "schema check must validate resource IDs", failures)
 	_assert_true(result.has_check_id("tag_references_valid"), "schema check must validate tag references", failures)
-	_assert_true(result.has_check_id("weapon_level_counts_valid"), "schema check must validate weapon level counts", failures)
+	_assert_true(result.has_check_id("weapon_base_stats_valid"), "schema check must validate weapon base stats", failures)
 	_assert_true(registry.has_weapon(&"waxlight_comet"), "prototype weapon must be registered", failures)
 	_assert_true(registry.has_enemy(&"wax_imp"), "Wax Imp enemy must be registered", failures)
 	_assert_true(registry.has_enemy(&"flicker_imp"), "Flicker Imp enemy must be registered", failures)

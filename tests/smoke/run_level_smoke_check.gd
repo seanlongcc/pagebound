@@ -39,18 +39,19 @@ func _initialize() -> void:
 	if runtime != null and runtime.has_method("debug_run_level"):
 		_assert_true(runtime.debug_run_level() == 1, "run level must start at 1", failures)
 	if runtime != null and runtime.has_method("debug_xp_threshold"):
-		_assert_true(runtime.debug_xp_threshold() == 3, "prototype first XP threshold must be 3", failures)
+		_assert_true(runtime.debug_xp_threshold() == 25, "first XP threshold must use VS-style Pagebound-scaled curve", failures)
+	_assert_vs_scaled_xp_curve(failures)
 
 	if runtime != null and player != null and runtime.has_method("debug_spawn_xp_pickup"):
-		for mote_index in 3:
-			runtime.debug_spawn_xp_pickup(player.global_position, 1)
+		for mote_index in 5:
+			runtime.debug_spawn_xp_pickup(player.global_position, 5)
 			for frame_index in 3:
 				await physics_frame
 
 	if runtime != null and runtime.has_method("debug_run_level"):
 		_assert_true(runtime.debug_run_level() == 2, "collecting enough Color Motes must raise run level", failures)
 	if runtime != null and runtime.has_method("debug_xp_total"):
-		_assert_true(runtime.debug_xp_total() == 3, "XP total must include collected motes", failures)
+		_assert_true(runtime.debug_xp_total() == 25, "XP total must include collected Color Mote values", failures)
 	if runtime != null and runtime.has_method("debug_current_level_xp"):
 		_assert_true(runtime.debug_current_level_xp() == 0, "XP progress must reset after exact threshold level-up", failures)
 	_assert_true(level_events.size() == 1, "level-up event must emit exactly once for first threshold", failures)
@@ -90,6 +91,32 @@ func _hud_has_text(hud: Node, text_fragment: String) -> bool:
 		if _hud_has_text(child, text_fragment):
 			return true
 	return false
+
+
+func _assert_vs_scaled_xp_curve(failures: Array[String]) -> void:
+	var tracker := RunLevelTracker.new()
+	tracker.configure(null)
+	tracker.reset()
+	var expected := {
+		1: 25,
+		2: 75,
+		3: 125,
+		4: 175,
+		5: 225,
+		10: 475,
+		20: 975,
+		21: 1040,
+		30: 1625,
+		40: 2275,
+		41: 2355,
+		49: 2995,
+	}
+	for level in range(1, 50):
+		if expected.has(level):
+			_assert_true(tracker.xp_threshold_for_next_level() == expected[level], "XP threshold for level %d must match continuous VS-style scaled curve" % level, failures)
+		tracker.add_xp(tracker.xp_threshold_for_next_level(), &"curve_smoke")
+	_assert_true(tracker.run_level() == 50, "continuous VS-style scaled curve must reach level 50 after 49 thresholds", failures)
+	_assert_true(tracker.total_xp() == 67225, "continuous VS-style scaled curve must total 67,225 XP to level 50", failures)
 
 
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:

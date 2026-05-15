@@ -2,7 +2,7 @@ class_name AutoWeaponManager
 extends Node
 
 const MvpWeaponEffectsScript := preload("res://src/weapons/mvp_weapon_effects.gd")
-const STAR_STICKER_LIFETIME_SECONDS := 1.25
+const STAR_STICKER_LIFETIME_SECONDS := 1.875
 const STAR_STICKER_POP_DAMAGE_SCALE := 0.75
 const STAR_STICKER_POP_RADIUS_SCALE := 2.0
 const STAR_TRAVEL_FEEDBACK_SECONDS := 0.22
@@ -116,7 +116,7 @@ func debug_weapon_damage(weapon_id: StringName) -> float:
 	var data := _weapon_data(weapon_id)
 	if data == null:
 		return 0.0
-	return _runtime_damage(weapon_id, data.level_data_for(_weapon_level(weapon_id)))
+	return _runtime_damage(weapon_id, data)
 
 
 ## Returns level-1 Waxlight cooldown after runtime upgrades.
@@ -124,7 +124,7 @@ func debug_cooldown_seconds() -> float:
 	var data := _weapon_data(&"waxlight_comet")
 	if data == null:
 		return 0.0
-	return _runtime_cooldown_seconds(&"waxlight_comet", data.level_data_for(_weapon_level(&"waxlight_comet")))
+	return _runtime_cooldown_seconds(&"waxlight_comet", data)
 
 
 ## Returns current weapon max targeting range after runtime upgrades.
@@ -132,7 +132,7 @@ func debug_weapon_range_meters(weapon_id: StringName) -> float:
 	var data := _weapon_data(weapon_id)
 	if data == null:
 		return 0.0
-	return _runtime_range_meters(weapon_id, data.level_data_for(_weapon_level(weapon_id)))
+	return _runtime_range_meters(weapon_id, data)
 
 
 ## Fires Waxlight immediately at a target for smoke checks using normal hit logic.
@@ -248,17 +248,17 @@ func _fire_direct_marking_weapon(state: Dictionary, target: Node3D) -> void:
 	if health == null:
 		return
 	var weapon_data: Resource = state["data"]
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
+	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
 	_damage_model.apply_damage(health, weapon_data.id, damage, weapon_data.material_tags)
-	_deposit_pagecraft_mark(target.global_position, weapon_data, level_data, damage)
+	if weapon_data.id == &"waxlight_comet":
+		_apply_waxlight_impact_splat(target, weapon_data, damage, weapon_data.material_tags)
+	_deposit_pagecraft_mark(target.global_position, weapon_data, damage)
 	_count_hit(weapon_data.id)
 
 
 func _fire_star_sticker(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
+	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
 	_sync_star_orbits()
 	var targets := _sticker_targets(target, debug_star_available_count(), _range_for_state(state))
 	for enemy in targets:
@@ -271,26 +271,24 @@ func _fire_star_sticker(state: Dictionary, target: Node3D) -> void:
 			continue
 		_damage_model.apply_damage(health, weapon_data.id, damage, weapon_data.material_tags)
 		_create_star_travel_feedback(_owner.global_position, enemy.global_position)
-		_create_star_page_sticker(enemy.global_position, weapon_data, level_data, damage, orbit_index)
+		_create_star_page_sticker(enemy.global_position, weapon_data, damage, orbit_index)
 		_count_hit(weapon_data.id)
 
 
 func _fire_dreamsap_glob(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
-	var result: Dictionary = MvpWeaponEffectsScript.fire_dreamsap_glob(self, _enemies_root, _damage_model, weapon_data, level_data, target, damage)
-	_deposit_pagecraft_mark(target.global_position, weapon_data, level_data, damage)
+	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
+	var result: Dictionary = MvpWeaponEffectsScript.fire_dreamsap_glob(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage)
+	_deposit_pagecraft_mark(target.global_position, weapon_data, damage)
 	_count_hits(weapon_data.id, int(result.get("hits", 0)))
 	_track_transient_entries(result.get("transients", []))
 
 
 func _fire_color_bloom(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	var damage := _runtime_damage(weapon_data.id, level_data, weapon_data.material_tags)
-	var result: Dictionary = MvpWeaponEffectsScript.fire_color_bloom(self, _enemies_root, _damage_model, weapon_data, level_data, target, damage)
-	_deposit_pagecraft_mark(target.global_position, weapon_data, level_data, damage)
+	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
+	var result: Dictionary = MvpWeaponEffectsScript.fire_color_bloom(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage)
+	_deposit_pagecraft_mark(target.global_position, weapon_data, damage)
 	_count_hits(weapon_data.id, int(result.get("hits", 0)))
 	_track_transient_entries(result.get("transients", []))
 
@@ -324,20 +322,20 @@ func _is_inside_owner_range(candidate: Node3D, range_meters: float) -> bool:
 	return _owner != null and candidate != null and _owner.global_position.distance_to(candidate.global_position) <= range_meters
 
 
-func _deposit_pagecraft_mark(weapon_position: Vector3, weapon_data: Resource, level_data: Resource, activation_damage: float) -> void:
+func _deposit_pagecraft_mark(weapon_position: Vector3, weapon_data: Resource, activation_damage: float) -> void:
 	if _pagecraft_manager == null or not _pagecraft_manager.has_method("deposit_mark"):
 		return
 	_pagecraft_manager.deposit_mark(
 		weapon_position,
 		weapon_data.pagecraft_material_tag,
-		level_data.mark_radius_meters,
+		weapon_data.base_mark_radius_meters,
 		weapon_data.id,
 		activation_damage,
 		weapon_data.material_tags
 	)
 
 
-func _create_star_page_sticker(world_position: Vector3, weapon_data: Resource, level_data: Resource, hit_damage: float, orbit_index: int) -> void:
+func _create_star_page_sticker(world_position: Vector3, weapon_data: Resource, hit_damage: float, orbit_index: int) -> void:
 	var visual := MeshInstance3D.new()
 	visual.name = "StarStickerPageSticker_%d" % _star_page_stickers.size()
 	visual.top_level = true
@@ -352,12 +350,14 @@ func _create_star_page_sticker(world_position: Vector3, weapon_data: Resource, l
 	visual.material_override = material
 	add_child(visual)
 	visual.global_position = Vector3(world_position.x, 0.08, world_position.z)
+	var lifetime := _star_sticker_lifetime_seconds()
 	_star_page_stickers.append({
 		"position": visual.global_position,
-		"radius": maxf(0.55, float(level_data.mark_radius_meters) * STAR_STICKER_POP_RADIUS_SCALE),
+		"radius": maxf(0.55, _runtime_mark_radius(weapon_data.id, weapon_data) * STAR_STICKER_POP_RADIUS_SCALE),
 		"damage": maxf(1.0, hit_damage * STAR_STICKER_POP_DAMAGE_SCALE),
 		"damage_tags": _string_name_array(weapon_data.material_tags),
-		"remaining": STAR_STICKER_LIFETIME_SECONDS,
+		"remaining": lifetime,
+		"lifetime": lifetime,
 		"visual": visual,
 		"orbit_index": orbit_index,
 	})
@@ -462,7 +462,8 @@ func _update_star_page_sticker_visual(sticker: Dictionary) -> void:
 	var visual = sticker.get("visual", null)
 	if not visual is MeshInstance3D:
 		return
-	var ratio := clampf(float(sticker.get("remaining", 0.0)) / STAR_STICKER_LIFETIME_SECONDS, 0.0, 1.0)
+	var lifetime := maxf(0.01, float(sticker.get("lifetime", STAR_STICKER_LIFETIME_SECONDS)))
+	var ratio := clampf(float(sticker.get("remaining", 0.0)) / lifetime, 0.0, 1.0)
 	(visual as MeshInstance3D).scale = Vector3.ONE * lerpf(1.2, 0.75, 1.0 - ratio)
 
 
@@ -556,32 +557,31 @@ func _tick_transient_visuals(delta: float) -> void:
 		_transient_visuals[index] = entry
 
 
-func _runtime_damage(weapon_id: StringName, level_data: Resource, damage_tags: Array = []) -> float:
+func _runtime_damage(weapon_id: StringName, weapon_data: Resource, damage_tags: Array = []) -> float:
 	if _upgrade_state != null and _upgrade_state.has_method("weapon_damage"):
-		return _upgrade_state.weapon_damage(weapon_id, level_data.base_damage)
+		return _upgrade_state.weapon_damage(weapon_id, weapon_data.base_damage, damage_tags)
 	if _upgrade_state != null and _upgrade_state.has_method("damage_for_tags"):
-		return _upgrade_state.damage_for_tags(weapon_id, level_data.base_damage, damage_tags)
-	return level_data.base_damage
+		return _upgrade_state.damage_for_tags(weapon_id, weapon_data.base_damage, damage_tags)
+	return weapon_data.base_damage
 
 
-func _runtime_cooldown_seconds(weapon_id: StringName, level_data: Resource) -> float:
+func _runtime_cooldown_seconds(weapon_id: StringName, weapon_data: Resource) -> float:
 	if _upgrade_state != null and _upgrade_state.has_method("weapon_cooldown_seconds"):
-		return _upgrade_state.weapon_cooldown_seconds(weapon_id, level_data.cooldown_seconds)
-	return level_data.cooldown_seconds
+		return _upgrade_state.weapon_cooldown_seconds(weapon_id, weapon_data.base_cooldown_seconds)
+	return weapon_data.base_cooldown_seconds
 
 
 func _range_for_state(state: Dictionary) -> float:
 	var weapon_data: Resource = state.get("data", null)
 	if weapon_data == null:
 		return target_range
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	return _runtime_range_meters(weapon_data.id, level_data)
+	return _runtime_range_meters(weapon_data.id, weapon_data)
 
 
-func _runtime_range_meters(weapon_id: StringName, level_data: Resource) -> float:
+func _runtime_range_meters(weapon_id: StringName, weapon_data: Resource) -> float:
 	var base_range := target_range
-	if level_data != null and "range_meters" in level_data:
-		base_range = float(level_data.range_meters)
+	if weapon_data != null and "base_range_meters" in weapon_data:
+		base_range = float(weapon_data.base_range_meters)
 	if _upgrade_state != null and _upgrade_state.has_method("weapon_range_meters"):
 		return _upgrade_state.weapon_range_meters(weapon_id, base_range)
 	return base_range
@@ -589,8 +589,37 @@ func _runtime_range_meters(weapon_id: StringName, level_data: Resource) -> float
 
 func _cooldown_for_state(state: Dictionary) -> float:
 	var weapon_data: Resource = state["data"]
-	var level_data = weapon_data.level_data_for(int(state.get("level", 1)))
-	return _runtime_cooldown_seconds(weapon_data.id, level_data)
+	return _runtime_cooldown_seconds(weapon_data.id, weapon_data)
+
+
+func _runtime_mark_radius(weapon_id: StringName, weapon_data: Resource) -> float:
+	if _upgrade_state != null and _upgrade_state.has_method("weapon_mark_radius_meters"):
+		return _upgrade_state.weapon_mark_radius_meters(weapon_id, weapon_data.base_mark_radius_meters)
+	return weapon_data.base_mark_radius_meters
+
+
+func _star_sticker_lifetime_seconds() -> float:
+	if _upgrade_state != null and _upgrade_state.has_method("star_sticker_lifetime_seconds"):
+		return _upgrade_state.star_sticker_lifetime_seconds(STAR_STICKER_LIFETIME_SECONDS)
+	return STAR_STICKER_LIFETIME_SECONDS
+
+
+func _apply_waxlight_impact_splat(target: Node3D, weapon_data: Resource, damage: float, damage_tags: Array) -> void:
+	if _enemies_root == null:
+		return
+	var radius := maxf(0.5, _runtime_mark_radius(weapon_data.id, weapon_data) * 1.6)
+	var splat_damage := maxf(1.0, damage * 0.5)
+	for enemy in _enemies_root.get_children():
+		if enemy == target or not enemy is Node3D or not _is_living_enemy(enemy as Node3D):
+			continue
+		if (enemy as Node3D).global_position.distance_to(target.global_position) > radius:
+			continue
+		var health := enemy.get_node_or_null("HealthComponent")
+		if health == null:
+			continue
+		var result: Dictionary = _damage_model.apply_damage(health, &"waxlight_comet_impact_splat", splat_damage, damage_tags)
+		if not result.is_empty():
+			_count_hit(&"waxlight_comet")
 
 
 func _count_hit(weapon_id: StringName) -> void:

@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document owns the active MVP weapon candidate details after the upgrade-model revision. The root GDD references this sheet for roster rows, weapon milestones, upgrade pools, catalyst assignments, and numeric weapon tuning.
+This document owns the active MVP weapon candidate details after the upgrade-model revision. The root GDD references this sheet for roster rows, weapon milestones, upgrade pools, catalyst assignments, and base numeric weapon tuning.
 
 Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/gdd/weapons-and-auto-attacks.md`; `design/gdd/xp-leveling-and-upgrade-drafts.md`; `design/gdd/passive-items-and-drafts.md`; `design/gdd/evolution-system.md`; `design/gdd/pagecraft-materials-and-grid.md`; `design/gdd/damage-and-status-model.md`; `design/gdd/resource-data-schemas.md`.
 
@@ -17,8 +17,8 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 11-13; `design/g
 - Removed candidates retained in appendix: 3
 - Active catalyst families: 10
 - Each active weapon has fixed L1, L5, and L10 milestones.
-- Non-milestone weapon levels grant one random card from that weapon's upgrade pool.
-- L5 and L10 grant their fixed feature plus one random upgrade card.
+- Non-milestone weapon levels grant one selected card from that weapon's upgrade pool.
+- L5 and L10 grant their fixed feature plus one selected upgrade card.
 - Final roster selection should preserve at least 5 close-range or melee-style weapons and at least 5 distinct DoT weapons.
 
 ## Catalyst Families
@@ -40,13 +40,15 @@ Catalysts are broad item/evolution families. Each active weapon has exactly two 
 
 ## Upgrade Model
 
-Weapon levels still run from 1 to 10, but only L1, L5, and L10 are fixed feature milestones.
+Weapon levels still run from 1 to 10, but level is upgrade-count progress only. Level never grants hidden baseline damage, cadence, size, or range.
 
 - L1: base weapon behavior only.
-- L2-L4: one random card from the weapon's upgrade pool.
-- L5: fixed feature plus one random card from the weapon's upgrade pool.
-- L6-L9: one random card from the weapon's upgrade pool.
-- L10: capstone feature plus one random card from the weapon's upgrade pool.
+- L2-L4: one card from the weapon's upgrade pool.
+- L5: fixed feature plus one card from the weapon's upgrade pool.
+- L6-L9: one card from the weapon's upgrade pool.
+- L10: capstone feature plus one card from the weapon's upgrade pool.
+
+Weapon resources expose one editable base stat set: base damage, base cooldown, base mark/effect radius, and base targeting/placement range. Runtime stats start from those values and change only through selected upgrade cards, passive items, evolutions, or explicit authored effects.
 
 Base cadence bands:
 

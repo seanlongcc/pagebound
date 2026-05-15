@@ -11,15 +11,24 @@ func _initialize() -> void:
 
 	_assert_true(state.has_method("damage_for_tags"), "upgrade state must expose tag-based damage modifier", failures)
 	if state.has_method("damage_for_tags"):
-		_assert_true(is_equal_approx(state.damage_for_tags(&"waxlight_debug", 10.0, [&"waxlight"]), 10.0), "Candle Spark must not affect tagged damage before passive is owned", failures)
+		_assert_true(is_equal_approx(state.damage_for_tags(&"firelight_debug", 10.0, [&"firelight"]), 10.0), "Candle Spark must not affect tagged damage before passive is owned", failures)
 
 	var new_passive_event: Dictionary = state.apply_choice(&"new_passive_candle_spark")
 	_assert_true(not new_passive_event.is_empty(), "Candle Spark acquisition must apply", failures)
 
 	if state.has_method("damage_for_tags"):
-		_assert_true(is_equal_approx(state.damage_for_tags(&"waxlight_debug", 10.0, [&"waxlight"]), 11.5), "Candle Spark must affect Waxlight-tagged damage", failures)
-		_assert_true(is_equal_approx(state.damage_for_tags(&"firelight_debug", 10.0, [&"firelight"]), 11.5), "Candle Spark must affect Firelight-tagged damage", failures)
+		_assert_true(is_equal_approx(state.damage_for_tags(&"firelight_debug", 10.0, [&"firelight"]), 11.0), "Candle Spark L1 must add +10% Firelight damage", failures)
+		_assert_true(is_equal_approx(state.damage_for_tags(&"light_debug", 10.0, [&"light"]), 11.0), "Candle Spark L1 must add +10% Light damage", failures)
+		_assert_true(is_equal_approx(state.damage_for_tags(&"waxlight_debug", 10.0, [&"waxlight"]), 10.0), "Candle Spark must not use stale Waxlight catalyst tag", failures)
 		_assert_true(is_equal_approx(state.damage_for_tags(&"dreamlight_debug", 10.0, [&"dreamlight"]), 10.0), "Candle Spark must not affect unrelated damage tags", failures)
+
+	for id in [&"cloud_seed", &"dream_thread", &"ribbon_spool", &"moon_button"]:
+		_assert_true(not state.apply_choice(StringName("new_passive_%s" % String(id))).is_empty(), "%s acquisition must apply" % id, failures)
+
+	_assert_true(is_equal_approx(state.size_multiplier(), 1.1), "Cloud Seed L1 must apply +10% size", failures)
+	_assert_true(is_equal_approx(state.duration_multiplier(), 1.1), "Dream Thread L1 must apply +10% duration", failures)
+	_assert_true(is_equal_approx(state.range_multiplier(), 1.1), "Ribbon Spool L1 must apply +10% range", failures)
+	_assert_true(is_equal_approx(state.cadence_multiplier(), 1.1), "Moon Button L1 must apply +10% cadence", failures)
 
 	_finish(failures)
 

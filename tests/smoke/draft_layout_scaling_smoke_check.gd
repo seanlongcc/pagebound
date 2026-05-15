@@ -80,7 +80,7 @@ func _open_draft(runtime: Node, player: Node) -> void:
 		return
 	var guard := 0
 	while runtime.has_method("debug_draft_is_open") and not runtime.debug_draft_is_open() and guard < 10:
-		runtime.debug_spawn_xp_pickup((player as Node3D).global_position, 1)
+		runtime.debug_spawn_xp_pickup((player as Node3D).global_position, 5)
 		await physics_frame
 		guard += 1
 

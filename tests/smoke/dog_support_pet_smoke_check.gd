@@ -23,29 +23,33 @@ func _initialize() -> void:
 	_assert_true(player != null, "run must spawn player", failures)
 	_assert_true(dog != null and dog.visible, "run must spawn visible Dog follower", failures)
 	_assert_true(dog == null or dog.get_node_or_null("CollisionShape3D") == null, "Dog must not have collision", failures)
-	_assert_true(runtime != null and runtime.has_method("debug_dog_aura_radius"), "runtime must expose Dog aura radius", failures)
+	_assert_true(dog == null or dog.get_node_or_null("DogAura") == null, "Dog must not render or own a pickup aura", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_dog_fetch_range"), "runtime must expose Dog fetch range", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_set_dog_tier"), "runtime must expose Dog tier debug setter", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_dog_accepts_pickup_type"), "runtime must expose Dog pickup type gate", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_dog_feedback_text"), "runtime must expose Dog feedback text", failures)
 
-	if runtime != null and runtime.has_method("debug_dog_aura_radius") and runtime.has_method("debug_spawn_xp_pickup") and player != null:
-		var tier_one_radius := float(runtime.debug_dog_aura_radius())
-		_assert_true(tier_one_radius > 3.0, "Dog T1 aura must extend pickup assist beyond base player magnet", failures)
-		runtime.debug_spawn_xp_pickup(player.global_position + Vector3(tier_one_radius - 0.15, 0.0, 0.0), 2)
+	if runtime != null and runtime.has_method("debug_dog_fetch_range") and runtime.has_method("debug_spawn_xp_pickup") and player != null:
+		var tier_one_range := float(runtime.debug_dog_fetch_range())
+		_assert_true(is_equal_approx(tier_one_range, 4.5), "Dog T1 fetch range must be 50% larger than default XP magnetism", failures)
+		runtime.debug_spawn_xp_pickup(player.global_position + Vector3(tier_one_range - 0.15, 0.0, 0.0), 5)
 		await physics_frame
 		await physics_frame
-		_assert_true(runtime.debug_xp_total() == 2, "Dog aura must instantly credit Color Motes inside assist radius", failures)
-		_assert_true(runtime.debug_dog_feedback_text().contains("Dog fetch +2 XP"), "Dog pickup assist must expose fetch feedback text", failures)
+		_assert_true(runtime.debug_xp_total() == 0, "Dog must not instantly credit pickups at range", failures)
+		for frame_index in 90:
+			await physics_frame
+		_assert_true(runtime.debug_xp_total() == 5, "Dog must path to and fetch Color Motes inside extended pickup range", failures)
+		_assert_true(runtime.debug_dog_feedback_text().contains("Dog fetch +5 XP"), "Dog pickup assist must expose fetch feedback text", failures)
 		_assert_true(_visible_text(root.get_node_or_null("UI/HUD")).contains("Dog"), "HUD must show Dog pet icon/label feedback", failures)
 
-	if runtime != null and runtime.has_method("debug_dog_accepts_pickup_type") and runtime.has_method("debug_set_dog_tier") and runtime.has_method("debug_dog_aura_radius"):
+	if runtime != null and runtime.has_method("debug_dog_accepts_pickup_type") and runtime.has_method("debug_set_dog_tier") and runtime.has_method("debug_dog_fetch_range"):
 		_assert_true(runtime.debug_dog_accepts_pickup_type(&"color_mote"), "Dog T1 must collect Color Motes", failures)
 		_assert_true(not runtime.debug_dog_accepts_pickup_type(&"health"), "Dog T1 must not collect health pickups", failures)
-		var tier_one_radius := float(runtime.debug_dog_aura_radius())
+		var tier_one_range := float(runtime.debug_dog_fetch_range())
 		runtime.debug_set_dog_tier(2)
 		_assert_true(runtime.debug_dog_accepts_pickup_type(&"health"), "Dog T2 must collect health pickups", failures)
 		runtime.debug_set_dog_tier(3)
-		_assert_true(float(runtime.debug_dog_aura_radius()) > tier_one_radius, "Dog T3 must increase assist radius", failures)
+		_assert_true(float(runtime.debug_dog_fetch_range()) > tier_one_range, "Dog T3 must increase fetch range", failures)
 
 	root.queue_free()
 	await process_frame

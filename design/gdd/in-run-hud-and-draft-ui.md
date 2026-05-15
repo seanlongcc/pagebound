@@ -46,7 +46,7 @@ The HUD should look like a readable storybook margin around the action. It shoul
 | Top-left | Reserved party/multiplayer portraits. Empty in solo prototype unless debug mock is needed. |
 | Top-right | Exclusive event/boss banner. Color Well uses percent progress; Crownless Echo uses HP percent. |
 | Center/world | Event circle ring/fill, offscreen marker, pet pickup pulses, damage numbers. |
-| Bottom-left | Run level badge plus Dog icon feedback. |
+| Bottom-left | Run level badge, dash recharge meter, plus Dog icon feedback. |
 | Bottom edge | Full-width XP bar with percentage text. |
 | Bottom center/right | 10-slot loadout: 5 weapons, 5 items. Pets excluded. |
 | Health | Larger readable HP bar near bottom HUD cluster. |
@@ -159,10 +159,11 @@ Invalid states:
 - Event banner shows percent progress.
 - Boss banner shows HP percent.
 - Bottom XP bar fills horizontally only and displays percentage on-bar.
-- Run level and Dog icon sit near bottom-left.
+- Run level, dash recharge meter, and Dog icon sit near bottom-left.
 - Loadout shows 5 weapon slots and 5 item slots, with no pet slot.
 - HP bar is readable at combat scale.
 - Draft modal displays exactly 3 supplied choices and returns selected choice.
+- Draft cards show category, rarity, icon label, title, stat delta, description, level delta, and deduplicated tags; slot state and evolution hint lines are omitted.
 - UI supports keyboard/gamepad navigation and prompt metadata.
 - Debug overlay remains hidden by default and developer-only.
 

@@ -44,6 +44,26 @@ Before initial implementation or correction work for weapons, passive items, ene
 - Do not invent new weapon, item, material, enemy, event, chapter, or unlock IDs when a root-GDD entry exists for the needed prototype role.
 - Record `Design source consulted: ...` in the bead or session-state note for content work.
 
+## Documentation Compliance Gate
+
+Before changing gameplay/content code for weapons, passive items, pets, page events, HUD, player stats, XP, enemies, bosses, or draft rules:
+
+- Read the root GDD and the focused GDD/candidate-pool document for that domain.
+- Write a short pre-edit checklist in the bead or session-state note:
+  - `Design source consulted: ...`
+  - exact IDs being implemented or corrected,
+  - exact stat values, rarities, tags, timers, levels, and UI placement copied from the docs,
+  - any user clarification that overrides stale docs.
+- If code or tests conflict with docs, treat the code/tests as stale unless the user explicitly says the docs are wrong.
+- If docs conflict with the user's latest instruction, stop and call out the conflict before implementing.
+- Do not use prototype, fallback, or memory-based numbers when documented values exist.
+
+Before finishing gameplay/content work:
+
+- Re-check every changed gameplay value, rarity, tag, timer, level, and UI placement against the cited docs.
+- Update or remove tests that encode stale undocumented behavior.
+- Include `Design compliance checked against: ...` in the final response.
+
 ## Beads Issue Tracking
 
 This project uses `bd` (beads) for issue tracking. Run `bd prime` for current workflow context. Run `bd hooks install` only when hook-based workflow injection is wanted.

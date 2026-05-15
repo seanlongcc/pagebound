@@ -3,11 +3,13 @@ extends Node3D
 
 signal pickup_assisted(amount: int, pickup_type: StringName, world_position: Vector3)
 
-const TIER_ONE_RADIUS := 4.0
-const TIER_THREE_RADIUS := 5.75
+const TIER_ONE_RADIUS := 4.5
+const TIER_THREE_RADIUS := 8.625
 const FOLLOW_OFFSET := Vector3(-0.85, 0.0, 0.65)
 const FOLLOW_SMOOTHING := 12.0
-const FEEDBACK_SECONDS := 0.75
+const FETCH_SPEED := 7.0
+const FETCH_COLLECT_RADIUS := 0.45
+const FEEDBACK_SECONDS := 2.5
 
 @export_range(1, 3, 1) var tier := 1
 
@@ -15,6 +17,7 @@ var _player: Node3D
 var _pickups_root: Node
 var _feedback_label: Label3D
 var _feedback_remaining := 0.0
+var _fetch_target: Node3D
 
 
 func _ready() -> void:
@@ -23,8 +26,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_follow_player(delta)
-	_scan_pickups()
+	_acquire_fetch_target()
+	if _fetch_target != null:
+		_fetch_pickup(delta)
+	else:
+		_follow_player(delta)
 	_tick_feedback(delta)
 
 
@@ -37,10 +43,13 @@ func configure(player: Node3D, pickups_root: Node) -> void:
 
 func set_tier(new_tier: int) -> void:
 	tier = clampi(new_tier, 1, 3)
-	_update_aura_visual()
 
 
 func aura_radius() -> float:
+	return fetch_range()
+
+
+func fetch_range() -> float:
 	return TIER_THREE_RADIUS if tier >= 3 else TIER_ONE_RADIUS
 
 
@@ -60,20 +69,46 @@ func _follow_player(delta: float) -> void:
 	global_position = global_position.lerp(desired, clampf(delta * FOLLOW_SMOOTHING, 0.0, 1.0))
 
 
-func _scan_pickups() -> void:
+func _acquire_fetch_target() -> void:
 	if _player == null or _pickups_root == null:
 		return
+	if _is_valid_fetch_target(_fetch_target):
+		return
+	_fetch_target = null
+	var nearest: Node3D = null
+	var nearest_distance := fetch_range()
 	for child in _pickups_root.get_children():
-		if not child is Node3D:
+		if not _is_valid_fetch_target(child):
 			continue
-		var pickup_type := _pickup_type(child)
-		if not accepts_pickup_type(pickup_type):
-			continue
-		if not child.has_method("is_collectible") or not child.is_collectible():
-			continue
-		if _player.global_position.distance_to((child as Node3D).global_position) > aura_radius():
-			continue
-		_collect_pickup(child as Node3D, pickup_type)
+		var distance := _player.global_position.distance_to((child as Node3D).global_position)
+		if distance <= nearest_distance:
+			nearest = child
+			nearest_distance = distance
+	_fetch_target = nearest
+
+
+func _fetch_pickup(delta: float) -> void:
+	if not _is_valid_fetch_target(_fetch_target):
+		_fetch_target = null
+		return
+	var desired := _fetch_target.global_position
+	desired.y = 0.0
+	global_position = global_position.move_toward(desired, FETCH_SPEED * delta)
+	if global_position.distance_to(desired) <= FETCH_COLLECT_RADIUS:
+		var pickup := _fetch_target
+		_fetch_target = null
+		_collect_pickup(pickup, _pickup_type(pickup))
+
+
+func _is_valid_fetch_target(candidate: Node) -> bool:
+	if _player == null or candidate == null or not candidate is Node3D:
+		return false
+	var pickup_type := _pickup_type(candidate)
+	if not accepts_pickup_type(pickup_type):
+		return false
+	if not candidate.has_method("is_collectible") or not candidate.is_collectible():
+		return false
+	return _player.global_position.distance_to((candidate as Node3D).global_position) <= fetch_range()
 
 
 func _collect_pickup(pickup: Node3D, pickup_type: StringName) -> void:
@@ -121,16 +156,10 @@ func _ensure_visuals() -> void:
 		body.position.y = 0.35
 		body.material_override = _material(Color(0.56, 0.32, 0.16, 1.0), false)
 		add_child(body)
-	if get_node_or_null("DogAura") == null:
-		var aura := MeshInstance3D.new()
-		aura.name = "DogAura"
-		var mesh := CylinderMesh.new()
-		mesh.height = 0.025
-		mesh.radial_segments = 48
-		aura.mesh = mesh
-		aura.position.y = 0.035
-		aura.material_override = _material(Color(0.25, 0.72, 1.0, 0.18), true)
-		add_child(aura)
+	var stale_aura := get_node_or_null("DogAura")
+	if stale_aura != null:
+		remove_child(stale_aura)
+		stale_aura.queue_free()
 	if _feedback_label == null:
 		_feedback_label = get_node_or_null("DogFetchFeedback") as Label3D
 		if _feedback_label == null:
@@ -142,15 +171,6 @@ func _ensure_visuals() -> void:
 			_feedback_label.modulate = Color(1.0, 0.86, 0.22, 1.0)
 			_feedback_label.visible = false
 			add_child(_feedback_label)
-	_update_aura_visual()
-
-
-func _update_aura_visual() -> void:
-	var aura := get_node_or_null("DogAura") as MeshInstance3D
-	if aura == null:
-		return
-	var radius := aura_radius()
-	aura.scale = Vector3(radius, 1.0, radius)
 
 
 func _material(color: Color, transparent: bool) -> StandardMaterial3D:
