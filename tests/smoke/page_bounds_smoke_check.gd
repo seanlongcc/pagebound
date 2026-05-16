@@ -51,6 +51,7 @@ func _initialize() -> void:
 		_assert_true(camera.is_position_in_frustum(player.global_position + Vector3.UP * 0.5), "camera must keep player readable on widened page", failures)
 	if page_ground != null:
 		_assert_true(page_ground.visible, "widened page ground must remain visible", failures)
+		_assert_true(_page_ground_is_grass_green(page_ground), "widened page ground must use grass green playing field color", failures)
 
 	root.queue_free()
 	await process_frame
@@ -70,6 +71,24 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
 	if not value:
 		failures.append(message)
+
+
+func _page_ground_is_grass_green(page_ground: MeshInstance3D) -> bool:
+	if page_ground == null or page_ground.mesh == null:
+		return false
+	var material := page_ground.mesh.material as StandardMaterial3D
+	if material == null:
+		return false
+	return _colors_close(material.albedo_color, Color(0.24, 0.55, 0.18, 1.0), 0.01)
+
+
+func _colors_close(actual: Color, expected: Color, tolerance: float) -> bool:
+	return (
+		absf(actual.r - expected.r) <= tolerance
+		and absf(actual.g - expected.g) <= tolerance
+		and absf(actual.b - expected.b) <= tolerance
+		and absf(actual.a - expected.a) <= tolerance
+	)
 
 
 func _finish(failures: Array[String]) -> void:

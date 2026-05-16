@@ -10,6 +10,7 @@ const BOSS_DISPLAY_NAME := "Crownless Echo"
 const BOSS_BANNER_TITLE := "The Scribble King Stirs"
 const SPAWN_TIME_SECONDS := 210.0
 const MAX_HEALTH := 2400.0
+const CONTACT_DAMAGE := 240.0
 const REWARD_XP := 1000
 
 var _enemies_root: Node3D
@@ -74,6 +75,7 @@ func state() -> Dictionary:
 		"defeated": _defeated,
 		"current_health": current,
 		"max_health": max_value,
+		"contact_damage": CONTACT_DAMAGE,
 		"hp_percent": ceili(clampf(current / maxf(1.0, max_value), 0.0, 1.0) * 100.0),
 		"spawn_time_seconds": SPAWN_TIME_SECONDS,
 	}
@@ -114,7 +116,7 @@ func _boss_data() -> Resource:
 	enemy.behavior_id = &"boss_chaser"
 	enemy.max_health = MAX_HEALTH
 	enemy.move_speed = 1.65
-	enemy.contact_damage = 160.0
+	enemy.contact_damage = CONTACT_DAMAGE
 	enemy.reward_xp = REWARD_XP
 	enemy.pagecraft_interaction_tags = _string_name_array([&"waxlight"])
 	return enemy

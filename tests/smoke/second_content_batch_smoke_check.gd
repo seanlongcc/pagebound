@@ -39,6 +39,12 @@ func _initialize() -> void:
 		_assert_true(passive.catalyst_tags == expected["tags"], "%s must use documented catalyst tags" % passive_id, failures)
 		_assert_true(passive.level_values == [0.1, 0.2, 0.3, 0.4, 0.5], "%s must use +10/+20/+30/+40/+50%% ladder" % passive_id, failures)
 
+	for enemy in factory.all_enemy_families():
+		_assert_true(enemy != null, "enemy data must load", failures)
+		if enemy == null:
+			continue
+		_assert_true(is_equal_approx(enemy.contact_damage, 90.0), "%s contact damage must be 50%% above old 60 baseline" % enemy.id, failures)
+
 	var state = RunUpgradeStateScript.new()
 	state.configure(factory)
 	var first_choices := state.prototype_choices_for_level(2)

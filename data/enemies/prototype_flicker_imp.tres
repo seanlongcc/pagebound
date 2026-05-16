@@ -11,6 +11,6 @@ tags = Array[StringName]([&"hostile_ink", &"prototype"])
 behavior_id = &"swarmer"
 max_health = 45.0
 move_speed = 3.2
-contact_damage = 60.0
+contact_damage = 90.0
 reward_xp = 5
 pagecraft_interaction_tags = Array[StringName]([&"waxlight"])

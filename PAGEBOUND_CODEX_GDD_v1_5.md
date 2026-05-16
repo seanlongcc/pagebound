@@ -544,7 +544,7 @@ Effects:
 - attach to enemies,
 - orbit players/pets,
 - become mines,
-- bounce between targets,
+- connect as constellation ricochet segments,
 - shield allies,
 - reflect certain beams.
 
@@ -3828,7 +3828,7 @@ The MVP director uses Vampire Survivors-inspired time waves: each minute resolve
 
 Opening uses a readability grace ramp: minimum alive starts at `8` at 0:00, ramps to the normal `25` by 1:00, and does not pressure-spawn above that grace minimum during the first minute. This keeps the opening low density while preserving the uncondensed 30-minute curve anchors.
 
-Prototype combat uses the 1000 HP player baseline: opening Wax Imp base health is `70`, Flicker Imp base health is `45`, starter Star Sticker Swarm damage is `100` with `0.9s` cooldown and `8.0m` target range, Waxlight Comet base damage is `45` with `0.95s` cooldown and `6.5m` target range, normal contact damage is `60`, and basic/fast enemy XP remains `5`. Waxlight Comet impact AoE applies full current weapon damage to every enemy inside the AoE, including secondary targets. Prototype enemy health pressure scales from `1.0x` at 0:00 to `8.0x` at 30:00 using an eased curve while authored base health and weapon damage remain the readable per-enemy/per-weapon anchors.
+Prototype combat uses the 1000 HP player baseline: opening Wax Imp base health is `70`, Flicker Imp base health is `45`, starter Star Sticker Swarm damage is `100` with `0.9s` cooldown and `8.0m` target range, Waxlight Comet base damage is `45` with `0.95s` cooldown and `6.5m` target range, normal contact damage is `90`, and basic/fast enemy XP remains `5`. Waxlight Comet impact AoE applies full current weapon damage to every enemy inside the AoE, including secondary targets. Prototype enemy health pressure scales from `1.0x` at 0:00 to `8.0x` at 30:00 using an eased curve while authored base health and weapon damage remain the readable per-enemy/per-weapon anchors.
 
 | Time | Min Alive | Base Spawn Interval | Target Kills/Sec |
 |---:|---:|---:|---:|

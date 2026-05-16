@@ -92,7 +92,7 @@ Invalid states:
 |---|---:|---:|---|
 | `base_enemy_speed` | `3.5 m/s` | `1.0-8.0` | Per enemy override. |
 | `contact_damage_cooldown` | `0.5 s` | `0.1-2.0` | Shared with Damage Model. |
-| `normal_contact_damage` | `60` | tuning | Current 1000 HP prototype baseline. |
+| `normal_contact_damage` | `90` | tuning | Current 1000 HP prototype baseline after 50% contact damage increase. |
 | `opening_wax_imp_health` | `70` | tuning | One-shot by the 100-damage Star Sticker Swarm starter baseline. |
 | `flicker_imp_health` | `45` | tuning | Fast weak pressure enemy, one-shot by starter baseline. |
 | `separation_radius` | `0.6 m` | `0.0-2.0` | Horde readability/perf tradeoff. |

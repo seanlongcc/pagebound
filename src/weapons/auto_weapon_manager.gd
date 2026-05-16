@@ -4,10 +4,11 @@ extends Node
 const MvpWeaponEffectsScript := preload("res://src/weapons/mvp_weapon_effects.gd")
 const StarStickerNetworkScript := preload("res://src/weapons/star_sticker_network.gd")
 const STAR_TRAVEL_FEEDBACK_SECONDS := 0.22
+const STAR_CONSTELLATION_FEEDBACK_SECONDS := 0.24
 const WAXLIGHT_IMPACT_FEEDBACK_SECONDS := 0.28
 const STAR_RICOCHET_DAMAGE_SCALE := 0.5
+const STAR_RICOCHET_HIT_WIDTH_METERS := 0.45
 const BASE_STAR_NODE_CAP := 5
-const BASE_STAR_NODE_RANGE_METERS := 4.0
 
 @export_range(0.0, 40.0, 0.1) var target_range := 8.0
 
@@ -24,6 +25,7 @@ var _star_network = StarStickerNetworkScript.new()
 var _star_orbit_visuals: Array[MeshInstance3D] = []
 var _star_orbit_angle := 0.0
 var _star_ricochet_damage_count := 0
+var _star_ricochet_segment_count := 0
 var _star_node_extra_star_count := 0
 var _transient_visuals: Array[Dictionary] = []
 
@@ -110,6 +112,11 @@ func debug_star_node_count() -> int:
 ## Returns count of enemies damaged by Star node ricochets.
 func debug_star_ricochet_damage_count() -> int:
 	return _star_ricochet_damage_count
+
+
+## Returns count of Star node-to-node ricochet segments created.
+func debug_star_ricochet_segment_count() -> int:
+	return _star_ricochet_segment_count
 
 
 ## Returns count of enemies damaged by L10 node-fired stars.
@@ -313,48 +320,51 @@ func _fire_star_sticker_volley(state: Dictionary, target: Node3D, create_nodes: 
 func _fire_star_node_followup(enemy: Node3D, weapon_data: Resource, damage: float, create_nodes: bool) -> void:
 	if not _star_nodes_unlocked():
 		return
-	var node := {}
+	var node: Dictionary = {}
 	if create_nodes:
 		node = _star_network.add_node(enemy.global_position, _runtime_mark_radius(weapon_data.id, weapon_data), _star_node_cap(), self)
 	else:
-		node = _star_network.closest_node(enemy.global_position, _star_node_range_meters())
-	_fire_star_ricochet_from_node(node, [enemy], weapon_data, damage * STAR_RICOCHET_DAMAGE_SCALE)
+		if _star_network.node_count() < 2:
+			return
+		node = _star_network.closest_node(enemy.global_position, INF)
+	_fire_star_ricochet_path_from_node(node, weapon_data, damage * STAR_RICOCHET_DAMAGE_SCALE)
 
 
-func _fire_star_ricochet_from_node(node: Dictionary, excluded: Array, weapon_data: Resource, ricochet_damage: float) -> void:
+func _fire_star_ricochet_path_from_node(node: Dictionary, weapon_data: Resource, ricochet_damage: float) -> void:
 	if node.is_empty():
 		return
-	var target := _star_network.target_from_node(node, _enemies_root, excluded, _star_node_range_meters())
-	if target == null:
+	if _star_network.node_count() < 2:
 		return
-	var node_position: Vector3 = node.get("position", target.global_position)
-	if _apply_star_damage(target, &"star_sticker_swarm_ricochet", ricochet_damage, weapon_data.material_tags, node_position):
-		_star_ricochet_damage_count += 1
-		_count_hit(weapon_data.id)
-		if _star_l10_unlocked():
-			var next_excluded := excluded.duplicate()
-			next_excluded.append(target)
-			_fire_star_node_extra_star(node, next_excluded, weapon_data, ricochet_damage)
-
-
-func _fire_star_node_extra_star(node: Dictionary, excluded: Array, weapon_data: Resource, extra_damage: float) -> void:
-	var target := _star_network.target_from_node(node, _enemies_root, excluded, _star_node_range_meters())
-	if target == null:
+	var path := _star_network.chain_from_node(node, _star_node_range_meters(weapon_data), _star_l10_unlocked())
+	if path.size() < 2:
 		return
-	var node_position: Vector3 = node.get("position", target.global_position)
-	if _apply_star_damage(target, &"star_sticker_swarm_node_star", extra_damage, weapon_data.material_tags, node_position):
-		_star_node_extra_star_count += 1
-		_count_hit(weapon_data.id)
+	for index in range(path.size() - 1):
+		var start_node := path[index]
+		var end_node := path[index + 1]
+		_fire_star_ricochet_segment(start_node, end_node, weapon_data, ricochet_damage)
 
 
-func _apply_star_damage(enemy: Node3D, source_id: StringName, damage: float, damage_tags: Array, start_position: Vector3) -> bool:
+func _fire_star_ricochet_segment(start_node: Dictionary, end_node: Dictionary, weapon_data: Resource, ricochet_damage: float) -> void:
+	var start_position: Vector3 = start_node.get("position", Vector3.ZERO)
+	var end_position: Vector3 = end_node.get("position", Vector3.ZERO)
+	_star_ricochet_segment_count += 1
+	_track_transient_entries(_star_network.create_constellation_feedback(start_node, end_node, self, STAR_CONSTELLATION_FEEDBACK_SECONDS, _star_ricochet_segment_count))
+	var enemies := _star_network.enemies_along_segment(start_position, end_position, _enemies_root, STAR_RICOCHET_HIT_WIDTH_METERS)
+	for enemy in enemies:
+		if _apply_star_damage(enemy, &"star_sticker_swarm_ricochet", ricochet_damage, weapon_data.material_tags, start_position, false):
+			_star_ricochet_damage_count += 1
+			_count_hit(weapon_data.id)
+
+
+func _apply_star_damage(enemy: Node3D, source_id: StringName, damage: float, damage_tags: Array, start_position: Vector3, create_travel_feedback: bool = true) -> bool:
 	var health := enemy.get_node_or_null("HealthComponent")
 	if health == null:
 		return false
 	var result: Dictionary = _damage_model.apply_damage(health, source_id, damage, damage_tags)
 	if result.is_empty():
 		return false
-	_create_star_travel_feedback(start_position, enemy.global_position)
+	if create_travel_feedback:
+		_create_star_travel_feedback(start_position, enemy.global_position)
 	return true
 
 
@@ -617,10 +627,13 @@ func _star_node_cap() -> int:
 	return BASE_STAR_NODE_CAP
 
 
-func _star_node_range_meters() -> float:
-	if _upgrade_state != null and _upgrade_state.has_method("weapon_range_meters"):
-		return _upgrade_state.weapon_range_meters(&"star_sticker_swarm", BASE_STAR_NODE_RANGE_METERS)
-	return BASE_STAR_NODE_RANGE_METERS
+func _star_node_range_meters(weapon_data: Resource = null) -> float:
+	var data := weapon_data
+	if data == null:
+		data = _weapon_data(&"star_sticker_swarm")
+	if data != null:
+		return _runtime_range_meters(&"star_sticker_swarm", data)
+	return target_range
 
 
 func _apply_waxlight_impact_splat(target: Node3D, weapon_data: Resource, damage: float, damage_tags: Array) -> void:

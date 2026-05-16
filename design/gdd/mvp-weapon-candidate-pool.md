@@ -128,22 +128,22 @@ Base tuning: 100 damage / 0.9s cooldown / 8.0m target range
 Base cadence band: Fast
 Catalyst tags: Star, Moon
 Gameplay purpose: Defines first-playable opening kill-rate and grows from reliable direct hits into a Star node ricochet network.
-Pagecraft verb: Places persistent Star nodes after L5; nodes are ricochet points, not timed mines.
-Dash payoff: Unlocks at L5. Dashing fires a cooldown-free Star Swarm volley using normal targeting and current max orbit star count. Dash volleys do not create Star nodes, but can ricochet through existing nodes at L5+.
+Pagecraft verb: Places persistent Star nodes after L5; nodes are constellation ricochet points, not timed mines or turrets.
+Dash payoff: Unlocks at L5. Dashing fires a cooldown-free Star Swarm volley using normal targeting and current max orbit star count. Dash volleys do not create Star nodes, but can start node-to-node ricochet from the nearest existing node to the hit enemy at L5+.
 Range intent: Reliable starter targeting at L1. Range upgrades scale target range and L5+ Star node ricochet range.
 
 | Level | Fixed Milestone |
 |---:|---|
 | L1 | Fires current max orbit star count at nearby enemies. Shots deal direct damage only and do not create Star nodes or ricochet. |
-| L5 | Star node and dash payoff unlock. Normal Star hits place a persistent Star node at the first enemy hit position, replacing the oldest node if the cap is full. Star shots can ricochet once through an existing Star node to one enemy for 50% weapon damage. Dash volleys do not create nodes but can use existing nodes for ricochet; also grants one selected upgrade card. |
-| L10 | Capstone: whenever a Star node is used for ricochet, that node fires 1 extra star at a nearby enemy for 50% weapon damage. Extra stars do not create nodes; also grants one selected upgrade card. |
+| L5 | Star node and dash payoff unlock. Normal Star hits place a persistent Star node at the first enemy hit position, replacing the oldest node if the cap is full. After cap enforcement, if at least 2 current nodes exist, the new node links to the nearest existing node within current Star range. That segment pierces enemies along the line for 50% weapon damage using a fixed 0.45m hit width. Each ricochet segment draws a short-lived constellation line and pulses the linked nodes. Dash volleys do not create nodes; they start ricochet from the nearest existing node to the hit enemy and require at least 2 existing nodes. Also grants one selected upgrade card. |
+| L10 | Capstone: each attack chains from the new node through every current node once using nearest-unused-node order. Node-to-node range is unlimited. Segment count is current node count minus 1. Each segment pierces enemies along the line for 50% weapon damage and uses the same line/pulse feedback. The same enemy can be hit once per segment, so overlapping constellation lines can hit one enemy multiple times. Also grants one selected upgrade card. |
 
 | Upgrade | Scope | Stat | Notes |
 |---|---|---|---|
 | Star Strike | orbit star | damage | Scales star contact hit. |
 | Star Reach | weapon range | range | Scales target range and any unlocked node ricochet range. |
 | Star Node Cap | Star node | active_cap | Base Star node cap is 5; this adds more persistent nodes. |
-| Ricochet Hit | node ricochet | damage | Scales L5 ricochet and L10 node-fired star damage. |
+| Ricochet Hit | node ricochet | damage | Scales L5/L10 node-to-node segment damage. |
 | Extra Stars | orbit star | effect_count | Adds orbiting stars. |
 | Dash Volley | dash payoff | damage | Scales cooldown-free dash volley damage. |
 

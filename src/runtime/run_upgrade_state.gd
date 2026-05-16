@@ -123,10 +123,8 @@ func weapon_damage(weapon_id: StringName, base_damage: float, damage_tags: Array
 	return damage_for_tags(weapon_id, damage, tags)
 
 
-func damage_for_tags(_source_id: StringName, base_damage: float, damage_tags: Array) -> float:
-	if _tags_match_passive(PASSIVE_CANDLE_SPARK, damage_tags):
-		return base_damage * (1.0 + _passive_stat_bonus(&"damage"))
-	return base_damage
+func damage_for_tags(_source_id: StringName, base_damage: float, _damage_tags: Array) -> float:
+	return base_damage * (1.0 + _passive_stat_bonus(&"damage"))
 
 
 func weapon_projectile_count(weapon_id: StringName, base_count: int) -> int:
@@ -594,16 +592,6 @@ func _weapon_material_tags(weapon_id: StringName) -> Array[StringName]:
 	if weapon != null and "material_tags" in weapon:
 		return weapon.material_tags
 	return []
-
-
-func _tags_match_passive(passive_id: StringName, damage_tags: Array) -> bool:
-	var passive := _passive_data(passive_id)
-	if passive == null:
-		return false
-	for tag in damage_tags:
-		if passive.catalyst_tags.has(tag):
-			return true
-	return false
 
 
 func _passive_description(passive: Resource, level: int) -> String:

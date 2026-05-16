@@ -322,7 +322,7 @@ func _wax_imp_enemy() -> Resource:
 	enemy.behavior_id = &"chaser"
 	enemy.max_health = 70.0
 	enemy.move_speed = 1.45
-	enemy.contact_damage = 60.0
+	enemy.contact_damage = 90.0
 	enemy.reward_xp = 5
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
 	return enemy
@@ -337,7 +337,7 @@ func _flicker_imp_enemy() -> Resource:
 	enemy.behavior_id = &"swarmer"
 	enemy.max_health = 45.0
 	enemy.move_speed = 3.2
-	enemy.contact_damage = 60.0
+	enemy.contact_damage = 90.0
 	enemy.reward_xp = 5
 	enemy.pagecraft_interaction_tags = _string_name_array([PAGECRAFT_TAG_WAXLIGHT])
 	return enemy

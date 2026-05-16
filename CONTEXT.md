@@ -50,14 +50,17 @@ Current first-playable rules:
 - **Waxlight Comet mark radius** is scaled by `size`, not `range`.
 
 **Star ricochet model**:
-The L5+ Star Sticker follow-up where the newly placed or selected Star node fires at one nearby enemy.
-_Avoid_: multi-hop enemy-to-node-to-enemy chain
+The L5+ Star Sticker follow-up where Star nodes connect with piercing constellation segments.
+_Avoid_: node turret, node-fired shot, enemy-to-node travel segment
 
 Current first-playable rules:
 - **L1-L4**: Star hits one enemy and creates no node.
-- **L5+**: Star hit creates a node at the hit position, then that node fires one ricochet at a nearby enemy for `50%` damage.
-- **L10+**: when a node fires a ricochet, that same node fires one extra non-node star at another nearby enemy for `50%` damage.
-- **Dash volleys** can use existing nodes for ricochet, but do not create nodes.
+- **L5+**: Star hit creates a node at the hit enemy position, enforces the node cap, then connects that node to the nearest existing node within current Star range. This requires at least 2 current nodes after cap enforcement. The segment pierces enemies along the line for `50%` damage.
+- **L10+**: each attack chains from the new node through every current node once using nearest-unused-node order. Node-to-node range is unlimited. Segment count is `current_node_count - 1`. Each segment pierces enemies along the line for `50%` damage.
+- **Dash volleys** do not create nodes. At L5+, a dash Star hit starts from the nearest existing node to the hit enemy and then follows the same node-to-node ricochet rules. Dash ricochet requires at least 2 existing nodes.
+- **Ricochet segment hit width** is fixed at `0.45m` and does not scale.
+- **Ricochet repeat hits**: the same enemy can be hit once per segment. Different segments can hit the same enemy again in one attack.
+- **Ricochet feedback**: each ricochet segment draws a short-lived constellation line and pulses the nodes used by that segment.
 
 **Opening attack pacing**:
 The level-1 cooldown baseline used before spawn pressure is retuned upward.
@@ -93,7 +96,7 @@ _Avoid_: re-checking player-to-pickup range during active Dog fetch
 - **Waxlight Comet** still has an **Attack visual** before L5; it just does not leave persistent Waxlight marks until L5.
 - **Waxlight Comet** should not have a longer **target range** than **Star Sticker Swarm**.
 - **Range upgrade scope** follows currently unlocked mechanics, so later Pagecraft systems can inherit the same weapon range upgrade without adding a new upgrade type.
-- **Star ricochet model** uses a node as the follow-up origin, not a multi-hop bounce chain.
+- **Star ricochet model** uses node-to-node constellation segments, not node-fired turret shots.
 - **Opening attack pacing** slows level-1 weapon cadence before raising enemy spawn pressure.
 - **Waxlight AoE damage** is full damage for every target in the impact AoE; secondary splash does not have a damage penalty.
 - **XP range debug circles** are shown only when a debug toggle is enabled.

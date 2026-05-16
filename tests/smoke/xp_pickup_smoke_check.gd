@@ -42,7 +42,7 @@ func _initialize() -> void:
 	if player != null and enemy != null and runtime != null and runtime.has_method("debug_player_health"):
 		enemy.global_position = player.global_position + Vector3(0.35, 0.0, 0.0)
 		await physics_frame
-		_assert_true(is_equal_approx(runtime.debug_player_health(), 940.0), "enemy contact damage must subtract scaled damage from 1000 HP baseline", failures)
+		_assert_true(is_equal_approx(runtime.debug_player_health(), 910.0), "enemy contact damage must subtract 50% increased scaled damage from 1000 HP baseline", failures)
 		enemy.global_position = Vector3(6.5, 0.0, 3.0)
 
 	if runtime != null and runtime.has_method("debug_xp_total"):
