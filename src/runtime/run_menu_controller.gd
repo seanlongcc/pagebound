@@ -2,6 +2,7 @@ class_name RunMenuController
 extends Node
 
 signal start_requested
+signal starter_weapon_selected(weapon_id: StringName)
 signal retry_requested
 signal main_menu_requested
 signal pause_requested
@@ -9,6 +10,7 @@ signal resume_requested
 
 var _modal_layer: Control
 var _start_screen: Control
+var _starter_weapon_screen: Control
 var _death_screen: Control
 var _summary_screen: Control
 var _pause_screen: Control
@@ -25,6 +27,7 @@ func configure(modal_layer: Control) -> void:
 	_modal_layer = modal_layer
 	_set_always_process(_modal_layer)
 	_ensure_start_screen()
+	_ensure_starter_weapon_screen()
 	_ensure_death_screen()
 	_ensure_summary_screen()
 	_ensure_pause_screen()
@@ -40,12 +43,21 @@ func hide_all() -> void:
 		_modal_layer.visible = false
 	if _start_screen != null:
 		_start_screen.visible = false
+	if _starter_weapon_screen != null:
+		_starter_weapon_screen.visible = false
 	if _death_screen != null:
 		_death_screen.visible = false
 	if _summary_screen != null:
 		_summary_screen.visible = false
 	if _pause_screen != null:
 		_pause_screen.visible = false
+
+
+func show_starter_weapon_select(starter_weapons: Array[Dictionary]) -> void:
+	_ensure_starter_weapon_screen()
+	_populate_starter_weapon_screen(starter_weapons)
+	_show_only(_starter_weapon_screen)
+	_focus_first_button(_starter_weapon_screen)
 
 
 func show_death_menu() -> void:
@@ -71,6 +83,10 @@ func start_screen_visible() -> bool:
 	return _start_screen != null and _start_screen.visible
 
 
+func starter_weapon_screen_visible() -> bool:
+	return _starter_weapon_screen != null and _starter_weapon_screen.visible
+
+
 func death_screen_visible() -> bool:
 	return _death_screen != null and _death_screen.visible
 
@@ -85,6 +101,10 @@ func pause_screen_visible() -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		if starter_weapon_screen_visible():
+			show_start_menu()
+			get_viewport().set_input_as_handled()
+			return
 		if pause_screen_visible():
 			resume_requested.emit()
 		else:
@@ -110,6 +130,54 @@ func _ensure_start_screen() -> void:
 		start_requested.emit()
 	)
 	_start_screen.add_child(start_button)
+
+
+func _ensure_starter_weapon_screen() -> void:
+	if _modal_layer == null:
+		return
+	_starter_weapon_screen = _modal_layer.get_node_or_null("StarterWeaponScreen") as Control
+	if _starter_weapon_screen != null:
+		return
+	_starter_weapon_screen = _screen("StarterWeaponScreen")
+	_modal_layer.add_child(_starter_weapon_screen)
+	_starter_weapon_screen.add_child(_title_label("StarterWeaponTitle", "Choose Starter Weapon", Vector2(250.0, 135.0), 34))
+
+
+func _populate_starter_weapon_screen(starter_weapons: Array[Dictionary]) -> void:
+	if _starter_weapon_screen == null:
+		return
+	for child in _starter_weapon_screen.get_children():
+		if child.name != "StarterWeaponTitle":
+			_starter_weapon_screen.remove_child(child)
+			child.queue_free()
+	for index in starter_weapons.size():
+		_add_starter_weapon_option(starter_weapons[index], index)
+
+
+func _add_starter_weapon_option(starter_weapon: Dictionary, index: int) -> void:
+	var weapon_id: StringName = starter_weapon.get("id", &"")
+	var display_name := String(starter_weapon.get("display_name", String(weapon_id).capitalize()))
+	var detail := String(starter_weapon.get("detail", ""))
+	var y := 220.0 + float(index) * 96.0
+	var button := _button(_starter_button_name(weapon_id), display_name, Vector2(270.0, y))
+	button.custom_minimum_size = Vector2(300.0, 50.0)
+	button.pressed.connect(func() -> void:
+		starter_weapon_selected.emit(weapon_id)
+	)
+	_starter_weapon_screen.add_child(button)
+	var detail_label := _title_label("%sDetail" % button.name, detail, Vector2(590.0, y + 9.0), 16)
+	detail_label.custom_minimum_size = Vector2(300.0, 48.0)
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_starter_weapon_screen.add_child(detail_label)
+
+
+func _starter_button_name(weapon_id: StringName) -> String:
+	match weapon_id:
+		&"star_sticker_swarm":
+			return "StarStickerSwarmButton"
+		&"waxlight_comet":
+			return "WaxlightCometButton"
+	return "%sButton" % String(weapon_id).to_pascal_case()
 
 
 func _ensure_death_screen() -> void:
@@ -226,7 +294,7 @@ func _button(button_name: String, text: String, position: Vector2) -> Button:
 func _show_only(screen: Control) -> void:
 	if _modal_layer != null:
 		_modal_layer.visible = true
-	for candidate in [_start_screen, _death_screen, _summary_screen, _pause_screen]:
+	for candidate in [_start_screen, _starter_weapon_screen, _death_screen, _summary_screen, _pause_screen]:
 		if candidate != null:
 			candidate.visible = candidate == screen
 

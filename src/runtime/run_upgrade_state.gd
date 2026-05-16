@@ -69,6 +69,7 @@ var _weapon_range_bonuses: Dictionary = {}
 var _weapon_applied_upgrades: Dictionary = {}
 var _draft_seed := 1337
 var _player_health_ratio := 1.0
+var _starter_weapon_id := WEAPON_STAR_STICKER_SWARM
 
 
 func _init() -> void:
@@ -80,12 +81,24 @@ func configure(content_factory) -> void:
 
 
 func reset() -> void:
-	_owned_weapon_levels = {WEAPON_STAR_STICKER_SWARM: 1}
+	_owned_weapon_levels = {_starter_weapon_id: 1}
 	_owned_passive_levels = {}
 	_weapon_stat_bonuses = {}
 	_weapon_range_bonuses = {}
 	_weapon_applied_upgrades = {}
 	_player_health_ratio = 1.0
+
+
+func set_starter_weapon(weapon_id: StringName) -> bool:
+	if _weapon_data(weapon_id) == null:
+		return false
+	_starter_weapon_id = weapon_id
+	reset()
+	return true
+
+
+func starter_weapon_id() -> StringName:
+	return _starter_weapon_id
 
 
 func prototype_choices_for_level(run_level: int) -> Array[Dictionary]:

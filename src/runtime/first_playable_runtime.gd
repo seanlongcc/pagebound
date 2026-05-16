@@ -19,6 +19,7 @@ const RunLevelTrackerScript := preload("res://src/runtime/run_level_tracker.gd")
 const RunMenuControllerScript := preload("res://src/runtime/run_menu_controller.gd")
 const RunPauseSummaryBuilderScript := preload("res://src/runtime/run_pause_summary_builder.gd")
 const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
+const StarterWeaponSelectionScript := preload("res://src/runtime/starter_weapon_selection.gd")
 const XpRangeDebugCirclesScript := preload("res://src/runtime/xp_range_debug_circles.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
@@ -36,6 +37,7 @@ var _page_event_orchestrator = FirstPlayablePageEventOrchestratorScript.new()
 var _boss_controller = CrownlessEchoControllerScript.new()
 var _run_ui = FirstPlayableRunUiScript.new()
 var _upgrade_state = RunUpgradeStateScript.new()
+var _starter_weapon_selection = StarterWeaponSelectionScript.new()
 var _xp_range_debug_circles = XpRangeDebugCirclesScript.new()
 var _event_bus: Node
 var _draft_controller: Node
@@ -115,6 +117,21 @@ func _start_run() -> void:
 		_camera_controller.ensure_follow(player(), _camera_rig())
 		_camera_controller.snap_to_target(player(), _camera_rig(), _camera())
 	_update_hud()
+
+
+func _show_starter_weapon_select() -> void:
+	if _menu_controller != null and _menu_controller.has_method("show_starter_weapon_select"):
+		_menu_controller.show_starter_weapon_select(_starter_weapon_selection.starter_weapon_options(_content_factory))
+
+
+func _start_run_with_starter_weapon(weapon_id: StringName) -> void:
+	if _upgrade_state.has_method("set_starter_weapon") and not _upgrade_state.set_starter_weapon(weapon_id):
+		return
+	_start_run()
+
+
+func _starter_weapon_data() -> Resource:
+	return _starter_weapon_selection.starter_weapon_data(_content_factory, _upgrade_state)
 
 
 ## Returns the current player instance if one exists.
@@ -267,6 +284,13 @@ func debug_owned_weapon_ids() -> Array[StringName]:
 	if _upgrade_state.has_method("owned_weapon_ids"):
 		return _upgrade_state.owned_weapon_ids()
 	return []
+
+
+## Returns current weapon level for smoke/debug checks.
+func debug_weapon_level(weapon_id: StringName) -> int:
+	if _upgrade_state.has_method("weapon_level"):
+		return _upgrade_state.weapon_level(weapon_id)
+	return 0
 
 
 ## Returns currently owned passive IDs for smoke/debug checks.
@@ -437,7 +461,7 @@ func _ensure_weapon_manager() -> void:
 		manager.name = "WeaponManager"
 		_projectiles_root().add_child(manager)
 	if manager.has_method("configure"):
-		manager.configure(player(), _enemies_root(), _damage_model, _content_factory.star_sticker_swarm_weapon(), _pagecraft_manager(), _upgrade_state, _content_factory)
+		manager.configure(player(), _enemies_root(), _damage_model, _starter_weapon_data(), _pagecraft_manager(), _upgrade_state, _content_factory)
 
 
 func _ensure_dog_pet() -> void:
@@ -498,10 +522,12 @@ func _ensure_menu_controller() -> void:
 		_run_root().add_child(_menu_controller)
 	if _menu_controller.has_method("configure"):
 		_menu_controller.configure(_modal_layer())
-	if _menu_controller.has_signal("start_requested") and not _menu_controller.start_requested.is_connected(_start_run):
-		_menu_controller.start_requested.connect(_start_run)
-	if _menu_controller.has_signal("retry_requested") and not _menu_controller.retry_requested.is_connected(_start_run):
-		_menu_controller.retry_requested.connect(_start_run)
+	if _menu_controller.has_signal("start_requested") and not _menu_controller.start_requested.is_connected(_show_starter_weapon_select):
+		_menu_controller.start_requested.connect(_show_starter_weapon_select)
+	if _menu_controller.has_signal("starter_weapon_selected") and not _menu_controller.starter_weapon_selected.is_connected(_start_run_with_starter_weapon):
+		_menu_controller.starter_weapon_selected.connect(_start_run_with_starter_weapon)
+	if _menu_controller.has_signal("retry_requested") and not _menu_controller.retry_requested.is_connected(_show_starter_weapon_select):
+		_menu_controller.retry_requested.connect(_show_starter_weapon_select)
 	if _menu_controller.has_signal("main_menu_requested") and not _menu_controller.main_menu_requested.is_connected(_return_to_main_menu):
 		_menu_controller.main_menu_requested.connect(_return_to_main_menu)
 	if _menu_controller.has_signal("pause_requested") and not _menu_controller.pause_requested.is_connected(_show_pause_menu):
