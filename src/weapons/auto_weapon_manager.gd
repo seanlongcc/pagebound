@@ -14,6 +14,7 @@ const BASE_STAR_NODE_CAP := 5
 
 var _owner: Node3D
 var _enemies_root: Node
+var _enemy_registry: Node
 var _damage_model
 var _pagecraft_manager: Node
 var _upgrade_state
@@ -61,6 +62,7 @@ func configure(
 ) -> void:
 	_owner = owner
 	_enemies_root = enemies_root
+	_enemy_registry = _active_enemy_registry_from_root(enemies_root)
 	_damage_model = damage_model
 	_fallback_weapon_data = weapon_data
 	_pagecraft_manager = pagecraft_manager
@@ -255,6 +257,8 @@ func _state_for_weapon(weapon_id: StringName) -> Dictionary:
 
 
 func _nearest_living_enemy_for_state(state: Dictionary) -> Node3D:
+	if _has_registered_enemies() and _enemy_registry.has_method("nearest_enemy") and _owner != null:
+		return _enemy_registry.nearest_enemy(_owner.global_position, _range_for_state(state))
 	var nearest: Node3D = null
 	var nearest_distance := _range_for_state(state)
 	if _enemies_root == null:
@@ -355,7 +359,7 @@ func _fire_star_ricochet_segment(start_node: Dictionary, end_node: Dictionary, w
 	var end_position: Vector3 = end_node.get("position", Vector3.ZERO)
 	_star_ricochet_segment_count += 1
 	_track_transient_entries(_star_network.create_constellation_feedback(start_node, end_node, self, STAR_CONSTELLATION_FEEDBACK_SECONDS, _star_ricochet_segment_count))
-	var enemies := _star_network.enemies_along_segment(start_position, end_position, _enemies_root, STAR_RICOCHET_HIT_WIDTH_METERS)
+	var enemies := _enemies_along_segment(start_position, end_position, STAR_RICOCHET_HIT_WIDTH_METERS)
 	for enemy in enemies:
 		if _apply_star_damage(enemy, &"star_sticker_swarm_ricochet", ricochet_damage, weapon_data.material_tags, start_position, false):
 			_star_ricochet_damage_count += 1
@@ -377,7 +381,7 @@ func _apply_star_damage(enemy: Node3D, source_id: StringName, damage: float, dam
 func _fire_dreamsap_glob(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
 	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
-	var result: Dictionary = MvpWeaponEffectsScript.fire_dreamsap_glob(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage)
+	var result: Dictionary = MvpWeaponEffectsScript.fire_dreamsap_glob(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage, _enemy_registry)
 	_deposit_pagecraft_mark(target.global_position, weapon_data, damage)
 	_count_hits(weapon_data.id, int(result.get("hits", 0)))
 	_track_transient_entries(result.get("transients", []))
@@ -386,7 +390,7 @@ func _fire_dreamsap_glob(state: Dictionary, target: Node3D) -> void:
 func _fire_color_bloom(state: Dictionary, target: Node3D) -> void:
 	var weapon_data: Resource = state["data"]
 	var damage := _runtime_damage(weapon_data.id, weapon_data, weapon_data.material_tags)
-	var result: Dictionary = MvpWeaponEffectsScript.fire_color_bloom(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage)
+	var result: Dictionary = MvpWeaponEffectsScript.fire_color_bloom(self, _enemies_root, _damage_model, weapon_data, _runtime_mark_radius(weapon_data.id, weapon_data), target, damage, _enemy_registry)
 	_deposit_pagecraft_mark(target.global_position, weapon_data, damage)
 	_count_hits(weapon_data.id, int(result.get("hits", 0)))
 	_track_transient_entries(result.get("transients", []))
@@ -404,13 +408,10 @@ func _counted_targets(primary: Node3D, max_count: int, range_meters: float) -> A
 		targets.append(primary)
 	if _enemies_root == null:
 		return targets
-	for child in _enemies_root.get_children():
+	for child in _enemies_in_radius(_owner.global_position, range_meters, max_count, primary):
 		if targets.size() >= max_count:
 			break
-		if child == primary or not child is Node3D:
-			continue
-		if _is_living_enemy(child as Node3D) and _is_inside_owner_range(child as Node3D, range_meters):
-			targets.append(child)
+		targets.append(child)
 	return targets
 
 
@@ -657,17 +658,61 @@ func _apply_waxlight_impact_splat(target: Node3D, weapon_data: Resource, damage:
 		return
 	var radius := maxf(0.5, _runtime_mark_radius(weapon_data.id, weapon_data) * 1.6)
 	var splat_damage := maxf(1.0, damage)
-	for enemy in _enemies_root.get_children():
-		if enemy == target or not enemy is Node3D or not _is_living_enemy(enemy as Node3D):
-			continue
-		if (enemy as Node3D).global_position.distance_to(target.global_position) > radius:
-			continue
+	for enemy in _enemies_in_radius(target.global_position, radius, 0, target):
 		var health := enemy.get_node_or_null("HealthComponent")
 		if health == null:
 			continue
 		var result: Dictionary = _damage_model.apply_damage(health, &"waxlight_comet_impact_splat", splat_damage, damage_tags)
 		if not result.is_empty():
 			_count_hit(&"waxlight_comet")
+
+
+func _enemies_in_radius(center: Vector3, radius: float, max_count: int = 0, exclude_enemy: Node3D = null) -> Array[Node3D]:
+	var enemies: Array[Node3D] = []
+	if _has_registered_enemies() and _enemy_registry.has_method("enemies_in_radius"):
+		for enemy in _enemy_registry.enemies_in_radius(center, radius, max_count, exclude_enemy):
+			if enemy is Node3D:
+				enemies.append(enemy)
+		return enemies
+	if _enemies_root == null:
+		return enemies
+	for child in _enemies_root.get_children():
+		if child == exclude_enemy or not child is Node3D:
+			continue
+		var enemy := child as Node3D
+		if not _is_living_enemy(enemy):
+			continue
+		if enemy.global_position.distance_squared_to(center) > radius * radius:
+			continue
+		enemies.append(enemy)
+		if max_count > 0 and enemies.size() >= max_count:
+			break
+	return enemies
+
+
+func _enemies_along_segment(start_position: Vector3, end_position: Vector3, hit_width_meters: float) -> Array[Node3D]:
+	var enemies: Array[Node3D] = []
+	if _has_registered_enemies() and _enemy_registry.has_method("enemies_along_segment"):
+		for enemy in _enemy_registry.enemies_along_segment(start_position, end_position, hit_width_meters):
+			if enemy is Node3D:
+				enemies.append(enemy)
+		return enemies
+	return _star_network.enemies_along_segment(start_position, end_position, _enemies_root, hit_width_meters)
+
+
+func _has_registered_enemies() -> bool:
+	return _enemy_registry != null and _enemy_registry.has_method("active_count") and int(_enemy_registry.active_count()) > 0
+
+
+func _active_enemy_registry_from_root(enemies_root: Node) -> Node:
+	if enemies_root == null:
+		return null
+	var current := enemies_root
+	while current != null and current.name != "RunRoot":
+		current = current.get_parent()
+	if current == null:
+		return null
+	return current.get_node_or_null("ActiveEnemyRegistry")
 
 
 func _count_hit(weapon_id: StringName) -> void:

@@ -41,6 +41,7 @@ func configure(enemy_data: Resource, target: Node3D) -> void:
 		contact_damage = enemy_data.contact_damage
 		reward_xp = enemy_data.reward_xp
 		_apply_placeholder_profile()
+	_enable_runtime(true)
 
 
 ## Assigns the health component used for alive/dead checks.
@@ -70,6 +71,18 @@ func debug_is_targetable() -> bool:
 	return visible and not _is_dead()
 
 
+## Reactivates this enemy after pool checkout.
+func activate_from_pool() -> void:
+	_enable_runtime(true)
+
+
+## Deactivates this enemy before returning to pool.
+func reset_for_pool() -> void:
+	velocity = Vector3.ZERO
+	_target = null
+	_enable_runtime(false)
+
+
 func _is_dead() -> bool:
 	return _health != null and _health.has_method("is_alive") and not _health.is_alive()
 
@@ -95,6 +108,14 @@ func _ensure_placeholder_nodes() -> void:
 		mesh_instance.position.y = 0.38
 		mesh_instance.material_override = _placeholder_material(Color(0.08, 0.08, 0.1, 1.0))
 		add_child(mesh_instance)
+
+
+func _enable_runtime(enabled: bool) -> void:
+	visible = enabled
+	set_physics_process(enabled)
+	var collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collision != null:
+		collision.disabled = not enabled
 
 
 func _placeholder_material(color: Color) -> StandardMaterial3D:

@@ -18,6 +18,7 @@ var _event_bus: Node
 var _pagecraft_root: Node3D
 var _damage_model
 var _enemies_root: Node
+var _enemy_registry: Node
 var _upgrade_state
 var _marks: Array[Dictionary] = []
 var _activation_count := 0
@@ -39,6 +40,7 @@ func configure(event_bus: Node, pagecraft_root: Node3D, damage_model = null, ene
 	_pagecraft_root = pagecraft_root
 	_damage_model = damage_model
 	_enemies_root = enemies_root
+	_enemy_registry = _active_enemy_registry_from_root(enemies_root)
 	_upgrade_state = upgrade_state
 
 
@@ -351,11 +353,7 @@ func _apply_activation_damage(mark: Dictionary, damage_scale: float = 1.0) -> vo
 	if activation_damage <= 0.0:
 		return
 	var radius := float(mark.get("radius", 0.0))
-	for enemy in _enemies_root.get_children():
-		if not enemy is Node3D or not (enemy as Node3D).visible:
-			continue
-		if (enemy as Node3D).global_position.distance_to(mark["position"]) > radius:
-			continue
+	for enemy in _enemies_in_radius(mark["position"], radius):
 		var health := enemy.get_node_or_null("HealthComponent")
 		if health == null:
 			continue
@@ -369,6 +367,35 @@ func _apply_activation_damage(mark: Dictionary, damage_scale: float = 1.0) -> vo
 			continue
 		_activation_damage_count += 1
 		_last_activation_damage = float(result.get("amount", activation_damage))
+
+
+func _enemies_in_radius(center: Vector3, radius: float) -> Array[Node3D]:
+	var enemies: Array[Node3D] = []
+	if _enemy_registry != null and _enemy_registry.has_method("active_count") and int(_enemy_registry.active_count()) > 0 and _enemy_registry.has_method("enemies_in_radius"):
+		for enemy in _enemy_registry.enemies_in_radius(center, radius):
+			if enemy is Node3D:
+				enemies.append(enemy)
+		return enemies
+	if _enemies_root == null:
+		return enemies
+	for enemy in _enemies_root.get_children():
+		if not enemy is Node3D or not (enemy as Node3D).visible:
+			continue
+		var enemy_node := enemy as Node3D
+		if enemy_node.global_position.distance_squared_to(center) <= radius * radius:
+			enemies.append(enemy_node)
+	return enemies
+
+
+func _active_enemy_registry_from_root(enemies_root: Node) -> Node:
+	if enemies_root == null:
+		return null
+	var current := enemies_root
+	while current != null and current.name != "RunRoot":
+		current = current.get_parent()
+	if current == null:
+		return null
+	return current.get_node_or_null("ActiveEnemyRegistry")
 
 
 func _activation_indices_for(origin_index: int) -> Array[int]:

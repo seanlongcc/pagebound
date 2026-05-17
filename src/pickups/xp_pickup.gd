@@ -36,6 +36,13 @@ func configure(new_amount: int, collector: Node3D) -> void:
 	_collected = false
 	visible = true
 	set_physics_process(true)
+	_apply_amount_visual()
+
+
+## Adds XP value when nearby/overflow motes merge.
+func merge_amount(extra_amount: int) -> void:
+	amount += maxi(1, extra_amount)
+	_apply_amount_visual()
 
 
 ## Returns true until collected, for smoke/debug checks.
@@ -58,6 +65,21 @@ func _collect() -> void:
 	visible = false
 	set_physics_process(false)
 	collected.emit(self, amount)
+
+
+## Reactivates this pickup after pool checkout.
+func activate_from_pool() -> void:
+	visible = true
+	_collected = false
+	set_physics_process(true)
+
+
+## Deactivates this pickup before returning to pool.
+func reset_for_pool() -> void:
+	_collected = true
+	_collector = null
+	visible = false
+	set_physics_process(false)
 
 
 func _collector_can_collect() -> bool:
@@ -90,3 +112,11 @@ func _placeholder_material() -> StandardMaterial3D:
 	material.emission = Color(0.05, 0.45, 0.75, 1.0)
 	material.emission_energy_multiplier = 0.7
 	return material
+
+
+func _apply_amount_visual() -> void:
+	var mesh_instance := get_node_or_null("PlaceholderMesh") as MeshInstance3D
+	if mesh_instance == null:
+		return
+	var scale_value := clampf(1.0 + (float(amount) / 50.0), 1.0, 2.2)
+	mesh_instance.scale = Vector3.ONE * scale_value

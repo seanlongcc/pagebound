@@ -11,6 +11,7 @@ const AutoWeaponManagerScript := preload("res://src/weapons/auto_weapon_manager.
 const FirstPlayableCameraControllerScript := preload("res://src/runtime/first_playable_camera_controller.gd")
 const FirstPlayablePageEventOrchestratorScript := preload("res://src/runtime/first_playable_page_event_orchestrator.gd")
 const FirstPlayableRunUiScript := preload("res://src/runtime/first_playable_run_ui.gd")
+const ActiveEnemyRegistryScript := preload("res://src/runtime/active_enemy_registry.gd")
 const DogSupportPetScript := preload("res://src/runtime/dog_support_pet.gd")
 const CrownlessEchoControllerScript := preload("res://src/runtime/crownless_echo_controller.gd")
 const RunDirectorScript := preload("res://src/runtime/run_director.gd")
@@ -22,6 +23,7 @@ const RunUpgradeStateScript := preload("res://src/runtime/run_upgrade_state.gd")
 const StarterWeaponSelectionScript := preload("res://src/runtime/starter_weapon_selection.gd")
 const XpRangeDebugCirclesScript := preload("res://src/runtime/xp_range_debug_circles.gd")
 const XpPickupScript := preload("res://src/pickups/xp_pickup.gd")
+const XpPickupPoolScript := preload("res://src/pickups/xp_pickup_pool.gd")
 const PrototypeContentFactoryScript := preload("res://src/data/prototype_content_factory.gd")
 const RuntimeEventBusScript := preload("res://src/events/runtime_event_bus.gd")
 const PAGE_HALF_EXTENTS := Vector2(32.0, 20.0)
@@ -74,6 +76,8 @@ func _initialize_first_playable_loop() -> void:
 	_input_actions.ensure_default_actions()
 	_upgrade_state.configure(_content_factory)
 	_ensure_runtime_services()
+	_ensure_active_enemy_registry()
+	_ensure_xp_pickup_pool()
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
@@ -93,12 +97,15 @@ func _start_run() -> void:
 	if get_tree() != null:
 		get_tree().paused = false
 	_ensure_runtime_services()
+	_ensure_active_enemy_registry()
+	_ensure_xp_pickup_pool()
 	_ensure_damage_number_manager()
 	_ensure_pagecraft_manager()
 	_ensure_minimal_hud()
 	_ensure_page_event_orchestrator()
 	_ensure_draft_controller()
 	_spawn_player()
+	_ensure_xp_pickup_pool()
 	_ensure_dog_pet()
 	_configure_xp_range_debug_circles()
 	_ensure_boss_controller()
@@ -197,6 +204,24 @@ func debug_level_up_count() -> int:
 ## Spawns a Color Mote for smoke checks.
 func debug_spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
 	_spawn_xp_pickup(world_position, amount)
+
+
+## Returns XP pickup pool stats for smoke/debug checks.
+func debug_xp_pickup_pool_stats() -> Dictionary:
+	var pool := _xp_pickup_pool()
+	if pool == null:
+		return {}
+	return {
+		"active": pool.debug_active_count() if pool.has_method("debug_active_count") else 0,
+		"inactive": pool.debug_inactive_count() if pool.has_method("debug_inactive_count") else 0,
+		"total": pool.debug_total_count() if pool.has_method("debug_total_count") else 0,
+		"hard_cap": pool.debug_hard_cap() if pool.has_method("debug_hard_cap") else 0,
+		"spawned": pool.debug_spawned_count() if pool.has_method("debug_spawned_count") else 0,
+		"reused": pool.debug_reused_count() if pool.has_method("debug_reused_count") else 0,
+		"returned": pool.debug_returned_count() if pool.has_method("debug_returned_count") else 0,
+		"merged": pool.debug_merged_count() if pool.has_method("debug_merged_count") else 0,
+		"dropped": pool.debug_dropped_count() if pool.has_method("debug_dropped_count") else 0,
+	}
 
 
 ## Returns true after player death/victory ends the run.
@@ -435,6 +460,29 @@ func _ensure_runtime_services() -> void:
 	_level_tracker.configure(_event_bus)
 
 
+func _ensure_active_enemy_registry() -> void:
+	var registry := _active_enemy_registry()
+	if registry == null:
+		registry = ActiveEnemyRegistryScript.new()
+		registry.name = "ActiveEnemyRegistry"
+		_run_root().add_child(registry)
+	if registry.has_method("configure"):
+		registry.configure(_enemies_root())
+		return
+
+
+func _ensure_xp_pickup_pool() -> void:
+	var pool := _xp_pickup_pool()
+	if pool == null:
+		pool = XpPickupPoolScript.new()
+		pool.name = "XpPickupPool"
+		_run_root().add_child(pool)
+	if pool.has_method("configure"):
+		pool.configure(_pickups_root(), player())
+	if pool.has_signal("collected") and not pool.collected.is_connected(_on_xp_pickup_collected):
+		pool.collected.connect(_on_xp_pickup_collected)
+
+
 func _ensure_damage_number_manager() -> void:
 	var manager := _damage_numbers_root().get_node_or_null("DamageNumberManager")
 	if manager == null:
@@ -587,12 +635,13 @@ func _on_entity_died(event: Dictionary) -> void:
 	if owner == player():
 		_end_run_from_player_death(event)
 		return
-	_show_enemy_death(owner)
-	_enemies_defeated += 1
-	_page_event_orchestrator.add_kill_progress(_event_position(event))
 	var reward := 0
 	if owner != null and "reward_xp" in owner:
 		reward = owner.reward_xp
+	if not _return_enemy_to_pool(owner):
+		_show_enemy_death(owner)
+	_enemies_defeated += 1
+	_page_event_orchestrator.add_kill_progress(_event_position(event))
 	if reward <= 0:
 		return
 	_spawn_xp_pickup(_event_position(event), reward)
@@ -645,7 +694,7 @@ func _tick_contact_damage(delta: float) -> void:
 	var player_health := _player_health()
 	if player_health == null or not player_health.has_method("is_alive") or not player_health.is_alive():
 		return
-	for enemy in _enemies_root().get_children():
+	for enemy in _active_enemy_nodes():
 		if not enemy is Node3D or not enemy.visible:
 			continue
 		var enemy_health := enemy.get_node_or_null("HealthComponent")
@@ -727,6 +776,11 @@ func _show_enemy_death(owner: Node) -> void:
 
 func _spawn_xp_pickup(world_position: Vector3, amount: int) -> void:
 	if not _run_started or _run_ended:
+		return
+	_ensure_xp_pickup_pool()
+	var pool := _xp_pickup_pool()
+	if pool != null and pool.has_method("spawn_pickup"):
+		pool.spawn_pickup(world_position, amount)
 		return
 	var pickup := XpPickupScript.new()
 	pickup.name = "ColorMote_%d" % amount
@@ -814,7 +868,13 @@ func _prepare_clean_run_state() -> void:
 	_clear_children(_players_root())
 	_clear_children(_pets_root())
 	_clear_children(_enemies_root())
+	var registry := _active_enemy_registry()
+	if registry != null and registry.has_method("clear"):
+		registry.clear()
 	_clear_children(_pickups_root())
+	var pickup_pool := _xp_pickup_pool()
+	if pickup_pool != null and pickup_pool.has_method("clear"):
+		pickup_pool.clear()
 	_clear_children(_projectiles_root())
 	_xp_range_debug_circles.clear()
 	var pagecraft := _pagecraft_manager()
@@ -839,6 +899,13 @@ func _clear_children(root: Node) -> void:
 	for child in root.get_children():
 		root.remove_child(child)
 		child.queue_free()
+
+
+func _return_enemy_to_pool(owner: Node) -> bool:
+	var director := _run_director()
+	if director == null or not director.has_method("return_enemy"):
+		return false
+	return bool(director.return_enemy(owner))
 
 
 func _return_to_main_menu() -> void:
@@ -1028,6 +1095,25 @@ func _pagecraft_manager() -> Node:
 
 func _run_director() -> Node:
 	return _run_root().get_node_or_null("RunDirector")
+
+
+func _active_enemy_registry() -> Node:
+	return _run_root().get_node_or_null("ActiveEnemyRegistry")
+
+
+func _xp_pickup_pool() -> Node:
+	return _run_root().get_node_or_null("XpPickupPool")
+
+
+func _active_enemy_nodes() -> Array[Node3D]:
+	var registry := _active_enemy_registry()
+	if registry != null and registry.has_method("active_enemies"):
+		return registry.active_enemies()
+	var enemies: Array[Node3D] = []
+	for child in _enemies_root().get_children():
+		if child is Node3D:
+			enemies.append(child)
+	return enemies
 
 
 func _active_enemy_count() -> int:

@@ -2,6 +2,7 @@ class_name RunDirector
 extends Node
 
 const ChaserEnemyScript := preload("res://src/enemies/chaser_enemy.gd")
+const EnemyPoolScript := preload("res://src/enemies/enemy_pool.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
 
 const TARGET_RUN_MINUTES := 30.0
@@ -28,6 +29,8 @@ const HEALTH_SCALING_CURVE := 1.6
 var _enemies_root: Node3D
 var _target: Node3D
 var _content_factory
+var _enemy_pool: Node
+var _active_enemy_registry: Node
 var _spawn_timer := 0.0
 var _run_time := 0.0
 var _spawned_count := 0
@@ -56,6 +59,8 @@ func configure(enemies_root: Node3D, target: Node3D, content_factory, new_page_h
 	_target = target
 	_content_factory = content_factory
 	page_half_extents = new_page_half_extents
+	_active_enemy_registry = _active_enemy_registry_from_root()
+	_ensure_enemy_pool()
 	_apply_time_band(_run_time)
 
 
@@ -82,6 +87,10 @@ func reset() -> void:
 	_health_multiplier = 1.0
 	_event_pressure_multiplier = 1.0
 	_pressure_spawn_credit = 0.0
+	if _active_enemy_registry != null and _active_enemy_registry.has_method("clear"):
+		_active_enemy_registry.clear()
+	if _enemy_pool != null and _enemy_pool.has_method("clear"):
+		_enemy_pool.clear()
 	_apply_time_band(_run_time)
 
 
@@ -130,6 +139,8 @@ func debug_spawned_enemy_ids() -> Array[StringName]:
 
 ## Returns current living, targetable enemy count.
 func debug_active_enemy_count() -> int:
+	if _active_enemy_registry != null and _active_enemy_registry.has_method("active_count"):
+		return _active_enemy_registry.active_count()
 	return _active_enemies().size()
 
 
@@ -179,6 +190,33 @@ func set_event_pressure_multiplier(multiplier: float) -> void:
 	_event_pressure_multiplier = clampf(multiplier, 0.25, 4.0)
 
 
+## Returns one director-owned enemy to the pool after death.
+func return_enemy(enemy: Node) -> bool:
+	if enemy == null or _enemy_pool == null or not _enemy_pool.has_method("owns_instance"):
+		return false
+	if not _enemy_pool.owns_instance(enemy):
+		return false
+	if _active_enemy_registry != null and _active_enemy_registry.has_method("unregister_enemy"):
+		_active_enemy_registry.unregister_enemy(enemy)
+	_enemy_pool.return_instance(enemy)
+	return true
+
+
+## Returns enemy pool counters for smoke/debug checks.
+func debug_enemy_pool_stats() -> Dictionary:
+	if _enemy_pool == null:
+		return {}
+	return {
+		"active": _enemy_pool.debug_active_count() if _enemy_pool.has_method("debug_active_count") else 0,
+		"inactive": _enemy_pool.debug_inactive_count() if _enemy_pool.has_method("debug_inactive_count") else 0,
+		"total": _enemy_pool.debug_total_count() if _enemy_pool.has_method("debug_total_count") else 0,
+		"spawned": _enemy_pool.debug_spawned_count() if _enemy_pool.has_method("debug_spawned_count") else 0,
+		"reused": _enemy_pool.debug_reused_count() if _enemy_pool.has_method("debug_reused_count") else 0,
+		"returned": _enemy_pool.debug_returned_count() if _enemy_pool.has_method("debug_returned_count") else 0,
+		"dropped": _enemy_pool.debug_dropped_count() if _enemy_pool.has_method("debug_dropped_count") else 0,
+	}
+
+
 func _spawn_tick() -> void:
 	var active_count := debug_active_enemy_count()
 	if active_count >= safety_enemy_cap:
@@ -193,21 +231,26 @@ func _spawn_tick() -> void:
 func _spawn_enemy(enemy_data: Resource) -> void:
 	if enemy_data == null or debug_active_enemy_count() >= safety_enemy_cap:
 		return
-	var enemy_body := CharacterBody3D.new()
+	var enemy_body := _request_enemy_body()
+	if enemy_body == null:
+		return
 	_spawned_count += 1
 	_spawned_enemy_ids.append(enemy_data.id)
 	enemy_body.name = _enemy_node_name(enemy_data, _spawned_count)
-	enemy_body.set_script(ChaserEnemyScript)
-	_enemies_root.add_child(enemy_body)
 	enemy_body.global_position = _spawn_position(_spawned_count)
 	if enemy_body.has_method("configure"):
 		enemy_body.configure(enemy_data, _target)
 	var health := _ensure_health(enemy_body, enemy_data.id, _scaled_enemy_health(enemy_data), &"enemy")
 	if enemy_body.has_method("set_health_component"):
 		enemy_body.set_health_component(health)
+	_activate_enemy_body(enemy_body)
+	if _active_enemy_registry != null and _active_enemy_registry.has_method("register_enemy"):
+		_active_enemy_registry.register_enemy(enemy_body)
 
 
 func _active_enemies() -> Array[Node3D]:
+	if _active_enemy_registry != null and _active_enemy_registry.has_method("active_enemies"):
+		return _active_enemy_registry.active_enemies()
 	var enemies: Array[Node3D] = []
 	if _enemies_root == null:
 		return enemies
@@ -219,6 +262,56 @@ func _active_enemies() -> Array[Node3D]:
 			continue
 		enemies.append(child)
 	return enemies
+
+
+func _ensure_enemy_pool() -> void:
+	if _enemies_root == null:
+		return
+	if _enemy_pool == null:
+		_enemy_pool = get_node_or_null("EnemyPool")
+	if _enemy_pool == null:
+		_enemy_pool = EnemyPoolScript.new()
+		_enemy_pool.name = "EnemyPool"
+		add_child(_enemy_pool)
+	if _enemy_pool.has_method("configure"):
+		_enemy_pool.configure(_enemies_root, Callable(self, "_create_enemy_body"), safety_enemy_cap, 0)
+
+
+func _request_enemy_body() -> CharacterBody3D:
+	_ensure_enemy_pool()
+	if _enemy_pool == null or not _enemy_pool.has_method("request_instance"):
+		return null
+	return _enemy_pool.request_instance() as CharacterBody3D
+
+
+func _create_enemy_body() -> Node:
+	var enemy_body := CharacterBody3D.new()
+	enemy_body.set_script(ChaserEnemyScript)
+	return enemy_body
+
+
+func _activate_enemy_body(enemy_body: Node) -> void:
+	if enemy_body == null:
+		return
+	if enemy_body.has_method("activate_from_pool"):
+		enemy_body.activate_from_pool()
+	else:
+		enemy_body.visible = true
+		enemy_body.set_physics_process(true)
+	var collision := enemy_body.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collision != null:
+		collision.disabled = false
+
+
+func _active_enemy_registry_from_root() -> Node:
+	if _enemies_root == null:
+		return null
+	var current: Node = _enemies_root
+	while current != null and current.name != "RunRoot":
+		current = current.get_parent()
+	if current == null:
+		return null
+	return current.get_node_or_null("ActiveEnemyRegistry")
 
 
 func _ensure_health(owner: Node, entity_id: StringName, max_health: float, team_id: StringName) -> Node:

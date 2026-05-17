@@ -5,39 +5,35 @@ const DREAMSAP_FEEDBACK_SECONDS := 2.6
 const COLOR_BLOOM_FEEDBACK_SECONDS := 0.85
 
 
-static func fire_dreamsap_glob(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float) -> Dictionary:
+static func fire_dreamsap_glob(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float, enemy_registry: Node = null) -> Dictionary:
 	if target == null:
 		return {"hits": 0, "transients": []}
 	var center := Vector3(target.global_position.x, 0.08, target.global_position.z)
 	var radius := maxf(0.65, mark_radius_meters)
-	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius)
+	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius, enemy_registry)
 	return {
 		"hits": hits,
 		"transients": [_create_dreamsap_feedback(parent, center, radius)],
 	}
 
 
-static func fire_color_bloom(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float) -> Dictionary:
+static func fire_color_bloom(parent: Node, enemies_root: Node, damage_model, weapon_data: Resource, mark_radius_meters: float, target: Node3D, damage: float, enemy_registry: Node = null) -> Dictionary:
 	if target == null:
 		return {"hits": 0, "transients": []}
 	var center := Vector3(target.global_position.x, 0.09, target.global_position.z)
 	var radius := maxf(0.7, mark_radius_meters * 1.15)
-	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius)
+	var hits := _apply_area_damage(enemies_root, damage_model, weapon_data.id, damage, weapon_data.material_tags, center, radius, enemy_registry)
 	return {
 		"hits": hits,
 		"transients": [_create_color_bloom_feedback(parent, center, radius)],
 	}
 
 
-static func _apply_area_damage(enemies_root: Node, damage_model, source_id: StringName, damage: float, damage_tags: Array, center: Vector3, radius: float) -> int:
+static func _apply_area_damage(enemies_root: Node, damage_model, source_id: StringName, damage: float, damage_tags: Array, center: Vector3, radius: float, enemy_registry: Node = null) -> int:
 	if enemies_root == null or damage_model == null:
 		return 0
 	var hits := 0
-	for enemy in enemies_root.get_children():
-		if not enemy is Node3D:
-			continue
-		if (enemy as Node3D).global_position.distance_to(center) > radius:
-			continue
+	for enemy in _enemies_in_radius(enemies_root, enemy_registry, center, radius):
 		var health := enemy.get_node_or_null("HealthComponent")
 		if health == null or not health.has_method("is_alive") or not health.is_alive():
 			continue
@@ -45,6 +41,22 @@ static func _apply_area_damage(enemies_root: Node, damage_model, source_id: Stri
 		if not result.is_empty():
 			hits += 1
 	return hits
+
+
+static func _enemies_in_radius(enemies_root: Node, enemy_registry: Node, center: Vector3, radius: float) -> Array[Node3D]:
+	var enemies: Array[Node3D] = []
+	if enemy_registry != null and enemy_registry.has_method("active_count") and int(enemy_registry.active_count()) > 0 and enemy_registry.has_method("enemies_in_radius"):
+		for enemy in enemy_registry.enemies_in_radius(center, radius):
+			if enemy is Node3D:
+				enemies.append(enemy)
+		return enemies
+	for enemy in enemies_root.get_children():
+		if not enemy is Node3D:
+			continue
+		var enemy_node := enemy as Node3D
+		if enemy_node.global_position.distance_squared_to(center) <= radius * radius:
+			enemies.append(enemy_node)
+	return enemies
 
 
 static func _create_dreamsap_feedback(parent: Node, world_position: Vector3, radius: float) -> Dictionary:
