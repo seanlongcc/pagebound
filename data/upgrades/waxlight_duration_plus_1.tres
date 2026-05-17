@@ -6,12 +6,12 @@
 script = ExtResource("1_upgrade")
 id = &"waxlight_duration_plus_1"
 display_name = "Waxlight duration +1s"
-description = "Activated wax stays dangerous longer."
+description = "Active Waxlight marks tick longer before expiring."
 tags = Array[StringName]([&"prototype"])
 draft_rarity = &"uncommon"
 choice_type = &"stat"
 effect_id = &"waxlight_duration_plus_1"
 stat_id = &"waxlight_duration"
 value = 1.0
-effect_text = "Duration +1s"
+effect_text = "duration +1s"
 draft_weight = 1.0

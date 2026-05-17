@@ -1,9 +1,15 @@
 class_name PagecraftManager
 extends Node
 
+const ACTIVATION_BASE_WINDOW_SECONDS := 1.0
+const ACTIVATION_DAMAGE_PULSE_SCALE := 0.35
+const CONNECTED_ACTIVATION_WINDOW_MULTIPLIER := 2.0
+const CONNECTED_ACTIVATION_DAMAGE_PULSE_SCALE := 0.35
+
 @export_range(0.05, 2.0, 0.05) var dash_activation_padding := 0.675
-@export_range(0.1, 20.0, 0.1) var base_activation_duration_seconds := 3.0
-@export_range(0.05, 5.0, 0.05) var activation_damage_tick_seconds := 0.35
+@export_range(0.05, 5.0, 0.01) var activation_damage_tick_seconds := 0.33
+@export_range(0.05, 5.0, 0.01) var connected_activation_damage_tick_seconds := 0.33
+@export_range(0.0, 0.5, 0.01) var activation_visual_grace_seconds := 0.05
 @export_range(0.5, 30.0, 0.5) var inactive_mark_lifetime_seconds := 12.0
 @export_range(0.1, 3.0, 0.05) var pulse_lifetime_seconds := 1.125
 @export_range(1, 64, 1) var base_unactivated_mark_cap := 6
@@ -58,6 +64,10 @@ func deposit_mark(
 		"inactive_remaining_duration": inactive_mark_lifetime_seconds,
 		"remaining_duration": 0.0,
 		"damage_tick_remaining": 0.0,
+		"activation_damage_tick_seconds": activation_damage_tick_seconds,
+		"activation_duration_seconds": 0.0,
+		"activation_damage_pulses_remaining": 0,
+		"activation_damage_pulse_count": 0,
 		"visual": mark_visual,
 		"activated": false,
 	}
@@ -181,8 +191,13 @@ func _activate_mark(index: int, start_position: Vector3, end_position: Vector3, 
 	if mark.get("activated", false):
 		return
 	mark["activated"] = true
-	mark["remaining_duration"] = _activation_duration_seconds()
-	mark["damage_tick_remaining"] = 0.0
+	mark["activation_damage_pulse_count"] = _activation_damage_pulse_count(mark)
+	mark["activation_damage_scale"] = _activation_damage_scale(mark)
+	mark["activation_damage_tick_seconds"] = _activation_damage_tick_seconds(mark)
+	mark["activation_duration_seconds"] = _activation_duration_seconds(mark)
+	mark["remaining_duration"] = mark["activation_duration_seconds"]
+	mark["activation_damage_pulses_remaining"] = int(mark["activation_damage_pulse_count"])
+	mark = _apply_activation_damage_pulse(mark)
 	_marks[index] = mark
 	_activation_count += 1
 	var visual = mark.get("visual", null)
@@ -191,7 +206,6 @@ func _activate_mark(index: int, start_position: Vector3, end_position: Vector3, 
 		(visual as MeshInstance3D).scale *= 1.35
 	if create_pulse:
 		_create_dash_pulse(start_position, end_position)
-	_apply_activation_damage(mark)
 	_emit_activated(mark)
 
 
@@ -209,6 +223,7 @@ func _tick_marks(delta: float) -> void:
 		if float(mark["remaining_duration"]) <= 0.0:
 			_remove_mark_at(index)
 			continue
+		mark = _tick_activation_damage_pulses(mark, delta)
 		_update_active_visual(mark)
 		_marks[index] = mark
 
@@ -240,7 +255,7 @@ func _update_active_visual(mark: Dictionary) -> void:
 	var visual = mark.get("visual", null)
 	if not visual is MeshInstance3D:
 		return
-	var duration := maxf(0.01, _activation_duration_seconds())
+	var duration := maxf(0.01, float(mark.get("activation_duration_seconds", _activation_duration_seconds(mark))))
 	var remaining_ratio := clampf(float(mark.get("remaining_duration", 0.0)) / duration, 0.0, 1.0)
 	(visual as MeshInstance3D).scale.y = maxf(0.35, remaining_ratio)
 
@@ -299,10 +314,40 @@ func _pulse_material(color: Color) -> StandardMaterial3D:
 	return material
 
 
-func _apply_activation_damage(mark: Dictionary) -> void:
+func _tick_activation_damage_pulses(mark: Dictionary, delta: float) -> Dictionary:
+	var pulses_remaining := int(mark.get("activation_damage_pulses_remaining", 0))
+	if pulses_remaining <= 0:
+		return mark
+	var interval := float(mark.get("activation_damage_tick_seconds", activation_damage_tick_seconds))
+	var tick_remaining := float(mark.get("damage_tick_remaining", interval)) - delta
+	while pulses_remaining > 0 and tick_remaining <= 0.0:
+		_apply_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
+		pulses_remaining -= 1
+		if pulses_remaining <= 0:
+			tick_remaining = 0.0
+			break
+		tick_remaining += interval
+	mark["activation_damage_pulses_remaining"] = pulses_remaining
+	mark["damage_tick_remaining"] = tick_remaining
+	return mark
+
+
+func _apply_activation_damage_pulse(mark: Dictionary) -> Dictionary:
+	var pulses_remaining := int(mark.get("activation_damage_pulses_remaining", 0))
+	if pulses_remaining <= 0:
+		return mark
+	_apply_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
+	pulses_remaining -= 1
+	mark["activation_damage_pulses_remaining"] = pulses_remaining
+	var interval := float(mark.get("activation_damage_tick_seconds", activation_damage_tick_seconds))
+	mark["damage_tick_remaining"] = interval if pulses_remaining > 0 else 0.0
+	return mark
+
+
+func _apply_activation_damage(mark: Dictionary, damage_scale: float = 1.0) -> void:
 	if _damage_model == null or _enemies_root == null:
 		return
-	var activation_damage := float(mark.get("activation_damage", 0.0))
+	var activation_damage := float(mark.get("activation_damage", 0.0)) * damage_scale
 	if activation_damage <= 0.0:
 		return
 	var radius := float(mark.get("radius", 0.0))
@@ -427,10 +472,51 @@ func _remove_mark_at(index: int) -> void:
 	_marks.remove_at(index)
 
 
-func _activation_duration_seconds() -> float:
+func _activation_duration_seconds(mark: Dictionary = {}) -> float:
+	return _activation_damage_window_seconds(mark) + activation_visual_grace_seconds
+
+
+func _activation_damage_window_seconds(mark: Dictionary = {}) -> float:
+	if not _uses_waxlight_activation_window(mark):
+		return 0.0
+	var base_window := ACTIVATION_BASE_WINDOW_SECONDS
 	if _upgrade_state != null and _upgrade_state.has_method("waxlight_active_duration_seconds"):
-		return _upgrade_state.waxlight_active_duration_seconds(base_activation_duration_seconds)
-	return base_activation_duration_seconds
+		base_window = _upgrade_state.waxlight_active_duration_seconds(ACTIVATION_BASE_WINDOW_SECONDS)
+	if _connected_activation_enabled(mark):
+		return base_window * CONNECTED_ACTIVATION_WINDOW_MULTIPLIER
+	return base_window
+
+
+func _activation_damage_tick_seconds(mark: Dictionary = {}) -> float:
+	if _connected_activation_enabled(mark):
+		return connected_activation_damage_tick_seconds
+	return activation_damage_tick_seconds
+
+
+func _activation_damage_pulse_count(mark: Dictionary = {}) -> int:
+	if mark.has("activation_damage_pulse_count") and int(mark["activation_damage_pulse_count"]) > 0:
+		return int(mark["activation_damage_pulse_count"])
+	if not _uses_waxlight_activation_window(mark):
+		return 1
+	return _tick_count_for_window(_activation_damage_window_seconds(mark), _activation_damage_tick_seconds(mark))
+
+
+func _activation_damage_scale(mark: Dictionary = {}) -> float:
+	if _connected_activation_enabled(mark):
+		return CONNECTED_ACTIVATION_DAMAGE_PULSE_SCALE
+	if not _uses_waxlight_activation_window(mark):
+		return 1.0
+	return ACTIVATION_DAMAGE_PULSE_SCALE
+
+
+func _tick_count_for_window(window_seconds: float, tick_seconds: float) -> int:
+	if window_seconds <= 0.0 or tick_seconds <= 0.0:
+		return 1
+	return int(floor(window_seconds / tick_seconds)) + 1
+
+
+func _uses_waxlight_activation_window(mark: Dictionary = {}) -> bool:
+	return mark.is_empty() or mark.get("source_id", &"") == &"waxlight_comet"
 
 
 func _unactivated_mark_cap() -> int:

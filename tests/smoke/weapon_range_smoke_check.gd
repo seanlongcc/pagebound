@@ -25,14 +25,14 @@ func _initialize() -> void:
 		_assert_true(is_equal_approx(upgrade_state.weapon_range_meters(&"waxlight_comet", base_range), base_range), "base weapon range must be unchanged before range upgrade", failures)
 
 	var before_damage := upgrade_state.weapon_damage(&"waxlight_comet", 5.0)
-	var before_cooldown := upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.95)
+	var before_cooldown := upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.9)
 	upgrade_state.apply_choice(&"new_weapon_waxlight_comet")
 	var range_event: Dictionary = upgrade_state.apply_choice(&"waxlight_range_plus")
 	_assert_true(not range_event.is_empty(), "Waxlight range upgrade card must apply", failures)
 	if upgrade_state.has_method("weapon_range_meters"):
 		_assert_true(is_equal_approx(upgrade_state.weapon_range_meters(&"waxlight_comet", base_range), base_range + 1.5), "Waxlight range upgrade must add exactly 1.5m", failures)
 	_assert_true(is_equal_approx(upgrade_state.weapon_damage(&"waxlight_comet", 5.0), before_damage), "range upgrade must not change weapon damage", failures)
-	_assert_true(is_equal_approx(upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.95), before_cooldown), "range upgrade must not change weapon cooldown", failures)
+	_assert_true(is_equal_approx(upgrade_state.weapon_cooldown_seconds(&"waxlight_comet", 0.9), before_cooldown), "range upgrade must not change weapon cooldown", failures)
 
 	var owner := Node3D.new()
 	owner.name = "RangeOwner"

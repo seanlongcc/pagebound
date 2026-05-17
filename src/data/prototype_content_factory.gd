@@ -250,7 +250,7 @@ func _waxlight_comet_weapon() -> Resource:
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_WAXLIGHT
 	weapon.dash_interaction_id = &"waxlight_dash_pulse"
 	weapon.base_damage = 45.0
-	weapon.base_cooldown_seconds = 0.95
+	weapon.base_cooldown_seconds = 0.9
 	weapon.base_mark_radius_meters = 0.98
 	weapon.base_range_meters = 6.5
 	return weapon
@@ -269,7 +269,7 @@ func _star_sticker_swarm_weapon() -> Resource:
 	weapon.pagecraft_material_tag = PAGECRAFT_TAG_STAR_STICKER
 	weapon.dash_interaction_id = &"sticker_dash_launch"
 	weapon.base_damage = 100.0
-	weapon.base_cooldown_seconds = 0.9
+	weapon.base_cooldown_seconds = 1.0
 	weapon.base_mark_radius_meters = 0.6
 	weapon.base_range_meters = 8.0
 	return weapon
@@ -380,7 +380,7 @@ func _fallback_upgrade_choices() -> Array[Resource]:
 	return [
 		_upgrade_choice(&"waxlight_damage_plus_1", "Waxlight damage +2", "Waxlight hits and active wax hit harder.", &"stat", &"waxlight_damage_plus_1", &"", &"", &"waxlight_damage", 2.0),
 		_upgrade_choice(&"waxlight_cooldown_minus_10", "Waxlight cooldown -0.25s", "Waxlight Comet fires more often.", &"stat", &"waxlight_cooldown_minus_10", &"", &"", &"waxlight_cooldown", -0.25),
-		_upgrade_choice(&"waxlight_duration_plus_1", "Waxlight duration +1s", "Activated wax stays dangerous longer.", &"stat", &"waxlight_duration_plus_1", &"", &"", &"waxlight_duration", 1.0),
+		_upgrade_choice(&"waxlight_duration_plus_1", "Waxlight duration +1s", "Active Waxlight marks tick longer before expiring.", &"stat", &"waxlight_duration_plus_1", &"", &"", &"waxlight_duration", 1.0),
 		_upgrade_choice(&"waxlight_mark_cap_plus_2", "Max unactivated wax +3", "More dormant wax marks can exist at once.", &"stat", &"waxlight_mark_cap_plus_2", &"", &"", &"waxlight_mark_cap", 3.0),
 		_upgrade_choice(&"player_max_hp_plus_10", "Player max HP +20", "Increase maximum HP and refill the new amount.", &"stat", &"player_max_hp_plus_10", &"", &"", &"player_max_hp", 20.0),
 	]

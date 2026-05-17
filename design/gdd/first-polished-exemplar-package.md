@@ -2,7 +2,7 @@
 
 > **Status**: Draft for implementation planning  
 > **Author**: Sean + Codex  
-> **Last Updated**: 2026-05-14  
+> **Last Updated**: 2026-05-16
 > **Implements Pillar**: The Page Is Alive, Power Fantasy First, Simple Controls  
 
 ## Purpose
@@ -22,7 +22,7 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md`; `design/gdd/mvp-weapon-c
 | Page Event | Color Well | Offscreen event, 60s timer, 15 kills inside circle. |
 | Enemy family | Waxlight Imps | Wax Imp basic chaser + Flicker Imp fast low-HP chaser. |
 | Mini-boss echo | Crownless Echo / Crownless Scribble | Killable mini-boss echo, not full final boss. |
-| HUD direction | Refined C | Top-left party, top-right exclusive event/boss banner, bottom XP, bottom-left level/pet badges, 5 weapons + 5 items. |
+| HUD direction | Refined C | Top-left kill counter, top-right exclusive event/boss banner, bottom XP, bottom-left level/pet badges, 5 weapons + 5 items. |
 
 ## First 5-Minute Target
 
@@ -46,8 +46,8 @@ Normal level-up drafts and Page Event reward drafts show exactly 3 cards.
 Normal draft card roll:
 
 1. Roll category per card:
-   - `90%` upgrade
-   - `10%` new gear
+   - `70%` upgrade
+   - `30%` new gear
 2. If the card rolls new gear:
    - `50%` new weapon
    - `50%` new item
@@ -109,7 +109,7 @@ Implications:
 
 HUD direction follows the approved `Refined C` prototype.
 
-- Top-left is reserved for future party/multiplayer friend status, but solo prototype placeholders stay hidden.
+- Top-left shows the solo kill counter. Future party/multiplayer friend status must share or intentionally replace that space.
 - Top-right is one exclusive banner slot. It shows Page Event state or boss state, never both.
 - Event banner shows percentage as primary progress, with count/timer secondary.
 - Boss banner shows HP percentage as primary progress, with boss name and health bar.

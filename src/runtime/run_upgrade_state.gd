@@ -2,6 +2,7 @@ class_name RunUpgradeState
 extends RefCounted
 
 const DraftChoicePickerScript := preload("res://src/runtime/draft_choice_picker.gd")
+const WeaponUpgradePoolScript := preload("res://src/runtime/weapon_upgrade_pool.gd")
 
 const WEAPON_WAXLIGHT_COMET := &"waxlight_comet"
 const WEAPON_STAR_STICKER_SWARM := &"star_sticker_swarm"
@@ -35,39 +36,17 @@ const COUNT_BY_RARITY := {
 	RARITY_EPIC: 2,
 	RARITY_LEGENDARY: 3,
 }
-const WEAPON_UPGRADE_TRACKS := {
-	WEAPON_WAXLIGHT_COMET: [
-		{"name": "Comet Hit", "scope": "base projectile", "stat": &"damage", "rarity": RARITY_COMMON, "note": "Scales direct comet hit."},
-		{"name": "Impact Radius", "scope": "AoE mark", "stat": &"size", "rarity": RARITY_COMMON, "note": "Scales Waxlight burst footprint."},
-		{"name": "Comet Cadence", "scope": "base projectile", "stat": &"cadence", "rarity": RARITY_COMMON, "note": "Waxlight Comet fires more often."},
-		{"name": "Dash Burst", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_UNCOMMON, "note": "L5 crossed marks burst harder."},
-		{"name": "Waxlight Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_RARE, "note": "Scales target range and any unlocked connected-mark reach."},
-		{"name": "Mark Cap", "scope": "AoE marks", "stat": &"active_cap", "rarity": RARITY_UNCOMMON, "note": "More unactivated Waxlight marks can wait on the page."},
-		{"name": "Burst Burn", "scope": "AoE mark", "stat": &"damage", "rarity": RARITY_RARE, "note": "Mark burst damage rises."},
-		{"name": "Comet Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_EPIC, "note": "Scales target range and any unlocked connected-mark reach."},
-		{"name": "Chain Burst", "scope": "connected marks", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 connected bursts hit harder."},
-	],
-	WEAPON_STAR_STICKER_SWARM: [
-		{"name": "Star Strike", "scope": "orbit star", "stat": &"damage", "rarity": RARITY_COMMON, "note": "Scales star contact hit."},
-		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_COMMON, "note": "Scales target range and any unlocked node ricochet range."},
-		{"name": "Star Node Cap", "scope": "Star node", "stat": &"active_cap", "rarity": RARITY_COMMON, "note": "Raises persistent Star node cap."},
-		{"name": "Ricochet Hit", "scope": "node ricochet", "stat": &"damage", "rarity": RARITY_UNCOMMON, "note": "L5 node ricochet damage."},
-		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_UNCOMMON, "note": "Scales target range and any unlocked node ricochet range."},
-		{"name": "Extra Stars", "scope": "orbit star", "stat": &"effect_count", "rarity": RARITY_RARE, "note": "Adds orbiting stars."},
-		{"name": "Star Node Cap", "scope": "Star node", "stat": &"active_cap", "rarity": RARITY_RARE, "note": "Raises persistent Star node cap again."},
-		{"name": "Star Reach", "scope": "weapon range", "stat": &"range", "rarity": RARITY_EPIC, "note": "Scales target range and any unlocked node ricochet range."},
-		{"name": "Dash Volley", "scope": "dash payoff", "stat": &"damage", "rarity": RARITY_RARE, "note": "L10 node-fired stars inherit stronger Star damage."},
-	],
-}
-
 var _content_factory
 var _draft_picker = DraftChoicePickerScript.new()
+var _weapon_upgrade_pool = WeaponUpgradePoolScript.new()
 var _owned_weapon_levels: Dictionary = {}
 var _owned_passive_levels: Dictionary = {}
 var _weapon_stat_bonuses: Dictionary = {}
 var _weapon_range_bonuses: Dictionary = {}
 var _weapon_applied_upgrades: Dictionary = {}
-var _draft_seed := 1337
+var _pending_weapon_upgrade_choices: Dictionary = {}
+var _draft_seed := 0
+var _draft_seed_locked := false
 var _player_health_ratio := 1.0
 var _starter_weapon_id := WEAPON_STAR_STICKER_SWARM
 
@@ -81,11 +60,14 @@ func configure(content_factory) -> void:
 
 
 func reset() -> void:
+	if not _draft_seed_locked:
+		_draft_seed = _fresh_draft_seed()
 	_owned_weapon_levels = {_starter_weapon_id: 1}
 	_owned_passive_levels = {}
 	_weapon_stat_bonuses = {}
 	_weapon_range_bonuses = {}
 	_weapon_applied_upgrades = {}
+	_pending_weapon_upgrade_choices = {}
 	_player_health_ratio = 1.0
 
 
@@ -118,7 +100,9 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 	if choice_text.begins_with("new_weapon_"):
 		return _add_weapon(choice_id, StringName(choice_text.substr(11)))
 	if choice_text.begins_with("weapon_upgrade_"):
-		return _apply_weapon_level_upgrade(choice_id, StringName(choice_text.substr(15)))
+		if _pending_weapon_upgrade_choices.has(choice_id):
+			return _apply_weapon_level_upgrade_choice(_pending_weapon_upgrade_choices[choice_id])
+		return _apply_weapon_level_upgrade(choice_id, _weapon_id_from_upgrade_choice(choice_id))
 	if choice_text.begins_with("new_passive_"):
 		return _add_passive(choice_id, StringName(choice_text.substr(12)))
 	if choice_text.begins_with("passive_upgrade_"):
@@ -273,6 +257,7 @@ func passive_level(passive_id: StringName) -> int:
 
 func debug_set_draft_seed(seed: int) -> void:
 	_draft_seed = seed
+	_draft_seed_locked = true
 
 
 func debug_rarity_weights() -> Dictionary:
@@ -285,19 +270,27 @@ func debug_rarity_weights() -> Dictionary:
 	}
 
 
-func debug_eligible_choices_for_level(_run_level: int) -> Array[Dictionary]:
+func debug_eligible_choices_for_level(run_level: int) -> Array[Dictionary]:
 	var choices: Array[Dictionary] = []
-	for bucket in _legal_draft_choice_buckets().values():
+	for bucket in _legal_draft_choice_buckets(run_level).values():
 		for choice in bucket:
 			choices.append(choice)
 	return choices
 
 
+func debug_weapon_upgrade_choice_id(weapon_id: StringName, stat_id: StringName) -> StringName:
+	for choice in _weapon_level_choices(weapon_id, _weapon_level(weapon_id) + 1):
+		if choice.get("stat_id", &"") == stat_id:
+			return choice.get("id", &"")
+	return &""
+
+
 func _draft_choices(run_level: int, guarantee_new_gear: bool) -> Array[Dictionary]:
-	return _draft_picker.normal_choices(_legal_draft_choice_buckets(), DRAFT_CHOICE_COUNT, _draft_seed_for_level(run_level), guarantee_new_gear)
+	_pending_weapon_upgrade_choices = {}
+	return _draft_picker.normal_choices(_legal_draft_choice_buckets(run_level), DRAFT_CHOICE_COUNT, _draft_seed_for_level(run_level), guarantee_new_gear)
 
 
-func _legal_draft_choice_buckets() -> Dictionary:
+func _legal_draft_choice_buckets(run_level: int = 0) -> Dictionary:
 	var buckets := {
 		&"new_weapon": [],
 		&"new_passive": [],
@@ -316,8 +309,7 @@ func _legal_draft_choice_buckets() -> Dictionary:
 				buckets[&"passive_upgrade"].append(_passive_upgrade_choice(passive))
 	for weapon_id in owned_weapon_ids():
 		if _weapon_level(weapon_id) < 10:
-			var weapon_choice := _weapon_level_choice(weapon_id)
-			if not weapon_choice.is_empty():
+			for weapon_choice in _weapon_level_choices(weapon_id, run_level):
 				buckets[&"weapon_upgrade"].append(weapon_choice)
 	if buckets[&"new_weapon"].is_empty() and buckets[&"new_passive"].is_empty() and buckets[&"weapon_upgrade"].is_empty() and buckets[&"passive_upgrade"].is_empty():
 		buckets[&"overflow"] = _fallback_choices()
@@ -345,24 +337,36 @@ func _new_weapon_choice(weapon: Resource) -> Dictionary:
 	)
 
 
-func _weapon_level_choice(weapon_id: StringName) -> Dictionary:
+func _weapon_level_choices(weapon_id: StringName, run_level: int) -> Array[Dictionary]:
+	var choices: Array[Dictionary] = []
 	var weapon := _weapon_data(weapon_id)
-	var upgrade := _next_weapon_upgrade(weapon_id)
+	if weapon == null:
+		return choices
+	var pool: Array = _weapon_upgrade_pool.pool_for(weapon_id, _weapon_level(weapon_id))
+	for option_index in pool.size():
+		var choice := _weapon_level_choice(weapon, pool[option_index], option_index, run_level)
+		if not choice.is_empty():
+			choices.append(choice)
+			_pending_weapon_upgrade_choices[choice["id"]] = choice
+	return choices
+
+
+func _weapon_level_choice(weapon: Resource, upgrade: Dictionary, option_index: int, run_level: int) -> Dictionary:
 	if weapon == null or upgrade.is_empty():
 		return {}
-	var current := _weapon_level(weapon_id)
+	var current := _weapon_level(weapon.id)
 	var next_level := mini(10, current + 1)
-	var rarity: StringName = upgrade["rarity"]
+	var rarity := _weapon_upgrade_pool.rolled_rarity(_draft_seed_for_level(run_level), weapon.id, option_index, current)
 	var stat: StringName = upgrade["stat"]
 	var value: float = _upgrade_value_for_stat(stat, rarity)
 	return _choice(
-		StringName("weapon_upgrade_%s" % String(weapon_id)),
+		StringName("weapon_upgrade_%s_%d_%s" % [String(weapon.id), option_index, String(rarity)]),
 		"%s: %s" % [weapon.display_name, upgrade["name"]],
 		"%s %s +%s" % [upgrade["scope"], _stat_label(stat), _value_label(stat, value)],
 		upgrade["note"],
 		&"weapon_upgrade",
 		rarity,
-		weapon_id,
+		weapon.id,
 		&"",
 		stat,
 		float(value),
@@ -454,22 +458,34 @@ func _add_weapon(choice_id: StringName, weapon_id: StringName) -> Dictionary:
 func _apply_weapon_level_upgrade(choice_id: StringName, weapon_id: StringName) -> Dictionary:
 	if not _owned_weapon_levels.has(weapon_id) or _weapon_level(weapon_id) >= 10:
 		return {}
-	var upgrade := _next_weapon_upgrade(weapon_id)
-	if upgrade.is_empty():
+	var choices := _weapon_level_choices(weapon_id, _weapon_level(weapon_id) + 1)
+	if choices.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _draft_seed_for_level(_weapon_level(weapon_id) + 1) + String(weapon_id).hash()
+	var choice := choices[rng.randi_range(0, choices.size() - 1)]
+	choice["id"] = choice_id
+	return _apply_weapon_level_upgrade_choice(choice)
+
+
+func _apply_weapon_level_upgrade_choice(choice: Dictionary) -> Dictionary:
+	var weapon_id: StringName = choice.get("weapon_id", &"")
+	if not _owned_weapon_levels.has(weapon_id) or _weapon_level(weapon_id) >= 10:
 		return {}
 	_owned_weapon_levels[weapon_id] = mini(10, _weapon_level(weapon_id) + 1)
-	var stat: StringName = upgrade["stat"]
-	var value: float = _upgrade_value_for_stat(stat, upgrade["rarity"])
+	var stat: StringName = choice.get("stat_id", &"")
+	var value := float(choice.get("value", 0.0))
 	_add_weapon_stat_bonus(weapon_id, stat, value)
-	_add_weapon_applied_upgrade(weapon_id, "%s (%s %s)" % [upgrade["name"], upgrade["scope"], _stat_label(stat)])
+	_add_weapon_applied_upgrade(weapon_id, "%s (%s %s)" % [choice.get("title", "Weapon Upgrade"), choice.get("stat_line", ""), choice.get("rarity_label", "")])
 	return {
-		"choice_id": choice_id,
+		"choice_id": choice.get("id", &""),
 		"weapon_id": weapon_id,
 		"weapon_level": _weapon_level(weapon_id),
-		"upgrade_name": upgrade["name"],
-		"upgrade_scope": upgrade["scope"],
+		"upgrade_name": choice.get("title", "Weapon Upgrade"),
+		"upgrade_scope": choice.get("stat_line", ""),
 		"stat_id": stat,
 		"value": value,
+		"rarity": choice.get("rarity", &"common"),
 	}
 
 
@@ -509,14 +525,8 @@ func _passive_event(choice_id: StringName, passive_id: StringName, is_new: bool)
 	return event
 
 
-func _next_weapon_upgrade(weapon_id: StringName) -> Dictionary:
-	var track: Array = WEAPON_UPGRADE_TRACKS.get(weapon_id, [])
-	if track.is_empty():
-		return {}
-	var index := clampi(_weapon_level(weapon_id) - 1, 0, track.size() - 1)
-	if index >= track.size():
-		return {}
-	return (track[index] as Dictionary).duplicate(true)
+func _weapon_id_from_upgrade_choice(choice_id: StringName) -> StringName:
+	return _weapon_upgrade_pool.weapon_id_from_choice(choice_id)
 
 
 func _upgrade_value_for_stat(stat: StringName, rarity: StringName) -> float:
@@ -634,6 +644,12 @@ func _fallback_choices() -> Array[Dictionary]:
 
 func _draft_seed_for_level(run_level: int) -> int:
 	return _draft_seed + run_level * 7919 + _owned_weapon_levels.size() * 397 + _owned_passive_levels.size() * 53
+
+
+func _fresh_draft_seed() -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	return rng.randi_range(1, 2147483647)
 
 
 func _category_label(choice_type: StringName) -> String:

@@ -15,6 +15,7 @@ func ensure_hud(hud: Control) -> void:
 	_hud.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_remove_old_debug_label()
 	_ensure_party_reserve()
+	_ensure_kill_counter()
 	_ensure_run_timer()
 	_ensure_top_right_banner()
 	_ensure_event_marker()
@@ -38,6 +39,7 @@ func update_hud(context: Dictionary) -> void:
 		return
 	_update_hp(context)
 	_update_dash(context)
+	_update_kill_counter(context)
 	_update_run_timer(context)
 	_update_banner(context)
 	_update_event_marker(context)
@@ -119,6 +121,23 @@ func _ensure_party_reserve() -> void:
 	var row := _hud.get_node_or_null("PartyReserve") as CanvasItem
 	if row != null:
 		row.visible = false
+
+
+func _ensure_kill_counter() -> void:
+	if _hud.get_node_or_null("KillCounter") != null:
+		return
+	var counter := Label.new()
+	counter.name = "KillCounter"
+	counter.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	counter.offset_left = 24.0
+	counter.offset_top = 20.0
+	counter.offset_right = 150.0
+	counter.offset_bottom = 54.0
+	counter.add_theme_font_size_override("font_size", 20)
+	counter.add_theme_color_override("font_color", Color(0.05, 0.035, 0.02, 1.0))
+	counter.add_theme_color_override("font_outline_color", Color(1.0, 0.92, 0.76, 0.9))
+	counter.add_theme_constant_override("outline_size", 2)
+	_hud.add_child(counter)
 
 
 func _ensure_run_timer() -> void:
@@ -372,6 +391,12 @@ func _update_dash(context: Dictionary) -> void:
 	var dash_bar := _find_named(_hud, "DashProgress") as ProgressBar
 	if dash_bar != null:
 		dash_bar.value = percent
+
+
+func _update_kill_counter(context: Dictionary) -> void:
+	var counter := _hud.get_node_or_null("KillCounter") as Label
+	if counter != null:
+		counter.text = "Kills %d" % int(context.get("enemies_defeated", 0))
 
 
 func _update_run_timer(context: Dictionary) -> void:

@@ -792,7 +792,7 @@ Target pacing is:
 | 15:00 | Third Page Event. Build identity should be clear. |
 | 20:00 | Fourth Page Event. First maxed items/weapons may appear for strong runs. |
 | 25:00 | Fifth Page Event. Build should be near core-complete. |
-| 30:00 | Boss/finale starts or queues if an event is active. Strong-build targets need remeasurement under the `90/10` draft model. |
+| 30:00 | Boss/finale starts or queues if an event is active. Strong-build targets need remeasurement under the `70/30` draft model. |
 
 ### Upgrade Drafts
 
@@ -819,8 +819,8 @@ A draft card can be:
 
 Normal level-up drafts roll each card independently:
 
-- `90%` upgrade.
-- `10%` new gear.
+- `70%` upgrade.
+- `30%` new gear.
 
 New gear rolls split:
 
@@ -848,7 +848,7 @@ When the player chooses a new weapon:
 - It adds its material tags to the player's build profile.
 - It can later be upgraded through level-up cards and Page Event reward cards.
 
-Normal strong-run weapon ownership pacing must be remeasured after the `90/10` draft model is implemented.
+Normal strong-run weapon ownership pacing must be remeasured after the `70/30` draft model is implemented.
 
 ### Weapon Upgrade Rules
 
@@ -933,12 +933,12 @@ A typical successful run might look like this:
 | Time | Example Progression |
 |---:|---|
 | 0:00 | Waxlight Knight starts with Waxlight Comet Lv. 1 and Dog pet. |
-| 5:00 | First Page Event spawns. Build state depends on normal `90/10` gear rolls and event reward success. |
+| 5:00 | First Page Event spawns. Build state depends on normal `70/30` gear rolls and event reward success. |
 | 10:00 | Second Page Event spawns. Build state continues through normal drafts and event gear guarantees. |
 | 15:00 | Waxlight Comet approaches high level. Candle Spark or another item approaches level 5. |
-| 20:00 | Fourth Page Event spawns. Weapon/item ownership pacing is tuning-owned under the `90/10` model. |
+| 20:00 | Fourth Page Event spawns. Weapon/item ownership pacing is tuning-owned under the `70/30` model. |
 | 25:00 | Fifth Page Event spawns. Build should be near its tuned core. |
-| 30:00 | Boss appears or queues if an event is active. Strong-build item/weapon/evolution counts need remeasurement under the `90/10` draft model. |
+| 30:00 | Boss appears or queues if an event is active. Strong-build item/weapon/evolution counts need remeasurement under the `70/30` draft model. |
 | 32:00+ | Strong build kills the boss, or the run continues into endless rules if selected. |
 
 ## 10. Damage Numbers
@@ -1072,6 +1072,7 @@ Each weapon has **10 levels**.
 - Level 10: capstone and evolution eligibility plus one upgrade card.
 - Weapon level is upgrade-count progress only. It must not apply hidden baseline stat growth.
 - Base weapon stats remain fixed unless a selected upgrade card, item, evolution, or explicit effect modifies them.
+- Weapon upgrade pools define eligible stat/scope options only; upgrade cards are not pinned to fixed level rows, fixed rarities, or fixed values.
 - Range can also be upgraded by separate one-stat draft cards. A range card must not bundle damage, projectile count, cooldown, or level increases.
 
 ### MVP Weapon Pool
@@ -1126,7 +1127,7 @@ Do not duplicate the item row table in this root document. Update `design/gdd/mv
 | Epic | 3 | 5 |
 | Legendary | 1 | 1 |
 
-- Find rarity is inactive future tuning metadata under the current approved `90/10` draft canon.
+- Find rarity is inactive future tuning metadata under the current approved `70/30` draft canon.
 - Owned item upgrade cards grant fixed +1 item level.
 - Normal passive items have 2 catalyst tags.
 - `Foundational Keepsake` is Legendary and has all 10 MVP catalyst families at level 5.
@@ -3744,7 +3745,7 @@ The draft generator should weight toward useful build construction.
 
 Normal level-up drafts:
 
-- Roll each card as `90%` upgrade or `10%` new gear.
+- Roll each card as `70%` upgrade or `30%` new gear.
 - New gear splits `50%` weapon and `50%` item before legality redirects.
 - Upgrades split `50%` weapon and `50%` item before legality redirects.
 - There are no fixed weapon-only draft levels.
@@ -3828,7 +3829,7 @@ The MVP director uses Vampire Survivors-inspired time waves: each minute resolve
 
 Opening uses a readability grace ramp: minimum alive starts at `8` at 0:00, ramps to the normal `25` by 1:00, and does not pressure-spawn above that grace minimum during the first minute. This keeps the opening low density while preserving the uncondensed 30-minute curve anchors.
 
-Prototype combat uses the 1000 HP player baseline: opening Wax Imp base health is `70`, Flicker Imp base health is `45`, starter Star Sticker Swarm damage is `100` with `0.9s` cooldown and `8.0m` target range, Waxlight Comet base damage is `45` with `0.95s` cooldown and `6.5m` target range, normal contact damage is `90`, and basic/fast enemy XP remains `5`. Waxlight Comet impact AoE applies full current weapon damage to every enemy inside the AoE, including secondary targets. Prototype enemy health pressure scales from `1.0x` at 0:00 to `8.0x` at 30:00 using an eased curve while authored base health and weapon damage remain the readable per-enemy/per-weapon anchors.
+Prototype combat uses the 1000 HP player baseline: opening Wax Imp base health is `70`, Flicker Imp base health is `45`, starter Star Sticker Swarm damage is `100` with `1.0s` cooldown and `8.0m` target range, Waxlight Comet base damage is `45` with `0.9s` cooldown and `6.5m` target range, normal contact damage is `90`, and basic/fast enemy XP remains `5`. Waxlight Comet impact AoE applies full current weapon damage to every enemy inside the AoE, including secondary targets. Prototype enemy health pressure scales from `1.0x` at 0:00 to `8.0x` at 30:00 using an eased curve while authored base health and weapon damage remain the readable per-enemy/per-weapon anchors.
 
 | Time | Min Alive | Base Spawn Interval | Target Kills/Sec |
 |---:|---:|---:|---:|
@@ -4181,6 +4182,7 @@ Required HUD elements:
 
 - Player HP, large enough to read while fighting.
 - Run timer.
+- Top-left kill counter.
 - Full-width bottom XP bar with percentage on the bar.
 - Run level at bottom-left.
 - Dash charges/recharge.
@@ -4193,7 +4195,7 @@ Required HUD elements:
 - Damage numbers in world space.
 - Pigment/Treat pickups as reward feedback.
 
-Top-left HUD space is reserved for party/multiplayer ally portraits and ally state. The weapon/item toolbar shows 5 weapon slots and 5 passive item slots. Pets do not occupy toolbar slots.
+Top-left HUD space shows the solo kill counter in the current prototype. Future party/multiplayer ally portraits must share or intentionally replace that space. The weapon/item toolbar shows 5 weapon slots and 5 passive item slots. Pets do not occupy toolbar slots.
 
 ### 43.3 Level-Up Draft UI
 

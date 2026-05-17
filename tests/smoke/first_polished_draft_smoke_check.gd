@@ -19,8 +19,7 @@ func _initialize() -> void:
 
 	var normal_choices: Array[Dictionary] = state.prototype_choices_for_level(2)
 	_assert_true(normal_choices.size() == 3, "normal draft must show exactly 3 choices", failures)
-	_assert_true(_contains_new_gear(normal_choices), "expanded normal draft may offer legal second-batch gear", failures)
-	_assert_true(_contains_choice_id(normal_choices, &"new_weapon_waxlight_comet") or _contains_any_requested_passive(normal_choices), "expanded pool must use authored Waxlight/passive gear, not fixed weapon-pick levels", failures)
+	_assert_true(_choices_stay_in_current_pool(normal_choices), "normal draft must stay inside authored current pool", failures)
 	_assert_choices_have_unique_tags(normal_choices, failures)
 
 	if state.has_method("page_event_reward_choices"):
@@ -75,6 +74,15 @@ func _contains_any_requested_passive(choices: Array[Dictionary]) -> bool:
 		if _contains_target(choices, &"passive", passive_id):
 			return true
 	return false
+
+
+func _choices_stay_in_current_pool(choices: Array[Dictionary]) -> bool:
+	for choice in choices:
+		var id := String(choice.get("id", &""))
+		if id.begins_with("weapon_upgrade_") or id == "new_weapon_waxlight_comet" or id.begins_with("new_passive_") or id.begins_with("passive_upgrade_"):
+			continue
+		return false
+	return true
 
 
 func _contains_target(choices: Array[Dictionary], choice_type: StringName, target_id: StringName) -> bool:

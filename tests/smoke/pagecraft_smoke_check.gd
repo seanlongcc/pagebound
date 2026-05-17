@@ -45,6 +45,10 @@ func _initialize() -> void:
 	if player != null and manager != null and manager.has_method("debug_first_mark_position"):
 		for _upgrade in 4:
 			runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+		if enemy != null:
+			var health := enemy.get_node_or_null("HealthComponent")
+			if health != null and health.has_method("configure"):
+				health.configure(&"pagecraft_l5_smoke_enemy", 1000.0, &"enemy")
 		if weapon_manager != null and enemy != null:
 			weapon_manager.debug_fire_weapon_at(&"waxlight_comet", enemy)
 		await process_frame

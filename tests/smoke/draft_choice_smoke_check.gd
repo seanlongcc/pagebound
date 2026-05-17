@@ -100,7 +100,7 @@ func _assert_choice_texts(level_up_screen: Node, failures: Array[String]) -> voi
 	_assert_true(not _buttons_contain_text(buttons, "Slot"), "draft cards must omit slot-fill state to reduce clutter", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Evolves"), "draft cards must omit evolution hints because tags carry compatibility", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Waxlight Comet +1"), "weapon upgrade cards must name the specific upgraded stat/scope", failures)
-	_assert_true(_buttons_contain_text(buttons, "Waxlight Comet") or _buttons_contain_text(buttons, "Candle Spark") or _buttons_contain_text(buttons, "Cloud Seed") or _buttons_contain_text(buttons, "Dream Thread") or _buttons_contain_text(buttons, "Ribbon Spool") or _buttons_contain_text(buttons, "Moon Button"), "normal draft must include legal new gear from expanded pool when rolled", failures)
+	_assert_true(_buttons_contain_text(buttons, "Star Sticker Swarm") or _buttons_contain_text(buttons, "Waxlight Comet") or _buttons_contain_text(buttons, "Candle Spark") or _buttons_contain_text(buttons, "Cloud Seed") or _buttons_contain_text(buttons, "Dream Thread") or _buttons_contain_text(buttons, "Ribbon Spool") or _buttons_contain_text(buttons, "Moon Button"), "normal draft must stay inside current authored pool", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Dreamsap Glob"), "first package draft must not include old Dreamsap weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Color Bloom"), "first package draft must not include old Color Bloom weapon", failures)
 	_assert_true(not _buttons_contain_text(buttons, "Paper Plane Dart"), "weapon-pick draft must not include non-GDD Paper Plane Dart weapon", failures)

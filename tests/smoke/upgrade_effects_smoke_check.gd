@@ -29,6 +29,7 @@ func _initialize() -> void:
 	var upgrade_events: Array[Dictionary] = []
 
 	_assert_true(runtime != null and runtime.has_method("debug_focus_draft_choice_index"), "runtime must expose draft focus helper", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"), "runtime must expose selected weapon stat upgrade helper", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_waxlight_damage_bonus"), "runtime must expose Waxlight damage bonus", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_waxlight_cooldown_multiplier"), "runtime must expose Waxlight cooldown multiplier", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_next_hit_damage"), "weapon manager must expose next hit damage", failures)
@@ -48,8 +49,8 @@ func _initialize() -> void:
 		base_star_damage = weapon_manager.debug_weapon_damage(&"star_sticker_swarm")
 	if weapon_manager != null and weapon_manager.has_method("debug_star_orbit_count"):
 		base_star_count = weapon_manager.debug_star_orbit_count()
-	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
+	if runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"):
+		runtime.debug_apply_weapon_upgrade_stat(&"star_sticker_swarm", &"damage")
 		await physics_frame
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
 		_assert_true(weapon_manager.debug_weapon_damage(&"star_sticker_swarm") > base_star_damage, "Star Sticker upgrade must increase its scoped stat", failures)
@@ -58,12 +59,8 @@ func _initialize() -> void:
 	var damage_after_star_damage := 0.0
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
 		damage_after_star_damage = weapon_manager.debug_weapon_damage(&"star_sticker_swarm")
-	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
+	if runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"):
+		runtime.debug_apply_weapon_upgrade_stat(&"star_sticker_swarm", &"effect_count")
 		await physics_frame
 	if weapon_manager != null and weapon_manager.has_method("debug_weapon_damage"):
 		_assert_true(weapon_manager.debug_weapon_damage(&"star_sticker_swarm") >= damage_after_star_damage, "later Star Sticker upgrades must preserve prior damage", failures)
@@ -81,8 +78,8 @@ func _initialize() -> void:
 	if runtime != null and runtime.has_method("debug_waxlight_damage_bonus"):
 		_assert_true(runtime.debug_waxlight_damage_bonus() == 0.0, "newly acquired Waxlight must not inherit Star damage bonus", failures)
 
-	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	if runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"):
+		runtime.debug_apply_weapon_upgrade_stat(&"waxlight_comet", &"damage")
 		await process_frame
 	if runtime != null and runtime.has_method("debug_waxlight_damage_bonus"):
 		_assert_true(runtime.debug_waxlight_damage_bonus() > 0.0, "specific Waxlight damage upgrade must add runtime damage", failures)
@@ -102,6 +99,9 @@ func _initialize() -> void:
 			runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
 			await physics_frame
 
+	var upgraded_waxlight_damage := base_damage
+	if weapon_manager != null and weapon_manager.has_method("debug_next_hit_damage"):
+		upgraded_waxlight_damage = weapon_manager.debug_next_hit_damage()
 	var dash_seed := _spawn_victim(enemies_root, "UpgradeDashMarkSeed", player.global_position + Vector3.RIGHT * 1.4, base_damage * 3.0)
 	if weapon_manager != null and weapon_manager.has_method("debug_fire_at"):
 		weapon_manager.debug_fire_at(dash_seed)
@@ -116,11 +116,32 @@ func _initialize() -> void:
 		await process_frame
 		for activation_frame in 25:
 			await physics_frame
-	if dash_victim != null:
-		var dash_health := dash_victim.get_node("HealthComponent")
-		_assert_true(dash_health.current_health <= base_damage * 2.0, "upgraded Waxlight mark activation must damage enemy with upgraded profile", failures)
-	if pagecraft_manager != null and pagecraft_manager.has_method("debug_last_activation_damage"):
-		_assert_true(pagecraft_manager.debug_last_activation_damage() >= base_damage, "upgraded Waxlight activation damage amount must use same damage profile", failures)
+		if dash_victim != null:
+			var dash_health := dash_victim.get_node("HealthComponent")
+			_assert_true(dash_health.current_health < dash_health.max_health, "upgraded Waxlight mark activation must damage enemy with upgraded profile", failures)
+		if pagecraft_manager != null and pagecraft_manager.has_method("debug_last_activation_damage"):
+			var expected_l5_activation_tick := upgraded_waxlight_damage * 0.35
+			var actual_l5_activation_tick: float = pagecraft_manager.debug_last_activation_damage()
+			_assert_true(absf(actual_l5_activation_tick - expected_l5_activation_tick) <= 0.01, "upgraded L5 Waxlight activation tick must use 35% of the upgraded profile", failures)
+
+	if enemies_root != null:
+		_clear_children(enemies_root)
+	if runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"):
+		runtime.debug_apply_weapon_upgrade_stat(&"waxlight_comet", &"effect_count")
+		await physics_frame
+	var comet_primary := _spawn_victim(enemies_root, "WaxlightCountPrimary", player.global_position + Vector3.RIGHT * 1.2, base_damage * 4.0)
+	var comet_secondary := _spawn_victim(enemies_root, "WaxlightCountSecondary", player.global_position + Vector3.LEFT * 1.2, base_damage * 4.0)
+	var waxlight_hits_before := 0
+	if weapon_manager != null and weapon_manager.has_method("debug_weapon_hit_count"):
+		waxlight_hits_before = weapon_manager.debug_weapon_hit_count(&"waxlight_comet")
+	if weapon_manager != null and weapon_manager.has_method("debug_fire_at"):
+		weapon_manager.debug_fire_at(comet_primary)
+		await process_frame
+	if comet_primary != null and comet_secondary != null:
+		_assert_true(comet_primary.get_node("HealthComponent").current_health < comet_primary.get_node("HealthComponent").max_health, "Waxlight count upgrade must still hit the primary target", failures)
+		_assert_true(comet_secondary.get_node("HealthComponent").current_health < comet_secondary.get_node("HealthComponent").max_health, "Waxlight effect_count upgrade must fire an extra comet at another enemy", failures)
+	if weapon_manager != null and weapon_manager.has_method("debug_weapon_hit_count"):
+		_assert_true(weapon_manager.debug_weapon_hit_count(&"waxlight_comet") >= waxlight_hits_before + 2, "Waxlight effect_count upgrade must register multiple comet hits per cast", failures)
 	_assert_true(upgrade_events.size() >= 7, "each selected draft/direct choice must emit upgrade applied event", failures)
 
 	root.queue_free()
@@ -149,6 +170,14 @@ func _spawn_victim(enemies_root: Node, node_name: String, position: Vector3, max
 	victim.add_child(health)
 	health.configure(StringName(node_name.to_snake_case()), max_health, &"enemy")
 	return victim
+
+
+func _clear_children(root: Node) -> void:
+	if root == null:
+		return
+	for child in root.get_children():
+		root.remove_child(child)
+		child.queue_free()
 
 
 func _load_main(failures: Array[String]) -> Node:

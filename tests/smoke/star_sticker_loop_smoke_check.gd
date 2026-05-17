@@ -249,8 +249,12 @@ func _setup_run(failures: Array[String]) -> Dictionary:
 
 
 func _advance_star_to_level(runtime: Node, target_level: int) -> void:
-	for _upgrade in maxi(0, target_level - 1):
-		runtime.debug_apply_upgrade_choice(STAR_UPGRADE_ID)
+	var safe_stats := [&"damage", &"range", &"active_cap"]
+	for upgrade_index in maxi(0, target_level - 1):
+		if runtime.has_method("debug_apply_weapon_upgrade_stat"):
+			runtime.debug_apply_weapon_upgrade_stat(STAR_WEAPON_ID, safe_stats[upgrade_index % safe_stats.size()])
+		else:
+			runtime.debug_apply_upgrade_choice(STAR_UPGRADE_ID)
 		await physics_frame
 
 

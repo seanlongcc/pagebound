@@ -29,6 +29,7 @@ func _initialize() -> void:
 
 	_assert_true(player != null and player.has_method("debug_integrate"), "player must exist for dash activation", failures)
 	_assert_true(runtime != null and runtime.has_method("debug_apply_upgrade_choice"), "runtime must expose upgrade helper", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"), "runtime must expose selected weapon stat upgrade helper", failures)
 	_assert_true(weapon_manager != null and weapon_manager.has_method("debug_fire_weapon_at"), "weapon manager must expose selected fire helper", failures)
 	_assert_true(manager != null and manager.has_method("debug_first_mark_position"), "Pagecraft manager must expose mark position", failures)
 	_assert_true(manager != null and manager.has_method("debug_activation_damage_count"), "Pagecraft manager must expose activation damage count", failures)
@@ -68,8 +69,8 @@ func _initialize() -> void:
 	_assert_true(locked_health.current_health == locked_health.max_health, "L1-L4 Waxlight dash must not activate nonexistent marks before dash payoff unlock", failures)
 	_assert_true(manager.debug_activation_damage_count() == 0, "locked Waxlight dash must not record activation damage", failures)
 
-	for _upgrade in 4:
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	for safe_stat in [&"damage", &"range", &"effect_count", &"active_cap"]:
+		runtime.debug_apply_weapon_upgrade_stat(&"waxlight_comet", safe_stat)
 		await physics_frame
 	manager.debug_clear_marks()
 	var l5_seed := _spawn_victim(enemies_root, "WaxlightL5MarkSeed", (player as Node3D).global_position + Vector3.RIGHT * 1.2, 200.0)
@@ -94,25 +95,46 @@ func _initialize() -> void:
 		_assert_true(damage_manager.debug_presented_count() > damage_numbers_before, "dash activation damage must show active damage number", failures)
 	_assert_true(_has_waxlight_pulse(root), "dash activation must leave primitive Waxlight pulse visual", failures)
 
-	for _upgrade in 5:
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
+	var safe_l10_stats := [&"damage", &"range", &"effect_count", &"active_cap", &"damage"]
+	for stat in safe_l10_stats:
+		runtime.debug_apply_weapon_upgrade_stat(&"waxlight_comet", stat)
 		await physics_frame
 	manager.debug_clear_marks()
 	manager.debug_deposit_test_mark(Vector3.ZERO)
 	manager.debug_deposit_test_mark(Vector3(1.3, 0.0, 0.0))
 	manager.debug_deposit_test_mark(Vector3(4.5, 0.0, 0.0))
-	var connected_a := _spawn_victim(enemies_root, "WaxlightConnectedA", Vector3.ZERO, 200.0)
-	var connected_b := _spawn_victim(enemies_root, "WaxlightConnectedB", Vector3(1.3, 0.0, 0.0), 200.0)
-	var disconnected := _spawn_victim(enemies_root, "WaxlightDisconnected", Vector3(4.5, 0.0, 0.0), 200.0)
+	var connected_a := _spawn_victim(enemies_root, "WaxlightConnectedA", Vector3.ZERO, 20.0)
+	var connected_b := _spawn_victim(enemies_root, "WaxlightConnectedB", Vector3(1.3, 0.0, 0.0), 20.0)
+	var third_second_connected := _spawn_victim(enemies_root, "WaxlightThirdSecondConnected", Vector3(8.0, 0.0, 0.0), 20.0)
+	var late_connected := _spawn_victim(enemies_root, "WaxlightLateConnected", Vector3(8.0, 0.0, 0.0), 20.0)
+	var disconnected := _spawn_victim(enemies_root, "WaxlightDisconnected", Vector3(4.5, 0.0, 0.0), 20.0)
 	var connected_a_health := connected_a.get_node("HealthComponent")
 	var connected_b_health := connected_b.get_node("HealthComponent")
+	var third_second_connected_health := third_second_connected.get_node("HealthComponent")
+	var late_connected_health := late_connected.get_node("HealthComponent")
 	var disconnected_health := disconnected.get_node("HealthComponent")
 	manager.activate_path(Vector3(-0.2, 0.0, 0.0), Vector3(0.2, 0.0, 0.0))
 	await process_frame
 	await physics_frame
-	_assert_true(connected_a_health.current_health < connected_a_health.max_health, "L10 Waxlight connected burst must damage crossed mark enemy", failures)
-	_assert_true(connected_b_health.current_health < connected_b_health.max_health, "L10 Waxlight connected burst must damage touching mark enemy", failures)
+	_assert_float_close(connected_a_health.current_health, 18.25, "L10 Waxlight connected tick must deal 35% activation damage immediately", failures)
+	_assert_float_close(connected_b_health.current_health, 18.25, "L10 Waxlight connected tick must hit every activated connected mark immediately", failures)
 	_assert_true(disconnected_health.current_health == disconnected_health.max_health, "L10 Waxlight connected burst must not activate disconnected marks", failures)
+	for _frame in 12:
+		await physics_frame
+	third_second_connected.global_position = Vector3(1.3, 0.0, 0.0)
+	for _frame in 12:
+		await physics_frame
+	_assert_true(third_second_connected_health.current_health < third_second_connected_health.max_health, "L10 Waxlight must tick again around 0.33s, before the old 0.5s cadence", failures)
+	for _frame in 74:
+		await physics_frame
+	_assert_true(manager.debug_active_mark_count() >= 2, "L10 Waxlight connected marks must stay active through the two-second ticking window", failures)
+	late_connected.global_position = Vector3(1.3, 0.0, 0.0)
+	for _frame in 14:
+		await physics_frame
+	_assert_true(late_connected_health.current_health < late_connected_health.max_health, "L10 Waxlight must tick near the end of the two-second window", failures)
+	for _frame in 20:
+		await physics_frame
+	_assert_true(manager.debug_active_mark_count() == 0, "default L10 Waxlight connected marks must end after the two-second tick window plus brief visual grace", failures)
 
 	_finish_after_root(root, failures)
 
@@ -168,6 +190,11 @@ func _spawn_victim(enemies_root: Node, node_name: String, position: Vector3, max
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
 	if not value:
 		failures.append(message)
+
+
+func _assert_float_close(value: float, expected: float, message: String, failures: Array[String]) -> void:
+	if not is_equal_approx(value, expected):
+		failures.append("%s (expected %.2f, got %.2f)" % [message, expected, value])
 
 
 func _finish(failures: Array[String]) -> void:

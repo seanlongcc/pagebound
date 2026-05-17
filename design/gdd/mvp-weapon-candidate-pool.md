@@ -3,7 +3,7 @@
 > Status: Draft candidate archive
 > Owner: Design
 > Source beads: pagebound-5ip, pagebound-j92
-> Last updated: 2026-05-15
+> Last updated: 2026-05-16
 
 ## Purpose
 
@@ -77,6 +77,8 @@ Upgrade stat channels:
 | effect_count | Common +1, Uncommon +1, Rare +2, Epic +2, Legendary +3 | Extra projectiles, pulses, echoes, links, sparks, or repeated effects |
 | active_cap | Common +1, Uncommon +1, Rare +2, Epic +2, Legendary +3 | Extra living wells, gates, sentries, summons, zones, or constructs |
 
+Weapon upgrade pool rows define eligible stat/scope options only. They do not pin an upgrade to a weapon level, rarity, or value. Runtime draft generation rolls the specific upgrade card identity from the weapon's pool and assigns its rarity/value at card creation.
+
 Dash and Pagecraft upgrades use scope plus normal stat. Example: `Scope: dash payoff`, `Stat: damage`. There is no separate dash or Pagecraft stat channel.
 
 ## Crit Policy
@@ -95,27 +97,28 @@ Dash and Pagecraft upgrades use scope plus normal stat. Example: `Scope: dash pa
 Status: First-playable tuned
 Role: Early AoE/Pagecraft mark weapon
 Weapon type: Homing comet, AoE mark, dash activation
-Base tuning: 45 damage / 0.95s cooldown / 6.5m target range
+Base tuning: 45 damage / 0.9s cooldown / 6.5m target range
 Base cadence band: Fast
 Catalyst tags: Firelight, Light
 Gameplay purpose: Gives the player a simple AoE weapon first, then adds visible Waxlight marks and dash rewards at L5.
 Pagecraft verb: From L5 onward, places glowing Waxlight AoE marks on enemy impact.
-Dash payoff: Unlocks at L5. Dashing through an unactivated Waxlight mark triggers one instant AoE burst.
+Dash payoff: Unlocks at L5. Dashing through an unactivated Waxlight mark creates a `1.0s` active wax window that ticks immediately and every `0.33s` while the window lasts; each L5 tick deals `35%` activation damage. Duration upgrades scale this active window.
 Range intent: Shorter homing range than Star Sticker Swarm. Range upgrades scale target range and L10 connected-mark reach; size upgrades scale mark radius.
 
 | Level | Fixed Milestone |
 |---:|---|
 | L1 | Fires 1 glowing comet at a nearby enemy. The comet deals full AoE damage to every target inside the impact radius and shows an attack visual, but leaves no persistent Waxlight mark. |
-| L5 | Dash payoff unlock: dashing through an unactivated Waxlight mark triggers that mark as a one-time instant AoE burst; also grants one selected upgrade card. |
-| L10 | Capstone: touching or overlapping unactivated Waxlight marks form connected groups. Dashing through one mark activates every currently unactivated mark in that connected group; also grants one selected upgrade card. |
+| L5 | Dash payoff unlock: dashing through an unactivated Waxlight mark creates a `1.0s` active wax window that ticks immediately and every `0.33s` while the window lasts; each L5 tick deals `35%` activation damage. Duration upgrades scale this active window. Also grants one selected upgrade card. |
+| L10 | Capstone: touching or overlapping unactivated Waxlight marks form connected groups. Dashing through one mark activates every currently unactivated mark in that connected group. The connected active window is current L5 active duration `* 2`, so base L10 window is `2.0s`. Connected ticks use the same `0.33s` interval and `35%` activation damage as L5. Also grants one selected upgrade card. |
 
 | Upgrade | Scope | Stat | Notes |
 |---|---|---|---|
 | Comet Burst | base AoE | damage | Scales comet impact and mark burst damage. Impact AoE secondary targets take full damage, not reduced splash damage. |
 | Wax Radius | Waxlight mark | size | Marks and bursts cover more space. |
-| Wax Duration | Waxlight mark | duration | Unactivated marks remain longer before expiring. |
+| Wax Duration | active wax | duration | Extends the L5 active wax window; L10 connected active window is the scaled L5 duration `* 2`. |
 | Wax Capacity | Waxlight mark | active_cap | Allows more unactivated Waxlight marks at once. |
-| Dash Ignition | dash payoff | damage | Scales L5/L10 dash-triggered mark bursts. |
+| Comet Count | cast | effect_count | Adds more Waxlight Comets per cast. |
+| Dash Ignition | dash payoff | damage | Scales the L5 active-window ticks and L10 connected active-window ticks. |
 | Waxlight Reach | weapon range | range | Scales target range and any unlocked connected-mark reach. |
 | Slow Wax | Waxlight mark | control_strength | Enemies in unactivated marks are slowed more strongly if slow behavior is enabled. |
 
@@ -124,8 +127,8 @@ Range intent: Shorter homing range than Star Sticker Swarm. Range upgrades scale
 Status: First-playable tuned
 Role: Starter baseline weapon
 Weapon type: Orbit shot, Star node, ricochet
-Base tuning: 100 damage / 0.9s cooldown / 8.0m target range
-Base cadence band: Fast
+Base tuning: 100 damage / 1.0s cooldown / 8.0m target range
+Base cadence band: Medium
 Catalyst tags: Star, Moon
 Gameplay purpose: Defines first-playable opening kill-rate and grows from reliable direct hits into a Star node ricochet network.
 Pagecraft verb: Places persistent Star nodes after L5; nodes are constellation ricochet points, not timed mines or turrets.

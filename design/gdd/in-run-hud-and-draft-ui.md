@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-14
+> **Last Updated**: 2026-05-16
 > **Implements Pillar**: Simple Controls, Deep Pagecraft
 
 ## Overview
@@ -21,7 +21,7 @@ The HUD should look like a readable storybook margin around the action. It shoul
 
 1. UI uses shell `CanvasLayer` with existing slots: `HUD`, `ModalLayer`, `LevelUpScreen`, `PauseMenu`, `VictoryScreen`, and `DebugOverlay`.
 2. HUD visual direction is storybook inspired: parchment, ink, ribbon, embossed paper, readable contrast, and compact fairytale labeling.
-3. Top-left HUD space is reserved for party/multiplayer ally portraits and ally state.
+3. Top-left HUD space shows the solo kill counter in the current prototype. Future party/multiplayer ally portraits must share or replace that space intentionally.
 4. Top-right HUD slot is exclusive: it shows either the active Page Event banner or the active boss/finale banner, never both.
 5. Page Events and bosses must not overlap by schedule. If the boss waits on an event, the event banner remains until event resolution, then boss banner takes over.
 6. Page Event banner shows percent progress as primary information. Count and timer are secondary.
@@ -43,7 +43,7 @@ The HUD should look like a readable storybook margin around the action. It shoul
 
 | Area | Content |
 |---|---|
-| Top-left | Reserved party/multiplayer portraits. Empty in solo prototype unless debug mock is needed. |
+| Top-left | Solo kill counter. Future party/multiplayer portraits may share or replace this slot. |
 | Top-right | Exclusive event/boss banner. Color Well uses percent progress; Crownless Echo uses HP percent. |
 | Center/world | Event circle ring/fill, offscreen marker, pet pickup pulses, damage numbers. |
 | Bottom-left | Run level badge, dash recharge meter, plus Dog icon feedback. |
@@ -145,7 +145,7 @@ Invalid states:
 
 ## UI Requirements
 
-- HUD slot: health, full-bottom XP bar, run level, loadout, event/boss banner, markers, pet icon.
+- HUD slot: health, top-left kill counter, full-bottom XP bar, run level, loadout, event/boss banner, markers, pet icon.
 - LevelUpScreen slot: 3-card draft with focused card, accept/cancel rules, device prompts.
 - PauseMenu slot: resume/options/quit-to-hub placeholders until menu system expands.
 - VictoryScreen slot: run summary and rewards handoff.
@@ -154,7 +154,7 @@ Invalid states:
 ## Acceptance Criteria
 
 - HUD can display core run state without gameplay logic.
-- Top-left remains available for multiplayer/party UI.
+- Top-left shows the solo kill counter.
 - Top-right banner is exclusive for event or boss.
 - Event banner shows percent progress.
 - Boss banner shows HP percent.

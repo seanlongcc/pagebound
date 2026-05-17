@@ -37,7 +37,7 @@ Items are not hidden single-weapon upgrades. They shape builds through global st
 16. Normal passive item stat bonuses apply globally to player-owned sources unless the item explicitly names an eligible authored channel.
 17. `effect_count`, `active_cap`, and `dash_count` apply only to authored eligible channels.
 18. Chance bonuses use additive `+X% chance` wording and respect per-effect caps.
-19. Luck affects future draft rarity weights only. It does not change the current `90%` upgrade / `10%` new gear split or the `50/50` weapon/item split.
+19. Luck affects future draft rarity weights only. It does not change the current `50%` upgrade / `50%` new gear split or the `50/50` weapon/item split.
 20. Base player max HP for current item balance is 1000. Base dash recharge is 2.0s per charge and baseline dash invulnerability is 0.15s.
 
 ### States and Transitions
@@ -74,7 +74,7 @@ Items are not hidden single-weapon upgrades. They shape builds through global st
 
 `item_find_weight = 1 among legal items for the current approved draft canon`
 
-`draft_category_split = 90% upgrade / 10% new gear`
+`draft_category_split = 50% upgrade / 50% new gear`
 
 `draft_item_side_split = 50% item when the rolled family is legal`
 

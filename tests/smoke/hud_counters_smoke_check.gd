@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_assert_true(initial_text.contains("HP") and initial_text.contains("1000/1000"), "HUD must show HP clearly", failures)
 	_assert_true(initial_text.contains("XP"), "HUD must show XP", failures)
 	_assert_true(initial_text.contains("Level"), "HUD must show level badge", failures)
+	_assert_true(initial_text.contains("Kills 0"), "HUD must show top-left kill counter", failures)
 	_assert_true(initial_text.contains("Dog"), "HUD must show Dog pet badge", failures)
 	_assert_true(not initial_text.contains("Enemies") and not initial_text.contains("Time"), "player HUD must not show debug enemy/time counters", failures)
 

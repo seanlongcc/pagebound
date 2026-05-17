@@ -17,11 +17,11 @@ Design source consulted: `PAGEBOUND_CODEX_GDD_v1_5.md` sections 12, 20, and 37; 
 
 | Question | Working Answer | Recommendation |
 |---|---|---|
-| When do players get items? | Items appear in 3-choice run level-up drafts and successful Page Event reward drafts. Normal cards roll `90%` upgrade / `10%` new gear; gear splits `50%` new weapon / `50%` new item before legality redirects. Page Event rewards include at least one new gear card if legal unowned gear exists and a slot is open. | Keep the normal draft simple. No fixed item levels and no pity. |
+| When do players get items? | Items appear in 3-choice run level-up drafts and successful Page Event reward drafts. Normal cards roll `50%` upgrade / `50%` new gear; gear splits `50%` new weapon / `50%` new item before legality redirects. Page Event rewards include at least one new gear card if legal unowned gear exists and a slot is open. | Keep the normal draft simple. No fixed item levels and no pity. |
 | Do items level by collecting multiples? | Not by physical duplicate pickups by default. The player levels items by selecting item upgrade cards from drafts. | Keep this consistent with weapon leveling: one selected card equals one level. |
 | Is there a max unique item cap during a run? | Yes. MVP should keep 5 unique passive item slots and item level cap 5. | Keep 5 slots for readability and HUD clarity. Consider a later Wonder Box unlock for a starter item option before adding a 6th passive slot. |
 | How do catalysts relate to items? | Items carry catalyst tags from level 1, but only level 5 items expose full catalyst value for weapon evolution eligibility. Items are not consumed by evolutions. | Keep catalysts broad and tag-based. Do not use strict 1:1 weapon-item recipes. |
-| How does item rarity work? | Each item has an initial find rarity for content identity and future tuning. Current approved draft canon does not use rarity to change the `90/10` category split or the `50/50` weapon/item split. | Keep rarity metadata, but do not add rarity weighting until a separate draft-weighting pass approves it. |
+| How does item rarity work? | Each item has an initial find rarity for content identity and future tuning. Current approved draft canon does not use rarity to change the `50/50` upgrade/new gear split or the `50/50` weapon/item split. | Keep rarity metadata, but do not add rarity weighting until a separate draft-weighting pass approves it. |
 | How do we avoid "I needed one item and never got it"? | Current answer is broad item usefulness plus Page Event new-gear guarantee, not pity. Players can take or skip normal gear offers like a normal draft. | Treat every item as a real build piece first and an evolution catalyst second. |
 
 ## Recommendation
@@ -39,7 +39,7 @@ Use this structure for MVP review:
 - Treat normal item stat bonuses as global player-owned stat bonuses; catalyst tags drive evolutions and future compatibility hints, not stat scope.
 - Keep the broadest raw-count stats - `effect_count`, `active_cap`, and `dash_count` - limited to authored eligible channels.
 - Keep `base_stat_boost` Legendary-only and out of Wonder Box meta progression.
-- Full-run build targets remain tuning-owned after the `90/10` draft model is implemented.
+- Full-run build targets remain tuning-owned after the `50/50` draft model is implemented.
 
 ## In-Run Item Rules
 
@@ -53,7 +53,7 @@ Passive item cards can appear from:
 Draft defaults:
 
 - Normal drafts still show exactly 3 choices.
-- Normal draft cards roll `90%` upgrade and `10%` new gear before legality redirects.
+- Normal draft cards roll `50%` upgrade and `50%` new gear before legality redirects.
 - New gear rolls split `50%` new weapon and `50%` new passive item before legality redirects.
 - Upgrade rolls split `50%` owned weapon upgrade and `50%` owned item upgrade before legality redirects.
 - Successful Page Event reward drafts include at least one new gear card if legal unowned gear exists and a slot is open.
@@ -69,9 +69,9 @@ Draft defaults:
 
 | Run Timing | Item Target |
 |---|---|
-| First normal drafts | Items may appear through the normal `10%` new gear lane if legal. |
+| First normal drafts | Items may appear through the normal `50%` new gear lane if legal. |
 | First successful Page Event | Guarantees at least one new gear card if legal unowned gear exists and a slot is open. In the first polished exemplar, this points to `Candle Spark` if still unowned. |
-| Full-run tuning | Exact item count by 5/10/20/30 minutes must be remeasured after the `90/10` model is implemented. |
+| Full-run tuning | Exact item count by 5/10/20/30 minutes must be remeasured after the `50/50` model is implemented. |
 | Endless | Normal upgrades continue while available; overflow drafts start only after no normal weapon/item choices remain. |
 
 ### Item Levels
@@ -101,7 +101,7 @@ All passive items use 5 levels.
 - Base player max HP is 1000 for the MVP balance scale.
 - Crit chance is global, additive, and capped at 75%.
 - Base crit multiplier is 2.0x. Crit damage adds to that multiplier; for example, +50% crit damage changes 2.0x to 2.5x. Final crit multiplier is capped at 4.0x.
-- Luck does not change the current `90/10` upgrade/gear split or the `50/50` weapon/item split.
+- Luck does not change the current `50/50` upgrade/gear split or the `50/50` weapon/item split.
 
 ## Build Reliability Rules
 
@@ -123,7 +123,7 @@ Level 10 Waxlight Comet
 
 Current draft reliability comes from:
 
-- normal level-up drafts always allowing legal new gear through the `10%` lane,
+- normal level-up drafts always allowing legal new gear through the `50%` lane,
 - Page Event rewards guaranteeing at least one new gear card when legal,
 - broad catalyst families,
 - useful item effects even when no evolution happens.
@@ -198,7 +198,7 @@ This table uses 23 active passive items because the requested stat list has 23 r
 
 - Find rarity is inactive future tuning metadata in the current approved draft canon.
 - Once an item is owned, its upgrade cards grant fixed +1 item level.
-- Upgrade-card rarity and luck do not change the current `90/10` category split or the amount of item levels gained.
+- Upgrade-card rarity and luck do not change the current `50/50` category split or the amount of item levels gained.
 - `Foundational Keepsake` is the only Legendary passive and its all-catalyst value is evolution-enabling only at level 5.
 
 ### Flat-Count Item Guardrail

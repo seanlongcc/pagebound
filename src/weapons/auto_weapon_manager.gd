@@ -285,6 +285,12 @@ func _fire_weapon_state_at(state: Dictionary, target: Node3D) -> void:
 
 
 func _fire_direct_marking_weapon(state: Dictionary, target: Node3D) -> void:
+	var weapon_data: Resource = state["data"]
+	for enemy in _counted_targets(target, _direct_marking_target_count(weapon_data.id), _range_for_state(state)):
+		_fire_direct_marking_hit(state, enemy)
+
+
+func _fire_direct_marking_hit(state: Dictionary, target: Node3D) -> void:
 	var health := target.get_node_or_null("HealthComponent")
 	if health == null:
 		return
@@ -387,6 +393,10 @@ func _fire_color_bloom(state: Dictionary, target: Node3D) -> void:
 
 
 func _sticker_targets(primary: Node3D, max_count: int, range_meters: float) -> Array[Node3D]:
+	return _counted_targets(primary, max_count, range_meters)
+
+
+func _counted_targets(primary: Node3D, max_count: int, range_meters: float) -> Array[Node3D]:
 	var targets: Array[Node3D] = []
 	if max_count <= 0:
 		return targets
@@ -402,6 +412,12 @@ func _sticker_targets(primary: Node3D, max_count: int, range_meters: float) -> A
 		if _is_living_enemy(child as Node3D) and _is_inside_owner_range(child as Node3D, range_meters):
 			targets.append(child)
 	return targets
+
+
+func _direct_marking_target_count(weapon_id: StringName) -> int:
+	if _upgrade_state != null and _upgrade_state.has_method("weapon_projectile_count"):
+		return _upgrade_state.weapon_projectile_count(weapon_id, 1)
+	return 1
 
 
 func _is_living_enemy(candidate: Node3D) -> bool:

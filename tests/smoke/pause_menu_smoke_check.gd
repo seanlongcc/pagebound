@@ -22,7 +22,10 @@ func _initialize() -> void:
 	if runtime != null and runtime.has_method("debug_apply_upgrade_choice"):
 		runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
 		runtime.debug_apply_upgrade_choice(&"new_passive_candle_spark")
-		runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
+		if runtime.has_method("debug_apply_weapon_upgrade_stat"):
+			runtime.debug_apply_weapon_upgrade_stat(&"star_sticker_swarm", &"damage")
+		else:
+			runtime.debug_apply_upgrade_choice(&"weapon_upgrade_star_sticker_swarm")
 		runtime.debug_apply_upgrade_choice(&"passive_upgrade_candle_spark")
 		await process_frame
 

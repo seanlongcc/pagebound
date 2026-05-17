@@ -253,6 +253,15 @@ func debug_apply_upgrade_choice(choice_id: StringName) -> void:
 	_apply_upgrade_choice(choice_id)
 
 
+## Applies a specific rolled weapon upgrade stat for smoke/debug checks.
+func debug_apply_weapon_upgrade_stat(weapon_id: StringName, stat_id: StringName) -> void:
+	if _upgrade_state == null or not _upgrade_state.has_method("debug_weapon_upgrade_choice_id"):
+		return
+	var choice_id: StringName = _upgrade_state.debug_weapon_upgrade_choice_id(weapon_id, stat_id)
+	if choice_id != &"":
+		_apply_upgrade_choice(choice_id)
+
+
 ## Returns current Waxlight damage bonus.
 func debug_waxlight_damage_bonus() -> float:
 	return _upgrade_state.waxlight_damage_bonus()

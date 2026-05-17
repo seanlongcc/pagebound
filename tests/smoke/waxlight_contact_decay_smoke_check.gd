@@ -25,6 +25,7 @@ func _initialize() -> void:
 	var enemies_root := root.get_node_or_null("RunRoot/Actors/Enemies")
 
 	_assert_true(runtime != null and runtime.has_method("debug_apply_upgrade_choice"), "runtime must expose upgrade helper", failures)
+	_assert_true(runtime != null and runtime.has_method("debug_apply_weapon_upgrade_stat"), "runtime must expose selected weapon stat upgrade helper", failures)
 	_assert_true(player != null and player.has_method("debug_integrate"), "player must support dash sampling", failures)
 	_assert_true(manager != null and manager.has_method("debug_deposit_test_mark"), "Pagecraft manager must expose test mark deposit", failures)
 	_assert_true(manager != null and manager.has_method("debug_unactivated_mark_count"), "Pagecraft manager must expose inactive mark count", failures)
@@ -53,15 +54,14 @@ func _initialize() -> void:
 		weapon_manager.set_physics_process(false)
 
 	manager.debug_clear_marks()
+	runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
+	for safe_stat in [&"damage", &"range", &"effect_count", &"active_cap"]:
+		runtime.debug_apply_weapon_upgrade_stat(&"waxlight_comet", safe_stat)
+		await physics_frame
 	var base_duration := 0.0
 	if manager.has_method("debug_activation_duration_seconds"):
 		base_duration = manager.debug_activation_duration_seconds()
-	runtime.debug_apply_upgrade_choice(&"new_weapon_waxlight_comet")
-	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
-	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
-	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
-	runtime.debug_apply_upgrade_choice(&"weapon_upgrade_waxlight_comet")
-	_assert_true(is_equal_approx(manager.debug_activation_duration_seconds(), base_duration), "Waxlight burst tuning must keep active visual duration stable", failures)
+	_assert_true(base_duration > 1.0 and base_duration <= 1.1, "L5 Waxlight active mark visual duration must cover a 1.0s damage window plus brief feedback", failures)
 
 	var base_cap: int = manager.debug_unactivated_mark_cap()
 	for index in base_cap + 2:
@@ -83,20 +83,38 @@ func _initialize() -> void:
 	var mark_position := Vector3.ZERO
 	manager.debug_deposit_test_mark(mark_position)
 	var touching_victim := _spawn_victim(enemies_root, "TouchingWaxVictim", mark_position + Vector3(0.25, 0.0, 0.0), 20.0)
+	var late_victim := _spawn_victim(enemies_root, "LateWaxVictim", mark_position + Vector3(0.9, 0.0, 0.0), 20.0)
 	var outside_victim := _spawn_victim(enemies_root, "OutsideWaxVictim", mark_position + Vector3(0.9, 0.0, 0.0), 20.0)
 
 	player.global_position = mark_position - Vector3.RIGHT * 0.8
-	player.debug_integrate(Vector2.RIGHT, true, 0.01)
-	player.debug_integrate(Vector2.ZERO, false, 0.25)
-	for frame_index in 4:
-		await physics_frame
+	manager.activate_path(mark_position - Vector3.RIGHT * 0.8, mark_position + Vector3.RIGHT * 0.8)
 
 	var touching_health := touching_victim.get_node("HealthComponent")
+	var late_health := late_victim.get_node("HealthComponent")
 	var outside_health := outside_victim.get_node("HealthComponent")
-	_assert_true(touching_health.current_health < 20.0, "activated Waxlight must damage enemy touching mark", failures)
+	_assert_float_close(touching_health.current_health, 18.25, "L5 Waxlight dash activation must deal an immediate 35% tick to enemy touching mark", failures)
 	_assert_true(is_equal_approx(outside_health.current_health, 20.0), "activated Waxlight must not damage enemy outside mark radius", failures)
-	_assert_true(manager.debug_active_mark_count() > 0, "activated Waxlight must remain active during decay duration", failures)
+	_assert_true(manager.debug_active_mark_count() == 1, "L5 Waxlight mark must remain active for the base 1.0s tick window", failures)
 	_assert_true(_visible_named_count(root, "WaxlightDashPulse") > 0, "Waxlight dash activation must create visible pulse feedback", failures)
+
+	late_victim.global_position = mark_position + Vector3(0.25, 0.0, 0.0)
+	for _frame in 22:
+		await physics_frame
+	_assert_float_close(touching_health.current_health, 16.5, "L5 Waxlight must deal a second 35% tick around 0.33s", failures)
+	_assert_float_close(late_health.current_health, 18.25, "L5 Waxlight must catch late-entering enemies on the 0.33s tick", failures)
+	_assert_true(manager.debug_active_mark_count() == 1, "L5 Waxlight mark must stay active until the 1.0s tick resolves", failures)
+
+	for _frame in 22:
+		await physics_frame
+	_assert_float_close(touching_health.current_health, 14.75, "L5 Waxlight must deal a third 35% tick around 0.66s", failures)
+	_assert_float_close(late_health.current_health, 16.5, "L5 Waxlight late-entering enemy must receive the 0.66s tick too", failures)
+	_assert_true(manager.debug_active_mark_count() == 1, "L5 Waxlight mark must stay active through the late 1.0s tick", failures)
+
+	for _frame in 22:
+		await physics_frame
+	_assert_float_close(touching_health.current_health, 13.0, "L5 Waxlight must deal a fourth 35% tick around 0.99s", failures)
+	_assert_float_close(late_health.current_health, 14.75, "L5 Waxlight late-entering enemy must receive the 0.99s tick too", failures)
+	_assert_true(manager.debug_active_mark_count() == 0, "L5 Waxlight mark must end after the 1.0s damage window plus brief grace", failures)
 
 	for _frame in 90:
 		await physics_frame
@@ -160,6 +178,11 @@ func _load_main(failures: Array[String]) -> Node:
 func _assert_true(value: bool, message: String, failures: Array[String]) -> void:
 	if not value:
 		failures.append(message)
+
+
+func _assert_float_close(actual: float, expected: float, message: String, failures: Array[String]) -> void:
+	if not is_equal_approx(actual, expected):
+		failures.append("%s (expected %.2f, got %.2f)" % [message, expected, actual])
 
 
 func _finish(failures: Array[String]) -> void:

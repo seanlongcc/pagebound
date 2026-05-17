@@ -8,6 +8,7 @@ const PASSIVE_UPGRADE := &"passive_upgrade"
 const OVERFLOW := &"overflow"
 const FAMILY_GEAR := &"gear"
 const FAMILY_UPGRADE := &"upgrade"
+const NORMAL_UPGRADE_CHANCE := 0.70
 
 
 func normal_choices(legal_choices: Dictionary, count: int, seed: int, guarantee_new_gear: bool = false) -> Array[Dictionary]:
@@ -27,7 +28,7 @@ func normal_choices(legal_choices: Dictionary, count: int, seed: int, guarantee_
 
 
 func _roll_card(legal_choices: Dictionary, rng: RandomNumberGenerator, selected: Array[Dictionary]) -> Dictionary:
-	var preferred_family := FAMILY_UPGRADE if rng.randf() < 0.90 else FAMILY_GEAR
+	var preferred_family := FAMILY_UPGRADE if rng.randf() < NORMAL_UPGRADE_CHANCE else FAMILY_GEAR
 	var choice := _roll_family(preferred_family, legal_choices, rng, selected)
 	if not choice.is_empty():
 		return choice
@@ -111,4 +112,6 @@ func _choice_signature(choice: Dictionary) -> String:
 		target = String(choice.get("passive_id", &""))
 	if target == "":
 		target = String(choice.get("stat_id", &""))
+	if String(choice.get("choice_type", &"")).ends_with("upgrade") and String(choice.get("stat_id", &"")) != "":
+		target = "%s:%s" % [target, String(choice.get("stat_id", &""))]
 	return "%s:%s" % [String(choice.get("choice_type", &"")), target]
