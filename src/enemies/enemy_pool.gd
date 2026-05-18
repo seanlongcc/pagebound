@@ -153,12 +153,11 @@ func _enable_collision(instance: Node, enabled: bool) -> void:
 
 
 func _prune_invalid() -> void:
+	for index in range(_inactive.size() - 1, -1, -1):
+		var inactive_instance := _inactive[index]
+		if inactive_instance == null or not is_instance_valid(inactive_instance):
+			_inactive.remove_at(index)
 	for index in range(_instances.size() - 1, -1, -1):
 		var instance := _instances[index]
 		if instance == null or not is_instance_valid(instance):
 			_instances.remove_at(index)
-			_inactive.erase(instance)
-	for index in range(_inactive.size() - 1, -1, -1):
-		var instance := _inactive[index]
-		if instance == null or not is_instance_valid(instance):
-			_inactive.remove_at(index)

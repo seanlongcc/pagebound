@@ -36,7 +36,7 @@ Every level-up should feel like a normal fast roguelite draft: three useful choi
 15. If new gear is rolled but neither new weapon nor new item is legal, redirect to upgrades.
 16. If upgrades are rolled but neither weapon nor item upgrades are legal, redirect to new gear.
 17. If no normal weapon/item card is legal, drafts switch to overflow rewards.
-18. Overflow rewards are small repeatable global stat crumbs. Current prototype crumb: `+5%` to a named global stat.
+18. Overflow rewards are small repeatable global stat crumbs. Current prototype crumbs are `+5%` to damage, range, size, cadence, or duration.
 19. There are no fixed weapon-only draft levels.
 20. There is no pity system.
 21. There are no elite/chest reward drafts in current scope.
@@ -124,7 +124,7 @@ Invalid states:
 - If XP gain crosses multiple levels, queue drafts one at a time.
 - If player dies during draft, death/victory flow decides whether the draft is canceled or resolved first.
 - If the tiny prototype pool cannot produce 3 distinct legal cards, repeat a legal simple upgrade only after all distinct legal cards are already shown.
-- If all normal weapon/item choices are exhausted, show overflow global `+5%` stat crumbs.
+- If all normal weapon/item choices are exhausted, show overflow global `+5%` stat crumbs for damage, range, size, cadence, or duration.
 - If draft UI cannot open, store pending draft and log blocking error.
 - If XP pickup pool is exhausted, pickup may merge values into nearby Color Motes.
 
@@ -148,7 +148,7 @@ Invalid states:
 | `upgrade_item_weight` | `0.50` | tuning | Item side of legal upgrades. |
 | `max_weapon_slots` | `5` | fixed for MVP | Shared with weapon system. |
 | `max_passive_slots` | `5` | fixed for MVP | Shared with item system. |
-| `overflow_stat_bonus` | `5%` | tuning | Repeatable crumb only when no normal legal cards exist. |
+| `overflow_stat_bonus` | `5%` | tuning | Repeatable damage/range/size/cadence/duration crumb only when no normal legal cards exist. |
 | `xp_curve_formula` | VS-style continuous bands scaled by `5` | fixed prototype | Level 1 threshold is `25 XP`; no level 20/40 walls. |
 | `target_total_xp_to_level_50` | `67,225` | tuning | Matches the 30:00 level-50 target with base enemies at `5 XP`. |
 | `base_enemy_xp` | `5` | fixed prototype | Basic and fast enemies drop Tiny Color Motes. |

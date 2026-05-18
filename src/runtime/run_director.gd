@@ -6,8 +6,8 @@ const EnemyPoolScript := preload("res://src/enemies/enemy_pool.gd")
 const HealthComponentScript := preload("res://src/combat/health_component.gd")
 
 const TARGET_RUN_MINUTES := 30.0
-const START_KILLS_PER_SECOND := 1.0
-const END_KILLS_PER_SECOND := 10.0
+const START_KILLS_PER_SECOND := 2.0
+const END_KILLS_PER_SECOND := 15.0
 const OPENING_MIN_ALIVE_START := 8
 const OPENING_GRACE_SECONDS := 60.0
 const MIN_ALIVE_START := 25
@@ -354,16 +354,23 @@ func _effective_spawn_interval() -> float:
 func _spawn_count_for_tick(active_count: int) -> int:
 	var remaining_capacity := maxi(0, safety_enemy_cap - active_count)
 	if active_count < active_budget:
-		return mini(active_budget - active_count, remaining_capacity)
+		var budget_gap := active_budget - active_count
+		if _run_time < OPENING_GRACE_SECONDS:
+			return mini(budget_gap, remaining_capacity)
+		return mini(mini(budget_gap, _target_spawn_count_for_tick()), remaining_capacity)
 	if _run_time < OPENING_GRACE_SECONDS:
 		_pressure_spawn_credit = 0.0
 		return 0
+	return mini(_target_spawn_count_for_tick(), remaining_capacity)
+
+
+func _target_spawn_count_for_tick() -> int:
 	_pressure_spawn_credit += _target_kills_per_second() * _effective_spawn_interval()
 	var pressure_count := floori(_pressure_spawn_credit)
 	if pressure_count <= 0:
 		return 0
 	_pressure_spawn_credit -= float(pressure_count)
-	return mini(pressure_count, remaining_capacity)
+	return pressure_count
 
 
 func _min_alive_for_time(run_time_seconds: float, wave_progress: float) -> int:

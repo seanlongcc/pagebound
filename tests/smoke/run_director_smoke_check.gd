@@ -41,6 +41,13 @@ func _initialize() -> void:
 	_assert_true(director.debug_active_enemy_count() <= director.debug_safety_enemy_cap(), "director safety cap must prevent runaway enemy count", failures)
 	_assert_true(director.debug_all_active_enemies_within_bounds(), "director must keep active enemies inside finite page bounds", failures)
 
+	if director.has_method("debug_force_run_time"):
+		director.debug_force_run_time(900.0)
+		var refill_spawned_before: int = director.debug_spawned_count()
+		await physics_frame
+		var refill_burst: int = director.debug_spawned_count() - refill_spawned_before
+		_assert_true(refill_burst <= 4, "15:00 refill tick must obey target throughput instead of filling the whole min-alive budget at once", failures)
+
 	_finish_after_root(root, failures)
 
 

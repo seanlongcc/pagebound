@@ -62,7 +62,8 @@ func _assert_director_pool_bounds(failures: Array[String]) -> void:
 	for _cycle in 3:
 		_kill_visible_enemies(runtime, root.get_node("RunRoot"), 40)
 		await process_frame
-		await physics_frame
+		for _respawn_frame in 20:
+			await physics_frame
 
 	var enemies_root := root.get_node("RunRoot/Actors/Enemies")
 	var total_enemy_children := enemies_root.get_child_count()

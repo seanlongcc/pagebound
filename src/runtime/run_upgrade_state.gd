@@ -2,6 +2,7 @@ class_name RunUpgradeState
 extends RefCounted
 
 const DraftChoicePickerScript := preload("res://src/runtime/draft_choice_picker.gd")
+const OverflowBonusStateScript := preload("res://src/runtime/overflow_bonus_state.gd")
 const WeaponUpgradePoolScript := preload("res://src/runtime/weapon_upgrade_pool.gd")
 
 const WEAPON_WAXLIGHT_COMET := &"waxlight_comet"
@@ -45,6 +46,7 @@ var _weapon_stat_bonuses: Dictionary = {}
 var _weapon_range_bonuses: Dictionary = {}
 var _weapon_applied_upgrades: Dictionary = {}
 var _pending_weapon_upgrade_choices: Dictionary = {}
+var _overflow_bonuses = OverflowBonusStateScript.new()
 var _draft_seed := 0
 var _draft_seed_locked := false
 var _player_health_ratio := 1.0
@@ -68,6 +70,7 @@ func reset() -> void:
 	_weapon_range_bonuses = {}
 	_weapon_applied_upgrades = {}
 	_pending_weapon_upgrade_choices = {}
+	_overflow_bonuses.reset()
 	_player_health_ratio = 1.0
 
 
@@ -107,6 +110,8 @@ func apply_choice(choice_id: StringName) -> Dictionary:
 		return _add_passive(choice_id, StringName(choice_text.substr(12)))
 	if choice_text.begins_with("passive_upgrade_"):
 		return _upgrade_passive(choice_id, StringName(choice_text.substr(16)))
+	if choice_text.begins_with("overflow_"):
+		return _apply_overflow_choice(choice_id)
 	if choice_id == &"waxlight_range_plus":
 		return _add_weapon_range(choice_id, WEAPON_WAXLIGHT_COMET, LEGACY_RANGE_STEP)
 	return {}
@@ -121,7 +126,7 @@ func weapon_damage(weapon_id: StringName, base_damage: float, damage_tags: Array
 
 
 func damage_for_tags(_source_id: StringName, base_damage: float, _damage_tags: Array) -> float:
-	return base_damage * (1.0 + _passive_stat_bonus(&"damage"))
+	return base_damage * (1.0 + _global_stat_bonus(&"damage"))
 
 
 func weapon_projectile_count(weapon_id: StringName, base_count: int) -> int:
@@ -199,19 +204,19 @@ func glow_damage_multiplier() -> float:
 
 
 func size_multiplier() -> float:
-	return 1.0 + _passive_stat_bonus(&"size")
+	return 1.0 + _global_stat_bonus(&"size")
 
 
 func duration_multiplier() -> float:
-	return 1.0 + _passive_stat_bonus(&"duration")
+	return 1.0 + _global_stat_bonus(&"duration")
 
 
 func range_multiplier() -> float:
-	return 1.0 + _passive_stat_bonus(&"range")
+	return 1.0 + _global_stat_bonus(&"range")
 
 
 func cadence_multiplier() -> float:
-	var bonus := _passive_stat_bonus(&"cadence")
+	var bonus := _global_stat_bonus(&"cadence")
 	if _passive_level(PASSIVE_MOON_BUTTON) >= 5 and _player_health_ratio <= 0.5:
 		bonus += 0.10
 	return 1.0 + bonus
@@ -503,6 +508,12 @@ func _upgrade_passive(choice_id: StringName, passive_id: StringName) -> Dictiona
 	return _passive_event(choice_id, passive_id, false)
 
 
+func _apply_overflow_choice(choice_id: StringName) -> Dictionary:
+	if not _normal_choices_exhausted():
+		return {}
+	return _overflow_bonuses.apply_choice(choice_id)
+
+
 func _add_weapon_range(choice_id: StringName, weapon_id: StringName, delta: float) -> Dictionary:
 	if not _owned_weapon_levels.has(weapon_id):
 		return {}
@@ -552,6 +563,10 @@ func _weapon_stat_bonus(weapon_id: StringName, stat: StringName) -> float:
 	return float(bonuses.get(stat, 0.0))
 
 
+func _global_stat_bonus(stat: StringName) -> float:
+	return _passive_stat_bonus(stat) + _overflow_bonuses.bonus(stat)
+
+
 func _passive_stat_bonus(stat: StringName) -> float:
 	var total := 0.0
 	for passive_id in _owned_passive_levels.keys():
@@ -574,6 +589,23 @@ func _can_add_weapon(weapon_id: StringName) -> bool:
 
 func _can_add_passive(passive_id: StringName) -> bool:
 	return not _owned_passive_levels.has(passive_id) and _owned_passive_levels.size() < MAX_PASSIVES
+
+
+func _normal_choices_exhausted() -> bool:
+	for weapon in _weapon_pool():
+		if weapon != null and _can_add_weapon(weapon.id):
+			return false
+	for passive in _passive_pool():
+		if passive == null:
+			continue
+		if _can_add_passive(passive.id):
+			return false
+		if _passive_level(passive.id) > 0 and _passive_level(passive.id) < 5:
+			return false
+	for weapon_id in owned_weapon_ids():
+		if _weapon_level(weapon_id) < 10:
+			return false
+	return true
 
 
 func _weapon_level(weapon_id: StringName) -> int:
@@ -639,6 +671,8 @@ func _fallback_choices() -> Array[Dictionary]:
 		_choice(&"overflow_damage_crumb", "Damage Crumb", "Global damage +5%", "Overflow appears only after all normal gear choices are exhausted.", &"overflow", RARITY_COMMON, &"", &"", &"damage", 0.05, 1.0, "Icon: crumb", [], "Overflow", "No open gear upgrades", "No evolution change"),
 		_choice(&"overflow_range_crumb", "Range Crumb", "Global range +5%", "Overflow appears only after all normal gear choices are exhausted.", &"overflow", RARITY_COMMON, &"", &"", &"range", 0.05, 1.0, "Icon: crumb", [], "Overflow", "No open gear upgrades", "No evolution change"),
 		_choice(&"overflow_size_crumb", "Size Crumb", "Global size +5%", "Overflow appears only after all normal gear choices are exhausted.", &"overflow", RARITY_COMMON, &"", &"", &"size", 0.05, 1.0, "Icon: crumb", [], "Overflow", "No open gear upgrades", "No evolution change"),
+		_choice(&"overflow_cadence_crumb", "Cadence Crumb", "Global cadence +5%", "Overflow appears only after all normal gear choices are exhausted.", &"overflow", RARITY_COMMON, &"", &"", &"cadence", 0.05, 1.0, "Icon: crumb", [], "Overflow", "No open gear upgrades", "No evolution change"),
+		_choice(&"overflow_duration_crumb", "Duration Crumb", "Global duration +5%", "Overflow appears only after all normal gear choices are exhausted.", &"overflow", RARITY_COMMON, &"", &"", &"duration", 0.05, 1.0, "Icon: crumb", [], "Overflow", "No open gear upgrades", "No evolution change"),
 	]
 
 

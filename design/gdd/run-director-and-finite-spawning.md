@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Author**: Sean + Codex
-> **Last Updated**: 2026-05-14
+> **Last Updated**: 2026-05-17
 > **Implements Pillar**: The Page Is Alive
 
 ## Overview
@@ -67,7 +67,7 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 
 `effective_spawn_interval = base_spawn_interval / event_pressure_multiplier`
 
-`target_kills_per_second = lerp(1.0, 10.0, wave_progress)`
+`target_kills_per_second = lerp(2.0, 15.0, wave_progress)`
 
 `enemy_hp_progress = clamp(run_time_seconds / 1800.0, 0.0, 1.0)`
 
@@ -75,7 +75,7 @@ The page should feel pressured but fair. Enemies arrive from believable edges an
 
 `scaled_enemy_health = round(base_enemy_health * enemy_health_multiplier)`
 
-`spawn_count = min_alive - active_enemy_count` when below minimum. During the first 1:00 opening grace, above-minimum pressure spawn count is `0`. After 1:00, pressure spawns use accumulated `target_kills_per_second * effective_spawn_interval` credit so fractional early rates do not round into a horde wall.
+`spawn_count = min_alive - active_enemy_count` when below minimum, limited by available spawn credit after the first 1:00. During the first 1:00 opening grace, above-minimum pressure spawn count is `0`. After 1:00, refill and pressure spawns both use accumulated `target_kills_per_second * effective_spawn_interval` credit so fractional early rates do not round into a horde wall and catch-up refill cannot spawn a full horde wall in one tick.
 
 `spawn_allowed = active_enemy_count < 350 and pool_available`
 
@@ -124,7 +124,7 @@ Invalid states:
 | `opening_min_alive_curve` | `8 -> 25` | tuning | Smoothstep over the first 60 seconds; director refills below this count and does not pressure-spawn above it. |
 | `min_alive_curve` | `25 -> 320` | tuning | Smoothstep over 30 minutes after opening grace; director refills below this count. |
 | `spawn_interval_curve` | `1.00s -> 0.20s` | tuning | Smoothstep over 30 minutes before event-pressure overrides. |
-| `target_kills_per_second` | `1.0 -> 10.0` | tuning | Smoothstep over 30 minutes; pressure spawns match this rate after opening grace. |
+| `target_kills_per_second` | `2.0 -> 15.0` | tuning | Smoothstep over 30 minutes; pressure spawns match this rate after opening grace. |
 | `opening_wax_imp_health` | `70` | tuning | Starter baseline Star Sticker Swarm deals 100 damage, so opening Wax Imp is one direct hit. |
 | `opening_flicker_imp_health` | `45` | tuning | Fast fragile enemy, one direct Star Sticker hit and one Waxlight AoE hit. |
 | `enemy_health_multiplier` | `1.0 -> 8.0` | tuning | Eased over 30 minutes with `1 + 7 * pow(t, 1.6)` for first playable balance. |

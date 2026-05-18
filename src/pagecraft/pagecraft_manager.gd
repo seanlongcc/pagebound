@@ -13,6 +13,7 @@ const CONNECTED_ACTIVATION_DAMAGE_PULSE_SCALE := 0.35
 @export_range(0.5, 30.0, 0.5) var inactive_mark_lifetime_seconds := 12.0
 @export_range(0.1, 3.0, 0.05) var pulse_lifetime_seconds := 1.125
 @export_range(1, 64, 1) var base_unactivated_mark_cap := 6
+@export_range(1, 64, 1) var activation_damage_jobs_per_frame := 4
 
 var _event_bus: Node
 var _pagecraft_root: Node3D
@@ -27,9 +28,11 @@ var _last_activation_damage := 0.0
 var _last_mark_position := Vector3.ZERO
 var _pulse_count := 0
 var _pulse_visuals: Array[Dictionary] = []
+var _activation_damage_jobs: Array[Dictionary] = []
 
 
 func _physics_process(delta: float) -> void:
+	_drain_activation_damage_jobs()
 	_tick_marks(delta)
 	_tick_pulse_visuals(delta)
 
@@ -149,6 +152,11 @@ func debug_active_pulse_visual_count() -> int:
 	return _pulse_visuals.size()
 
 
+## Returns queued activation damage jobs for performance smoke checks.
+func debug_pending_activation_damage_jobs() -> int:
+	return _activation_damage_jobs.size()
+
+
 ## Returns current unactivated Waxlight mark cap for smoke/debug checks.
 func debug_unactivated_mark_cap() -> int:
 	return _unactivated_mark_cap()
@@ -176,6 +184,7 @@ func debug_clear_marks() -> void:
 		if visual is Node:
 			(visual as Node).queue_free()
 	_pulse_visuals.clear()
+	_activation_damage_jobs.clear()
 	_last_mark_position = Vector3.ZERO
 
 
@@ -323,7 +332,7 @@ func _tick_activation_damage_pulses(mark: Dictionary, delta: float) -> Dictionar
 	var interval := float(mark.get("activation_damage_tick_seconds", activation_damage_tick_seconds))
 	var tick_remaining := float(mark.get("damage_tick_remaining", interval)) - delta
 	while pulses_remaining > 0 and tick_remaining <= 0.0:
-		_apply_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
+		_resolve_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
 		pulses_remaining -= 1
 		if pulses_remaining <= 0:
 			tick_remaining = 0.0
@@ -338,12 +347,46 @@ func _apply_activation_damage_pulse(mark: Dictionary) -> Dictionary:
 	var pulses_remaining := int(mark.get("activation_damage_pulses_remaining", 0))
 	if pulses_remaining <= 0:
 		return mark
-	_apply_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
+	_resolve_activation_damage(mark, float(mark.get("activation_damage_scale", ACTIVATION_DAMAGE_PULSE_SCALE)))
 	pulses_remaining -= 1
 	mark["activation_damage_pulses_remaining"] = pulses_remaining
 	var interval := float(mark.get("activation_damage_tick_seconds", activation_damage_tick_seconds))
 	mark["damage_tick_remaining"] = interval if pulses_remaining > 0 else 0.0
 	return mark
+
+
+func _resolve_activation_damage(mark: Dictionary, damage_scale: float) -> void:
+	if _should_queue_activation_damage(mark):
+		_queue_activation_damage(mark, damage_scale)
+		return
+	_apply_activation_damage(mark, damage_scale)
+
+
+func _should_queue_activation_damage(mark: Dictionary) -> bool:
+	return _connected_activation_enabled(mark)
+
+
+func _queue_activation_damage(mark: Dictionary, damage_scale: float) -> void:
+	var target_enemies := _enemies_in_radius(mark["position"], float(mark.get("radius", 0.0)))
+	_activation_damage_jobs.append({
+		"mark": mark.duplicate(true),
+		"damage_scale": damage_scale,
+		"target_enemies": target_enemies,
+	})
+
+
+func _drain_activation_damage_jobs() -> void:
+	var jobs_to_process := mini(activation_damage_jobs_per_frame, _activation_damage_jobs.size())
+	for _job_index in jobs_to_process:
+		var job: Dictionary = _activation_damage_jobs.pop_front()
+		if job.has("target_enemies"):
+			_apply_activation_damage_to_enemies(
+				job.get("mark", {}),
+				float(job.get("damage_scale", 1.0)),
+				job.get("target_enemies", [])
+			)
+			continue
+		_apply_activation_damage(job.get("mark", {}), float(job.get("damage_scale", 1.0)))
 
 
 func _apply_activation_damage(mark: Dictionary, damage_scale: float = 1.0) -> void:
@@ -353,8 +396,20 @@ func _apply_activation_damage(mark: Dictionary, damage_scale: float = 1.0) -> vo
 	if activation_damage <= 0.0:
 		return
 	var radius := float(mark.get("radius", 0.0))
-	for enemy in _enemies_in_radius(mark["position"], radius):
-		var health := enemy.get_node_or_null("HealthComponent")
+	_apply_activation_damage_to_enemies(mark, damage_scale, _enemies_in_radius(mark["position"], radius))
+
+
+func _apply_activation_damage_to_enemies(mark: Dictionary, damage_scale: float, enemies: Array) -> void:
+	if _damage_model == null:
+		return
+	var activation_damage := float(mark.get("activation_damage", 0.0)) * damage_scale
+	if activation_damage <= 0.0:
+		return
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or not enemy is Node3D:
+			continue
+		var enemy_node := enemy as Node3D
+		var health := enemy_node.get_node_or_null("HealthComponent")
 		if health == null:
 			continue
 		var result: Dictionary = _damage_model.apply_damage(
@@ -375,7 +430,8 @@ func _enemies_in_radius(center: Vector3, radius: float) -> Array[Node3D]:
 		for enemy in _enemy_registry.enemies_in_radius(center, radius):
 			if enemy is Node3D:
 				enemies.append(enemy)
-		return enemies
+		if not enemies.is_empty():
+			return enemies
 	if _enemies_root == null:
 		return enemies
 	for enemy in _enemies_root.get_children():

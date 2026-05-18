@@ -43,9 +43,9 @@ func _initialize() -> void:
 	_assert_true(opening_budget == 8, "opening grace minimum alive must start at 8", failures)
 	_assert_float_equal(opening_interval, 1.0, 0.01, "opening spawn interval must start at 1.00s", failures)
 	if director.has_method("debug_spawn_rate_per_second"):
-		_assert_float_equal(director.debug_spawn_rate_per_second(), 1.0, 0.01, "opening pressure spawn rate must start at 1 enemy/sec", failures)
+		_assert_float_equal(director.debug_spawn_rate_per_second(), 2.0, 0.01, "opening pressure spawn rate must start at 2.00 enemies/sec", failures)
 	if director.has_method("debug_target_kills_per_second"):
-		_assert_float_equal(director.debug_target_kills_per_second(), 1.0, 0.01, "opening kill-rate target must start at 1 kill/sec", failures)
+		_assert_float_equal(director.debug_target_kills_per_second(), 2.0, 0.01, "opening kill-rate target must start at 2.00 kills/sec", failures)
 	if director.has_method("debug_current_time_band_id"):
 		_assert_true(director.debug_current_time_band_id() == &"opening", "director must start in opening time band", failures)
 
@@ -65,6 +65,7 @@ func _initialize() -> void:
 		_assert_true(director.debug_base_spawn_interval_seconds() < opening_interval, "first pressure band must lower spawn interval", failures)
 		_assert_true(director.debug_active_budget() >= 46 and director.debug_active_budget() <= 48, "5:00 wave minimum alive must be about 47", failures)
 		_assert_float_equal(director.debug_base_spawn_interval_seconds(), 0.94, 0.02, "5:00 spawn interval must follow smooth wave curve", failures)
+		_assert_float_equal(director.debug_target_kills_per_second(), 2.96, 0.02, "5:00 kill-rate target must reflect the tuned 2 -> 15 curve", failures)
 		_assert_true(director.debug_current_time_band_id() == &"fast_wave", "5:00 must use fast_wave band", failures)
 
 		var first_budget: int = director.debug_active_budget()
@@ -75,6 +76,7 @@ func _initialize() -> void:
 		_assert_true(director.debug_base_spawn_interval_seconds() < first_interval, "second pressure band must lower spawn interval again", failures)
 		_assert_true(director.debug_active_budget() >= 172 and director.debug_active_budget() <= 174, "15:00 wave minimum alive must be about 173", failures)
 		_assert_float_equal(director.debug_base_spawn_interval_seconds(), 0.60, 0.02, "15:00 spawn interval must follow smooth wave curve", failures)
+		_assert_float_equal(director.debug_target_kills_per_second(), 8.5, 0.02, "15:00 kill-rate target must reflect the tuned 2 -> 15 curve", failures)
 		_assert_float_equal(director.debug_health_multiplier(), 1.0 + (7.0 * pow(0.5, 1.6)), 0.01, "15:00 enemy HP multiplier must follow eased 1x -> 8x curve", failures)
 		_assert_true(director.debug_current_time_band_id() == &"tank_wave", "15:00 must use tank_wave band", failures)
 
@@ -83,7 +85,7 @@ func _initialize() -> void:
 		_assert_true(director.debug_active_budget() == 320, "30:00 wave minimum alive must hit 320", failures)
 		_assert_float_equal(director.debug_base_spawn_interval_seconds(), 0.20, 0.01, "30:00 spawn interval must hit 0.20s", failures)
 		if director.has_method("debug_target_kills_per_second"):
-			_assert_float_equal(director.debug_target_kills_per_second(), 10.0, 0.01, "30:00 kill-rate target must hit 10 kills/sec", failures)
+			_assert_float_equal(director.debug_target_kills_per_second(), 15.0, 0.01, "30:00 kill-rate target must hit 15 kills/sec", failures)
 		_assert_float_equal(director.debug_health_multiplier(), 8.0, 0.01, "30:00 enemy HP multiplier must end at 8x", failures)
 		_assert_true(director.debug_current_time_band_id() == &"elite_wave", "30:00 must use elite_wave band", failures)
 

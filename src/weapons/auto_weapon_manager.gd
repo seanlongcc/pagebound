@@ -11,6 +11,7 @@ const STAR_RICOCHET_HIT_WIDTH_METERS := 0.45
 const BASE_STAR_NODE_CAP := 5
 
 @export_range(0.0, 40.0, 0.1) var target_range := 8.0
+@export_range(1, 16, 1) var star_ricochet_segment_jobs_per_frame := 4
 
 var _owner: Node3D
 var _enemies_root: Node
@@ -28,11 +29,13 @@ var _star_orbit_angle := 0.0
 var _star_ricochet_damage_count := 0
 var _star_ricochet_segment_count := 0
 var _star_node_extra_star_count := 0
+var _star_ricochet_segment_jobs: Array[Dictionary] = []
 var _transient_visuals: Array[Dictionary] = []
 
 
 func _physics_process(delta: float) -> void:
 	_tick_transient_visuals(delta)
+	_drain_star_ricochet_segment_jobs()
 	if _owner == null or _damage_model == null:
 		return
 	_star_orbit_angle += delta * 2.4
@@ -68,6 +71,7 @@ func configure(
 	_pagecraft_manager = pagecraft_manager
 	_upgrade_state = upgrade_state
 	_content_factory = content_factory
+	_star_ricochet_segment_jobs.clear()
 	_sync_weapon_states(true)
 
 
@@ -119,6 +123,16 @@ func debug_star_ricochet_damage_count() -> int:
 ## Returns count of Star node-to-node ricochet segments created.
 func debug_star_ricochet_segment_count() -> int:
 	return _star_ricochet_segment_count
+
+
+## Returns queued L10 Star ricochet segment jobs.
+func debug_pending_star_ricochet_segment_jobs() -> int:
+	return _star_ricochet_segment_jobs.size()
+
+
+## Drains one frame budget of queued L10 Star ricochet segment jobs.
+func debug_drain_star_ricochet_segment_jobs() -> void:
+	_drain_star_ricochet_segment_jobs()
 
 
 ## Returns count of enemies damaged by L10 node-fired stars.
@@ -345,13 +359,33 @@ func _fire_star_ricochet_path_from_node(node: Dictionary, weapon_data: Resource,
 		return
 	if _star_network.node_count() < 2:
 		return
-	var path := _star_network.chain_from_node(node, _star_node_range_meters(weapon_data), _star_l10_unlocked())
+	var l10_chain := _star_l10_unlocked()
+	var path := _star_network.chain_from_node(node, _star_node_range_meters(weapon_data), l10_chain)
 	if path.size() < 2:
 		return
 	for index in range(path.size() - 1):
 		var start_node := path[index]
 		var end_node := path[index + 1]
-		_fire_star_ricochet_segment(start_node, end_node, weapon_data, ricochet_damage)
+		if l10_chain:
+			_queue_star_ricochet_segment(start_node, end_node, weapon_data, ricochet_damage)
+		else:
+			_fire_star_ricochet_segment(start_node, end_node, weapon_data, ricochet_damage)
+
+
+func _queue_star_ricochet_segment(start_node: Dictionary, end_node: Dictionary, weapon_data: Resource, ricochet_damage: float) -> void:
+	_star_ricochet_segment_jobs.append({
+		"start_node": start_node,
+		"end_node": end_node,
+		"weapon_data": weapon_data,
+		"ricochet_damage": ricochet_damage,
+	})
+
+
+func _drain_star_ricochet_segment_jobs() -> void:
+	var budget: int = mini(star_ricochet_segment_jobs_per_frame, _star_ricochet_segment_jobs.size())
+	for _index in budget:
+		var job: Dictionary = _star_ricochet_segment_jobs.pop_front()
+		_fire_star_ricochet_segment(job["start_node"], job["end_node"], job["weapon_data"], float(job["ricochet_damage"]))
 
 
 func _fire_star_ricochet_segment(start_node: Dictionary, end_node: Dictionary, weapon_data: Resource, ricochet_damage: float) -> void:

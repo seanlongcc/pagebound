@@ -184,6 +184,7 @@ func _check_l10_constellation_chain(failures: Array[String]) -> void:
 
 	weapon_manager.debug_fire_weapon_at(STAR_WEAPON_ID, new_node_target)
 	await _settle()
+	await _drain_star_ricochet_jobs(weapon_manager)
 
 	var expected_segments: int = weapon_manager.debug_star_node_count() - 1
 	var overlap_damage := overlap_before - _health_value(overlap_victim)
@@ -262,6 +263,7 @@ func _create_star_node(weapon_manager: Node, enemies_root: Node, node_name: Stri
 	var enemy := _spawn_victim(enemies_root, node_name, position, 5000.0)
 	weapon_manager.debug_fire_weapon_at(STAR_WEAPON_ID, enemy)
 	await _settle()
+	await _drain_star_ricochet_jobs(weapon_manager)
 	enemy.queue_free()
 	await process_frame
 
@@ -296,6 +298,20 @@ func _star_segment_count(weapon_manager: Node) -> int:
 func _settle() -> void:
 	await process_frame
 	await physics_frame
+
+
+func _drain_star_ricochet_jobs(weapon_manager: Node, max_drains: int = 16) -> void:
+	if (
+		weapon_manager == null
+		or not weapon_manager.has_method("debug_pending_star_ricochet_segment_jobs")
+		or not weapon_manager.has_method("debug_drain_star_ricochet_segment_jobs")
+	):
+		return
+	for _index in maxi(0, max_drains):
+		if int(weapon_manager.debug_pending_star_ricochet_segment_jobs()) <= 0:
+			return
+		weapon_manager.debug_drain_star_ricochet_segment_jobs()
+		await process_frame
 
 
 func _wait_physics_frames(count: int) -> void:
